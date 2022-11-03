@@ -1,0 +1,26 @@
+{
+  "kind": "collectionType",
+  "collectionName": "deploys",
+  "info": {
+    "singularName": "deploy",
+    "pluralName": "deploys",
+    "displayName": "deploy"
+  },
+  "options": {
+    "draftAndPublish": false,
+    "comment": ""
+  },
+  "attributes": {
+    "name": {
+      "type": "string"
+    },
+    "isFinal": {
+      "type": "boolean"
+    },
+    "deployStatus": {
+      "via": "deployStatus",
+      "plugin": "make-deploy",
+      "model": "deploy"
+    }
+  }
+}

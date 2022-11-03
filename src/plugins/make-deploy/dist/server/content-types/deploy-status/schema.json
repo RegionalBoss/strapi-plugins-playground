@@ -1,0 +1,32 @@
+{
+    "kind": "collectionType",
+    "collectionName": "deploy_statuses",
+    "info": {
+        "singularName": "deploy-status",
+        "pluralName": "deploy-statuses",
+        "displayName": "deployStatus"
+    },
+    "options": {
+        "draftAndPublish": false,
+        "comment": ""
+    },
+    "attributes": {
+        "message": {
+            "type": "text"
+        },
+        "status": {
+            "type": "enumeration",
+            "enum": [
+                "info",
+                "warning",
+                "error"
+            ]
+        },
+        "stage": {
+            "type": "string"
+        },
+        "deploy": {
+            "type": "json"
+        }
+    }
+}
