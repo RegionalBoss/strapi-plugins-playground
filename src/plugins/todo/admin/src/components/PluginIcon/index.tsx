@@ -4,9 +4,9 @@
  *
  */
 
-import React from 'react';
-import Puzzle from '@strapi/icons/Puzzle';
+import React from "react";
+import CheckCircle from "@strapi/icons/CheckCircle";
 
-const PluginIcon: React.VoidFunctionComponent = () => <Puzzle />;
+const PluginIcon: React.VoidFunctionComponent = () => <CheckCircle />;
 
 export default PluginIcon;
