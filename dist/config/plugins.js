@@ -6,4 +6,8 @@ exports.default = {
         enabled: true,
         resolve: "./src/plugins/slugify",
     },
+    todo: {
+        enabled: true,
+        resolve: "./src/plugins/todo",
+    },
 };
