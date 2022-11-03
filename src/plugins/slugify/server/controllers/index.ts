@@ -1,4 +1,4 @@
-import slugController from './slugController';
+import slugController from "./slugController";
 
 export default {
   slugController,

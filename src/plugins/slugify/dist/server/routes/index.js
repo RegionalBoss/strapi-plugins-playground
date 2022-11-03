@@ -2,48 +2,30 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = [
     {
-        method: 'GET',
-        path: '/',
-        handler: 'slugController.index',
+        method: "GET",
+        path: "/",
+        handler: "slugController.index",
         config: {
             policies: [],
             auth: false,
         },
     },
     {
-        method: 'GET',
-        path: '/settings',
-        handler: 'slugController.getSettings',
+        method: "GET",
+        path: "/allContentTypes",
+        handler: "slugController.getContentTypes",
         config: {
             policies: [],
             auth: false,
         },
     },
     {
-        method: 'POST',
-        path: '/settings',
-        handler: 'slugController.setSettings',
+        method: "POST",
+        path: "/setSlugs",
+        handler: "slugController.setSlugs",
         config: {
             policies: [],
             auth: false,
         },
     },
-    {
-        method: 'GET',
-        path: '/allContentTypes',
-        handler: 'slugController.getContentTypes',
-        config: {
-            policies: [],
-            auth: false,
-        }
-    },
-    {
-        method: 'POST',
-        path: '/setSlugs',
-        handler: 'slugController.setSlugs',
-        config: {
-            policies: [],
-            auth: false,
-        }
-    }
 ];

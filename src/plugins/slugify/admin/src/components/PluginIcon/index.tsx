@@ -5,8 +5,8 @@
  */
 
 import React from 'react';
-import Repeat from '@strapi/icons/Repeat';
+import Puzzle from '@strapi/icons/Puzzle';
 
-const PluginIcon: React.VoidFunctionComponent = () => <Repeat />;
+const PluginIcon: React.VoidFunctionComponent = () => <Puzzle />;
 
 export default PluginIcon;
