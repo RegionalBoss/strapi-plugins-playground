@@ -1,23 +1,27 @@
 {
-  "name": "todo",
-  "version": "0.0.0",
+  "name": "@regionalboss/strapi-plugin-todo-test",
+  "version": "1.0.1",
   "description": "This is the description of the plugin.",
   "strapi": {
     "name": "todo",
+    "displayName": "TODO",
     "description": "Description of todo plugin",
     "kind": "plugin"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RegionalBoss/strapi-plugin-todo.git"
   },
   "dependencies": {},
   "devDependencies": {
     "typescript": "4.6.3"
   },
-  "author": {
-    "name": "A Strapi developer"
+  "peerDependencies": {
+    "@strapi/strapi": "^4.0.0"
   },
+  "author": "RegionalBoss <eduard.karbovanec@gmail.com>",
   "maintainers": [
-    {
-      "name": "A Strapi developer"
-    }
+    "RegionalBoss <eduard.karbovanec@gmail.com>"
   ],
   "engines": {
     "node": ">=14.19.1 <=18.x.x",
@@ -28,5 +32,10 @@
     "build": "tsc",
     "strapi": "strapi"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/RegionalBoss/strapi-plugin-todo/issues"
+  },
+  "homepage": "https://github.com/RegionalBoss/strapi-plugin-todo#readme",
+  "main": "strapi-admin.js"
 }
