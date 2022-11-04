@@ -6,11 +6,18 @@ export const settingsRequests = {
     (await axiosInstance.get("/make-deploy/settings", opts)).data,
   setSettings: async (data, opts) =>
     (
-      await axiosInstance.post("/make-deploy/settings", {
-        body: data,
+      await axiosInstance.post("/make-deploy/settings", data, {
         ...opts,
       })
     ).data,
+  updateSetting: async (id, data, opts) =>
+    (
+      await axiosInstance.put(`/make-deploy/settings/${id}`, data, {
+        ...opts,
+      })
+    ).data,
+  deleteSetting: async (id, opts) =>
+    (await axiosInstance.delete(`/make-deploy/settings/${id}`, opts)).data,
 };
 
 export const useSettingsData = () => {
@@ -18,7 +25,12 @@ export const useSettingsData = () => {
   const [isLoading, setIsLoading] = useState(false);
   const abortController = new AbortController();
 
-  React.useEffect(async () => {
+  React.useEffect(() => {
+    fetchData();
+    return () => abortController.abort();
+  }, []);
+
+  const fetchData = async () => {
     setIsLoading(true);
     try {
       setSettingsData(
@@ -31,8 +43,7 @@ export const useSettingsData = () => {
       strapi.notification.toggle({ type: "error", message: error.message });
     }
     setIsLoading(false);
-    return () => abortController.abort();
-  }, []);
+  };
 
-  return { settingsData, isLoading };
+  return { settingsData, isLoading, refresh: fetchData };
 };

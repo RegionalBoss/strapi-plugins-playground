@@ -21,6 +21,27 @@ export default {
       ctx.throw(500, err);
     }
   },
+  updateOne: async (ctx) => {
+    const { body } = ctx.request;
+    try {
+      ctx.body = await strapi
+        .plugin("make-deploy")
+        .service("settings")
+        .updateOne(ctx.params.id, body);
+    } catch (err) {
+      ctx.throw(500, err);
+    }
+  },
+  deleteOne: async (ctx) => {
+    try {
+      ctx.body = await strapi
+        .plugin("make-deploy")
+        .service("settings")
+        .deleteOne(ctx.params.id);
+    } catch (err) {
+      ctx.throw(500, err);
+    }
+  },
   // exampleAction: async (ctx, next) => {
   //   try {
   //     ctx.body = 'ok';

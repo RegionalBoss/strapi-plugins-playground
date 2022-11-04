@@ -21,5 +21,23 @@ exports.default = {
                 auth: false,
             },
         },
+        {
+            method: "PUT",
+            path: "/settings/:id",
+            handler: "settings.updateOne",
+            config: {
+                policies: [],
+                auth: false,
+            },
+        },
+        {
+            method: "DELETE",
+            path: "/settings/:id",
+            handler: "settings.deleteOne",
+            config: {
+                policies: [],
+                auth: false,
+            },
+        },
     ],
 };

@@ -46,16 +46,8 @@ const Settings = () => {
         title="Todo General settings"
         subtitle="Manage the settings and behaviour of your todo plugin"
         primaryAction={
-          isLoading ? (
-            <></>
-          ) : (
-            <Button
-              onClick={handleSubmit}
-              startIcon={<Check />}
-              size="L"
-              disabled={isSaving}
-              loading={isSaving}
-            >
+          isLoading ? null : (
+            <Button onClick={handleSubmit} startIcon={<Check />} size="L" disabled={isSaving} loading={isSaving}>
               Save
             </Button>
           )
@@ -65,15 +57,7 @@ const Settings = () => {
         <LoadingIndicatorPage />
       ) : (
         <ContentLayout>
-          <Box
-            background="neutral0"
-            hasRadius
-            shadow="filterShadow"
-            paddingTop={6}
-            paddingBottom={6}
-            paddingLeft={7}
-            paddingRight={7}
-          >
+          <Box background="neutral0" hasRadius shadow="filterShadow" paddingTop={6} paddingBottom={6} paddingLeft={7} paddingRight={7}>
             <Stack size={3}>
               <Typography>General settings</Typography>
               <Grid gap={6}>

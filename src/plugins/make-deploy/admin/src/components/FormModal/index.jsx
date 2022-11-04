@@ -8,7 +8,9 @@ import {
   Button,
   TextInput,
   Box,
+  Loader,
 } from "@strapi/design-system";
+import { settingsRequests } from "../../api/settings";
 
 const FORM_VALUES = [
   {
@@ -34,7 +36,13 @@ const FORM_VALUES = [
   },
 ];
 
-export const FormModal = ({ handleClose, isOpen, values = {}, ...props }) => {
+export const FormModal = ({
+  handleClose,
+  isOpen,
+  values = {},
+  isUpdate,
+  ...props
+}) => {
   const [status, setStatus] = useState();
   const [formValues, setFormValues] = useState(values);
   const [formErrors, setFormErrors] = useState({});
@@ -70,6 +78,12 @@ export const FormModal = ({ handleClose, isOpen, values = {}, ...props }) => {
     e.preventDefault();
     e.stopPropagation();
     if (!isInvalid()) {
+      setStatus("loading");
+      const result = await (isUpdate
+        ? settingsRequests.updateSetting(formValues.id, formValues)
+        : settingsRequests.setSettings(formValues));
+      console.log(result);
+      setStatus("success");
       handleClose();
     }
   };

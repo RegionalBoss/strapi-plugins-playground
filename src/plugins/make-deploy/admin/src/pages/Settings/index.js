@@ -19,27 +19,29 @@ import Trash from "@strapi/icons/Trash";
 import pluginId from "../../pluginId";
 import { useTranslation } from "../../hooks/useTranslation";
 
-import { useSettingsData } from "../../api/settings";
+import { settingsRequests, useSettingsData } from "../../api/settings";
 import { Illo } from "../../components/Illo";
 import { FormModal } from "../../components/FormModal";
 
 const COL_COUNT = 4;
 
 export default () => {
+  const { settingsData, isLoading, refresh } = useSettingsData();
   const [showFormModal, setShowFormModal] = useState(false);
   const [deployToEdit, setDeployToEdit] = useState();
   const { t } = useTranslation();
-  const { settingsData, isLoading } = useSettingsData();
 
   return (
     <>
       {showFormModal && (
         <FormModal
           handleClose={() => {
+            refresh();
             setShowFormModal(false);
             setDeployToEdit(undefined);
           }}
           values={deployToEdit}
+          isUpdate={typeof deployToEdit !== "undefined"}
         ></FormModal>
       )}
       <BaseHeaderLayout
@@ -112,7 +114,10 @@ export default () => {
                         />
                         <Box paddingLeft={4}>
                           <IconButton
-                            onClick={() => console.log("delete")}
+                            onClick={async () => {
+                              await settingsRequests.deleteSetting(entry.id);
+                              refresh();
+                            }}
                             label="Smazat"
                             noBorder
                             icon={<Trash />}
