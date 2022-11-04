@@ -1,6 +1,6 @@
 {
     "kind": "collectionType",
-    "collectionName": "deploy_statuses",
+    "collectionName": "deployStatuses",
     "info": {
         "singularName": "deploy-status",
         "pluralName": "deploy-statuses",
@@ -26,7 +26,10 @@
             "type": "string"
         },
         "deploy": {
-            "type": "json"
+            "type": "relation",
+            "relation": "manyToOne",
+            "target": "plugin::make-deploy.deploy",
+            "inversedBy": "deployStatus"
         }
     }
 }

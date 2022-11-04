@@ -18,9 +18,10 @@
       "type": "boolean"
     },
     "deployStatus": {
-      "via": "deployStatus",
-      "plugin": "make-deploy",
-      "model": "deploy"
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "plugin::make-deploy.deploy-status",
+      "mappedBy": "deploy"
     }
   }
 }
