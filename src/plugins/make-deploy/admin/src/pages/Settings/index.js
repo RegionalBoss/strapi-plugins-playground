@@ -17,36 +17,27 @@ import Plus from "@strapi/icons/Plus";
 import Pencil from "@strapi/icons/Pencil";
 import Trash from "@strapi/icons/Trash";
 import pluginId from "../../pluginId";
+import { useTranslation } from "../../hooks/useTranslation";
 
-import { useIntl } from "react-intl";
-import getTrad from "../../utils/getTrad";
 import { useSettingsData } from "../../api/settings";
+import { Illo } from "../../components/Illo";
 
 const COL_COUNT = 4;
 
 export default () => {
-  const { formatMessage } = useIntl();
+  const { t } = useTranslation();
   const { settingsData, isLoading } = useSettingsData();
 
   return (
     <>
       <BaseHeaderLayout
         id="title"
-        title={formatMessage({
-          id: getTrad("settings.header.label"),
-          defaultMessage: "Deploy plugin settings",
-        })}
-        subtitle={formatMessage({
-          id: getTrad("settings.sub-header.label"),
-          defaultMessage: "Manage your deploy settings",
-        })}
+        title={t("settings.header.label", "Deploy plugin settings")}
+        subtitle={t("settings.sub-header.label", "Manage your deploy settings")}
         as="h2"
         primaryAction={
           <Button startIcon={<Plus />}>
-            {formatMessage({
-              id: getTrad("settings.addEnv"),
-              defaultMessage: "Deploy plugin settings",
-            })}
+            {t("settings.addEnv", "Deploy plugin settings")}
           </Button>
         }
       ></BaseHeaderLayout>
@@ -55,7 +46,10 @@ export default () => {
       ) : (
         <ContentLayout>
           {settingsData?.length === 0 && (
-            <EmptyStateLayout content="You don't have any deploys yet..." />
+            <EmptyStateLayout
+              icon={<Illo />}
+              content="You don't have any deploys yet..."
+            />
           )}
           {settingsData?.length > 0 && (
             <Table colCount={COL_COUNT} rowCount={settingsData?.length}>
@@ -94,17 +88,17 @@ export default () => {
                       </Typography>
                     </Td>
                     <Td>
-                      <Flex>
+                      <Flex style={{ justifyContent: "flex-end" }}>
                         <IconButton
                           onClick={() => console.log("edit")}
-                          label="Edit"
+                          label="Upravit"
                           noBorder
                           icon={<Pencil />}
                         />
-                        <Box paddingLeft={1}>
+                        <Box paddingLeft={4}>
                           <IconButton
                             onClick={() => console.log("delete")}
-                            label="Delete"
+                            label="Smazat"
                             noBorder
                             icon={<Trash />}
                           />
