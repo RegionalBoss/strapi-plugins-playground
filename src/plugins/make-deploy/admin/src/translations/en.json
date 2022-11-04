@@ -1,1 +1,24 @@
-{}
+{
+  "plugin.name": "Deploy",
+  "header.description": "Server for data synchronization between Strapi and website",
+  "settings.header.label": "Settings - Deploy",
+  "settings.sub-header.label": "Here you can change deployment urls",
+  "settings.addEnv": "Add job",
+  "jobs.timestamp": "Created at",
+  "jobs.state.running": "Job is running",
+  "jobs.author": "Author",
+  "jobs.settings": "Job settings",
+  "jobs.settings.remove": "Remove",
+  "jobs.button.start": "Start job",
+  "jobs.name.label": "Environment name",
+  "jobs.name.description": "Environment description",
+  "jobs.run.label": "Start URL",
+  "jobs.run.description": "Url that serves for job starting",
+  "jobs.status.label": "Status URL",
+  "jobs.status.description": "Url that server for checking job status",
+  "jobs.link.label": "URL odkazu",
+  "jobs.link.description": "Url pro přechod na náhled",
+  "jobs.roles.label": "Role ",
+  "jobs.roles.description": "Role s právem spouštění",
+  "jobs.link": "Redirect to environment"
+}

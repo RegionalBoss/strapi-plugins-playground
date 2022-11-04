@@ -4,4 +4,4 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 const strapi_1 = require("@strapi/strapi");
-exports.default = strapi_1.factories.createCoreService('plugin::make-deploy.deploy');
+exports.default = strapi_1.factories.createCoreService("plugin::make-deploy.deploy");

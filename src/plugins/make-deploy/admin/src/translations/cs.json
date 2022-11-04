@@ -1,0 +1,22 @@
+{
+  "plugin.name": "Nasazování",
+  "header.description": "Synchronizační služba mezi administrací Strapi a webovými stránkami",
+  "settings.header.label": "Nastavení - Deploy",
+  "settings.sub-header.label": "Zde můžete změnit URL pro nasazování",
+  "settings.addEnv": "Přidat položku",
+  "jobs.timestamp": "Čas vytvoření",
+  "jobs.state.running": "Probíhá nasazování",
+  "jobs.author": "Autor",
+  "jobs.settings": "Nastavení",
+  "jobs.settings.remove": "Odstranit",
+  "jobs.button.start": "Spustit",
+  "jobs.name.label": "Jméno prostředí",
+  "jobs.name.description": "Jméno prostředí",
+  "jobs.run.label": "URL nasazení",
+  "jobs.run.description": "Url pro spuštění nasazení náhledu",
+  "jobs.status.label": "URL stavu",
+  "jobs.status.description": "Url pro ověření stavu nasazení náhledu",
+  "jobs.link.label": "URL odkazu",
+  "jobs.link.description": "Url pro přechod na náhled",
+  "jobs.link": "Přejít na prostředí"
+}

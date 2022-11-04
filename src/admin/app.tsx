@@ -3,7 +3,7 @@ export default {
     locales: [
       // 'ar',
       // 'fr',
-      // 'cs',
+      "cs",
       // 'de',
       // 'dk',
       // 'es',
