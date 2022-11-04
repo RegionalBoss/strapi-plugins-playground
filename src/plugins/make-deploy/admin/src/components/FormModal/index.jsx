@@ -11,6 +11,8 @@ import {
   Loader,
 } from "@strapi/design-system";
 import { settingsRequests } from "../../api/settings";
+import { useTranslation } from "../../hooks/useTranslation";
+import { useNotification } from "@strapi/helper-plugin";
 
 const FORM_VALUES = [
   {
@@ -43,9 +45,11 @@ export const FormModal = ({
   isUpdate,
   ...props
 }) => {
+  const { formatMessage } = useTranslation();
   const [status, setStatus] = useState();
   const [formValues, setFormValues] = useState(values);
   const [formErrors, setFormErrors] = useState({});
+  const toggleNotification = useNotification();
 
   const handleValueChange = (e) => {
     const { name, value } = e.target;
@@ -78,13 +82,21 @@ export const FormModal = ({
     e.preventDefault();
     e.stopPropagation();
     if (!isInvalid()) {
-      setStatus("loading");
-      const result = await (isUpdate
-        ? settingsRequests.updateSetting(formValues.id, formValues)
-        : settingsRequests.setSettings(formValues));
-      console.log(result);
-      setStatus("success");
-      handleClose();
+      try {
+        setStatus("loading");
+        await (isUpdate
+          ? settingsRequests.updateSetting(formValues.id, formValues)
+          : settingsRequests.setSettings(formValues));
+        setStatus("success");
+        toggleNotification({
+          type: "success",
+          message: formatMessage({ id: "notification.form.success.fields" }),
+        });
+        handleClose();
+      } catch (err) {
+        setStatus("error");
+        toggleNotification({ type: "error", message: error.message });
+      }
     }
   };
 

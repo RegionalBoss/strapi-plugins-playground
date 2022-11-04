@@ -12,5 +12,5 @@ export const useTranslation = () => {
       }),
     []
   );
-  return { t };
+  return { t, formatMessage };
 };

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axiosInstance from "../utils/axiosInstance";
+import { useNotification } from "@strapi/helper-plugin";
 
 export const settingsRequests = {
   getSettings: async (opts) =>
@@ -24,6 +25,7 @@ export const useSettingsData = () => {
   const [settingsData, setSettingsData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const abortController = new AbortController();
+  const toggleNotification = useNotification();
 
   React.useEffect(() => {
     fetchData();
@@ -40,7 +42,7 @@ export const useSettingsData = () => {
       );
     } catch (error) {
       console.error(error);
-      strapi.notification.toggle({ type: "error", message: error.message });
+      toggleNotification({ type: "error", message: error.message });
     }
     setIsLoading(false);
   };
