@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 import { Box } from "@strapi/design-system/Box";
 import { Stack } from "@strapi/design-system/Stack";
@@ -21,22 +21,34 @@ import { useTranslation } from "../../hooks/useTranslation";
 
 import { useSettingsData } from "../../api/settings";
 import { Illo } from "../../components/Illo";
+import { FormModal } from "../../components/FormModal";
 
 const COL_COUNT = 4;
 
 export default () => {
+  const [showFormModal, setShowFormModal] = useState(false);
+  const [deployToEdit, setDeployToEdit] = useState();
   const { t } = useTranslation();
   const { settingsData, isLoading } = useSettingsData();
 
   return (
     <>
+      {showFormModal && (
+        <FormModal
+          handleClose={() => {
+            setShowFormModal(false);
+            setDeployToEdit(undefined);
+          }}
+          values={deployToEdit}
+        ></FormModal>
+      )}
       <BaseHeaderLayout
         id="title"
         title={t("settings.header.label", "Deploy plugin settings")}
         subtitle={t("settings.sub-header.label", "Manage your deploy settings")}
         as="h2"
         primaryAction={
-          <Button startIcon={<Plus />}>
+          <Button startIcon={<Plus />} onClick={() => setShowFormModal(true)}>
             {t("settings.addEnv", "Deploy plugin settings")}
           </Button>
         }
@@ -90,7 +102,10 @@ export default () => {
                     <Td>
                       <Flex style={{ justifyContent: "flex-end" }}>
                         <IconButton
-                          onClick={() => console.log("edit")}
+                          onClick={() => {
+                            setShowFormModal(true);
+                            setDeployToEdit(entry);
+                          }}
                           label="Upravit"
                           noBorder
                           icon={<Pencil />}
