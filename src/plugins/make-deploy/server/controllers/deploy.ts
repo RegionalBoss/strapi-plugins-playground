@@ -18,8 +18,8 @@ export default {
     const entities = ctx.query._q
       ? await strapi.plugin("make-deploy").service("deploy").search(ctx.query)
       : await strapi.plugin("make-deploy").service("deploy").find(ctx.query);
-    console.log("entities", entities.results);
-    return entities.results;
+    console.log("entities", entities);
+    return entities;
   },
 
   /**

@@ -19,7 +19,8 @@ import Trash from "@strapi/icons/Trash";
 import pluginId from "../../pluginId";
 import { useTranslation } from "../../hooks/useTranslation";
 
-import { settingsRequests, useSettingsData } from "../../api/settings";
+import { settingsRequests } from "../../api/settings";
+import { useSettingsData } from "../../hooks/useSettingsData";
 import { Illo } from "../../components/Illo";
 import { FormModal } from "../../components/FormModal";
 

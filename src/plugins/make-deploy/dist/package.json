@@ -9,6 +9,7 @@
         "icon": "plug"
     },
     "dependencies": {
+        "date-fns": "^2.29.3",
         "lodash": "^4.17.21",
         "uuid": "^9.0.0"
     },
@@ -30,6 +31,7 @@
     },
     "scripts": {
         "develop": "tsc -w",
+        "dev": "tsc -w",
         "build": "tsc"
     },
     "license": "MIT"

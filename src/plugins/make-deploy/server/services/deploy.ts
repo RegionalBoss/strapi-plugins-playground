@@ -12,10 +12,8 @@ export default {
    * @return {Promise}
    */
   find(params, populate): Promise<any> {
-    console.log(strapi.query(`plugin::make-deploy.deploy`));
-    return strapi
-      .query(`plugin::make-deploy.deploy`)
-      .findPage(params, populate);
+    console.log(strapi.query(`plugin::make-deploy.deploy`), "params", params);
+    return strapi.query(`plugin::make-deploy.deploy`).findMany(params);
   },
 
   /**

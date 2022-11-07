@@ -4,37 +4,34 @@
  *
  */
 
-import React, { useEffect } from "react";
-import pluginId from "../../pluginId";
-
-import axiosInstance from "../../utils/axiosInstance";
+import React, { useEffect, useState } from "react";
+import { StageContainer } from "../../components/StageContainer";
 
 import {
   BaseHeaderLayout,
-  ContentLayout,
-  Grid,
-  GridItem,
-  GridLayout,
   Box,
-  Button,
+  ContentLayout,
+  GridLayout,
 } from "@strapi/design-system";
 import { EmptyStateLayout } from "@strapi/design-system/EmptyStateLayout";
-import { useSettingsData } from "../../api/settings";
+import { useSettingsData } from "../../hooks/useSettingsData";
+import { useUser } from "../../hooks/useUser";
 import { Illo } from "../../components/Illo";
-import { Flex } from "@strapi/design-system/Flex";
-import { IconButton } from "@strapi/design-system/IconButton";
-import { Typography } from "@strapi/design-system/Typography";
-import { VisuallyHidden } from "@strapi/design-system/VisuallyHidden";
 
 import { useTranslation } from "../../hooks/useTranslation";
 
 const HomePage = () => {
   const { settingsData, isLoading } = useSettingsData();
   const { t } = useTranslation();
+  const { user } = useUser();
+  const [count, setCount] = useState(0);
 
-  useEffect(async () => {
-    const res = await axiosInstance.get("/admin/users/me");
-    console.log("me: ", res);
+  // Loop every 2 seconds over API
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      setCount((prev) => prev + 1);
+    }, 2000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -54,18 +51,11 @@ const HomePage = () => {
         <Box padding={8} background="neutral100">
           <GridLayout>
             {settingsData.map((entry) => (
-              <Box
-                padding={4}
-                hasRadius
-                background="neutral0"
+              <StageContainer
                 key={entry.id}
-                shadow="tableShadow"
-              >
-                <Box style={{ marginBottom: "1rem" }}>
-                  <Typography>{entry.name}</Typography>
-                </Box>
-                <Button>Spustit</Button>
-              </Box>
+                deploySetting={entry}
+                refetchTimer={count}
+              />
             ))}
           </GridLayout>
         </Box>

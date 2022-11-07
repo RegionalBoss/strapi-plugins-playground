@@ -1,13 +1,14 @@
 {
     "kind": "collectionType",
-    "collectionName": "deployStatuses",
+    "collectionName": "deploy-statuses",
     "info": {
         "singularName": "deploy-status",
         "pluralName": "deploy-statuses",
-        "displayName": "deployStatus"
+        "displayName": "Deploy Statuses"
     },
     "options": {
-        "draftAndPublish": false,
+        "draftAndPublish": true,
+        "populateCreatorFields": true,
         "comment": ""
     },
     "attributes": {
@@ -29,7 +30,7 @@
             "type": "relation",
             "relation": "manyToOne",
             "target": "plugin::make-deploy.deploy",
-            "inversedBy": "deployStatus"
+            "inversedBy": "deploy-statuses"
         }
     }
 }
