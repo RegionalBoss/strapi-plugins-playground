@@ -6,10 +6,10 @@ export const useDeploy = () => {
   const [loading, setLoading] = useState(false);
   const toggleNotification = useNotification();
 
-  const getDeploys = useCallback(async (whereQuery) => {
+  const makeRequest = useCallback(async (requestCallback) => {
     setLoading(true);
     try {
-      return await deploysRequests.getDeploys(whereQuery);
+      return await requestCallback;
     } catch (error) {
       toggleNotification({
         type: "warning",
@@ -21,19 +21,20 @@ export const useDeploy = () => {
     }
   }, []);
 
-  const getDeploy = useCallback(async (id, params) => {
-    setLoading(true);
-    try {
-      return await deploysRequests.getDeploy(id, params);
-    } catch (error) {
-      toggleNotification({
-        type: "warning",
-        message: error.message,
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const getDeploys = useCallback(
+    async (whereQuery) => makeRequest(deploysRequests.getDeploys(whereQuery)),
+    []
+  );
+
+  const getDeploy = useCallback(
+    async (id, params) => makeRequest(deploysRequests.getDeploy(id, params)),
+    []
+  );
+
+  const createDeploy = useCallback(
+    async (name) => makeRequest(deploysRequests.createDeploy(name)),
+    []
+  );
 
   return { loading, getDeploys, getDeploy };
 };

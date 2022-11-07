@@ -19,4 +19,14 @@ export const deploysRequests = {
     ).data,
   getDeploy: async (id, params) =>
     (await axiosInstance.get(`/make-deploy/deploy/${id}`, params)).data,
+  createDeploy: async (name) =>
+    (
+      await axiosInstance.post(`/make-deploy/deploy`, {
+        isFinal: false,
+        message: "Spuštění buildu ve strapi",
+        stage: "FE Strapi",
+        status: "info",
+        name,
+      })
+    ).data,
 };

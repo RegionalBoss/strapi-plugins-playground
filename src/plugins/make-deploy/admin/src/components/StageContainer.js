@@ -57,38 +57,38 @@ const STAGE_STATUS_ICON = {
   ),
 };
 
-export function StageContainer({ deploySetting, refreshTimer }) {
+export function StageContainer({ deploySetting, refetchTimer }) {
   const [deploys, setDeploys] = React.useState([]);
   const { t } = useTranslation();
   const { getDeploys } = useDeploy();
 
-  const actionDisabled = React.useMemo(
+  const isRunning = React.useMemo(
     () => deploys.length > 0 && !deploys[0].isFinal,
     [deploys]
   );
 
   React.useEffect(async () => {
+    loadData();
+  }, [refetchTimer]);
+
+  const loadData = async () =>
     setDeploys(await getDeploys({ name: deploySetting.name }));
-  }, [refreshTimer]);
 
   return (
     <Box padding={4} hasRadius background="neutral0" shadow="tableShadow">
       <Flex style={{ marginBottom: "1rem" }}>
-        <Typography
-          as="h2"
-          style={{ fontWeight: "bold" }}
-          title={t("jobs.name.label")}
-        >
-          {deploySetting.name}
-        </Typography>
-        <Link
-          href={deploySetting.link}
-          isExternal
-          title={t("jobs.link")}
-        ></Link>
+        <Link href={deploySetting.link} isExternal title={t("jobs.link")}>
+          <Typography
+            as="h2"
+            style={{ fontWeight: "bold" }}
+            title={t("jobs.name.label")}
+          >
+            {deploySetting.name}
+          </Typography>
+        </Link>
       </Flex>
-      <Button disabled={actionDisabled} loading={actionDisabled}>
-        {t(actionDisabled ? "jobs.state.running" : "jobs.button.start")}
+      <Button disabled={isRunning} loading={isRunning}>
+        {t(isRunning ? "jobs.state.running" : "jobs.button.start")}
       </Button>
       <ul>
         {deploys?.map((deploy) => (
@@ -103,7 +103,7 @@ export function StageContainer({ deploySetting, refreshTimer }) {
             </Typography>
             {deploy.deployStatuses?.map((deployStatus) => (
               <Card
-                id={deployStatus.id}
+                id={`${deployStatus.id}`}
                 key={deployStatus.id}
                 style={{ marginBottom: "0.5rem" }}
               >
