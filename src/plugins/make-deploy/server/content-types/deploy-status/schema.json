@@ -30,7 +30,7 @@
       "type": "relation",
       "relation": "manyToOne",
       "target": "plugin::make-deploy.deploy",
-      "inversedBy": "deploy-statuses"
+      "inversedBy": "deployStatuses"
     }
   }
 }

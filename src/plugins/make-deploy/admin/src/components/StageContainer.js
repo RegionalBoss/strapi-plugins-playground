@@ -1,8 +1,61 @@
-import { Box, Button, Typography, Flex, Link } from "@strapi/design-system";
+import {
+  Box,
+  Button,
+  Card,
+  CardBody,
+  CardContent,
+  Flex,
+  Link,
+  Typography,
+} from "@strapi/design-system";
+
+import styled from "styled-components";
+
+import {
+  faExclamationCircle,
+  faExclamationTriangle,
+  faInfoCircle,
+  faFlagCheckered,
+} from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+
+import format from "date-fns/format";
 import React from "react";
 import { useDeploy } from "../hooks/useDeploy";
-import format from "date-fns/format";
 import { useTranslation } from "../hooks/useTranslation";
+import { Spinner } from "./Spinner";
+
+const SuccessIcon = styled(FontAwesomeIcon)`
+  font-size: 200%;
+`;
+
+const StageCardBody = styled(CardBody)`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+`;
+
+const WaitingForNextRow = styled.span`
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+`;
+
+const STAGE_STATUS_ICON = {
+  info: (
+    <FontAwesomeIcon
+      icon={faInfoCircle}
+      style={{ color: "#007bff" }}
+    ></FontAwesomeIcon>
+  ),
+  warning: (
+    <FontAwesomeIcon icon={faExclamationTriangle} style={{ color: "orange" }} />
+  ),
+  error: (
+    <FontAwesomeIcon icon={faExclamationCircle} style={{ color: "red" }} />
+  ),
+};
 
 export function StageContainer({ deploySetting, refreshTimer }) {
   const [deploys, setDeploys] = React.useState([]);
@@ -15,12 +68,7 @@ export function StageContainer({ deploySetting, refreshTimer }) {
   );
 
   React.useEffect(async () => {
-    setDeploys(
-      await getDeploys({
-        where: { name: deploySetting.name },
-        populate: { "deploy-statuses": true, createdBy: true, updatedBy: true },
-      })
-    );
+    setDeploys(await getDeploys({ name: deploySetting.name }));
   }, [refreshTimer]);
 
   return (
@@ -45,7 +93,7 @@ export function StageContainer({ deploySetting, refreshTimer }) {
       <ul>
         {deploys?.map((deploy) => (
           <li key={deploy.id}>
-            <Typography as="h3" style={{ marginTop: "1rem" }}>
+            <Typography as="h3" style={{ margin: "1rem 0" }}>
               <span>
                 {deploy?.createdBy?.firstname} {deploy?.createdBy?.lastname}
               </span>
@@ -53,6 +101,44 @@ export function StageContainer({ deploySetting, refreshTimer }) {
                 {format(new Date(deploy.createdAt), "dd.MM.yyyy HH:mm:ss")}
               </small>
             </Typography>
+            {deploy.deployStatuses?.map((deployStatus) => (
+              <Card
+                id={deployStatus.id}
+                key={deployStatus.id}
+                style={{ marginBottom: "0.5rem" }}
+              >
+                <StageCardBody>
+                  <Box style={{ marginRight: "0.5rem" }}>
+                    <Typography as="strong" style={{ fontWeight: "bold" }}>
+                      {deployStatus.stage}
+                    </Typography>
+                    <Typography as="div">
+                      {format(new Date(deployStatus.createdAt), "HH:mm:ss")}
+                    </Typography>
+                  </Box>
+                  <CardContent style={{ marginRight: "0.5rem" }}>
+                    <Typography as="p">{deployStatus.message}</Typography>
+                  </CardContent>
+                  <Box>
+                    {STAGE_STATUS_ICON[deployStatus.status] ??
+                      STAGE_STATUS_ICON.info}
+                  </Box>
+                </StageCardBody>
+              </Card>
+            ))}
+            {deploy.isFinal ? (
+              <WaitingForNextRow>
+                <SuccessIcon
+                  icon={faFlagCheckered}
+                  title="Build finished"
+                  style={{ color: "#007bff" }}
+                />
+              </WaitingForNextRow>
+            ) : (
+              <WaitingForNextRow>
+                <Spinner />
+              </WaitingForNextRow>
+            )}
           </li>
         ))}
       </ul>

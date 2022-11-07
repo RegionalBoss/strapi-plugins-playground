@@ -2,13 +2,18 @@ import { axiosInstance } from "../utils/axiosInstance";
 import qs from "qs";
 
 export const deploysRequests = {
-  getDeploys: async (params) =>
+  getDeploys: async (whereQuery) =>
     (
       await axiosInstance.get(
         `/make-deploy/deploy?${qs.stringify({
           orderBy: { createdAt: "DESC" },
           limit: 1,
-          ...params,
+          populate: {
+            deployStatuses: true,
+            createdBy: true,
+            updatedBy: true,
+          },
+          where: whereQuery,
         })}`
       )
     ).data,

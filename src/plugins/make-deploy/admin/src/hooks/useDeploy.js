@@ -6,10 +6,10 @@ export const useDeploy = () => {
   const [loading, setLoading] = useState(false);
   const toggleNotification = useNotification();
 
-  const getDeploys = useCallback(async (params) => {
+  const getDeploys = useCallback(async (whereQuery) => {
     setLoading(true);
     try {
-      return await deploysRequests.getDeploys(params);
+      return await deploysRequests.getDeploys(whereQuery);
     } catch (error) {
       toggleNotification({
         type: "warning",

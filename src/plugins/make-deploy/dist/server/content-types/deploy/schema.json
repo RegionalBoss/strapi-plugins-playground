@@ -18,7 +18,7 @@
         "isFinal": {
             "type": "boolean"
         },
-        "deploy-statuses": {
+        "deployStatuses": {
             "type": "relation",
             "relation": "oneToMany",
             "target": "plugin::make-deploy.deploy-status",
