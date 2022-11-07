@@ -23,5 +23,10 @@ export default {
         auth: false,
       },
     },
+    {
+      method: "POST",
+      path: "/deploy",
+      handler: "deploy.startNewDeploy",
+    },
   ],
 };

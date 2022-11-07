@@ -8,13 +8,22 @@ export const useDeploy = () => {
 
   const makeRequest = useCallback(async (requestCallback) => {
     setLoading(true);
-    try {
-      return await requestCallback;
-    } catch (error) {
+    const showNotification = (message, type) => {
       toggleNotification({
-        type: "warning",
-        message: error.message,
+        type: type,
+        message: message,
       });
+    };
+    try {
+      const { data } = await requestCallback;
+      if (typeof data.error !== "undefined") {
+        showNotification(data.error?.message, "warning");
+        setLoading(false);
+        return [];
+      }
+      return data;
+    } catch (error) {
+      showNotification(error.message, "warning");
       return [];
     } finally {
       setLoading(false);
@@ -31,10 +40,10 @@ export const useDeploy = () => {
     []
   );
 
-  const createDeploy = useCallback(
-    async (name) => makeRequest(deploysRequests.createDeploy(name)),
+  const startDeploy = useCallback(
+    async (name) => makeRequest(deploysRequests.startDeploy(name)),
     []
   );
 
-  return { loading, getDeploys, getDeploy };
+  return { loading, getDeploys, getDeploy, startDeploy };
 };

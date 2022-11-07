@@ -60,7 +60,7 @@ const STAGE_STATUS_ICON = {
 export function StageContainer({ deploySetting, refetchTimer }) {
   const [deploys, setDeploys] = React.useState([]);
   const { t } = useTranslation();
-  const { getDeploys } = useDeploy();
+  const { getDeploys, startDeploy } = useDeploy();
 
   const isRunning = React.useMemo(
     () => deploys.length > 0 && !deploys[0].isFinal,
@@ -87,7 +87,13 @@ export function StageContainer({ deploySetting, refetchTimer }) {
           </Typography>
         </Link>
       </Flex>
-      <Button disabled={isRunning} loading={isRunning}>
+      <Button
+        disabled={isRunning}
+        loading={isRunning}
+        onClick={async () =>
+          setDeploys([await startDeploy(deploySetting.name)])
+        }
+      >
         {t(isRunning ? "jobs.state.running" : "jobs.button.start")}
       </Button>
       <ul>
@@ -98,7 +104,9 @@ export function StageContainer({ deploySetting, refetchTimer }) {
                 {deploy?.createdBy?.firstname} {deploy?.createdBy?.lastname}
               </span>
               <small>
-                {format(new Date(deploy.createdAt), "dd.MM.yyyy HH:mm:ss")}
+                {deploy.createdAt
+                  ? format(new Date(deploy.createdAt), "dd.MM.yyyy HH:mm:ss")
+                  : ""}
               </small>
             </Typography>
             {deploy.deployStatuses?.map((deployStatus) => (
@@ -113,7 +121,9 @@ export function StageContainer({ deploySetting, refetchTimer }) {
                       {deployStatus.stage}
                     </Typography>
                     <Typography as="div">
-                      {format(new Date(deployStatus.createdAt), "HH:mm:ss")}
+                      {deployStatus.createdAt
+                        ? format(new Date(deployStatus.createdAt), "HH:mm:ss")
+                        : ""}
                     </Typography>
                   </Box>
                   <CardContent style={{ marginRight: "0.5rem" }}>

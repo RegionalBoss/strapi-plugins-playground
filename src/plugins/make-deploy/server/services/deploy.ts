@@ -2,8 +2,18 @@
  *  service
  */
 
+import * as https from "https";
+import axios from "axios";
 import pluginId from "../pluginId";
-import { contentTypes } from "@strapi/utils";
+import { errors } from "@strapi/utils";
+import { ICreateDeployDTO, IDeploy } from "../content-types/deploy";
+import { IDeploySetting } from "../content-types/setting";
+import { IDeployStatus } from "../content-types/deploy-status";
+import { validateDeployStatus } from "../validators/deploy-status";
+
+const { ApplicationError, ValidationError } = errors;
+
+const MODEL_NAME = "deploy";
 
 export default {
   /**
@@ -11,8 +21,8 @@ export default {
    *
    * @return {Promise}
    */
-  find(params, populate): Promise<any> {
-    return strapi.query(`plugin::make-deploy.deploy`).findMany(params);
+  find(params, populate): Promise<IDeploy[]> {
+    return strapi.query(`plugin::${pluginId}.${MODEL_NAME}`).findMany(params);
   },
 
   /**
@@ -21,7 +31,9 @@ export default {
    * @return {Promise}
    */
   findOne(params, populate): Promise<any> {
-    return strapi.query(`plugin::${pluginId}.deploy`).findOne(params, populate);
+    return strapi
+      .query(`plugin::${pluginId}.${MODEL_NAME}`)
+      .findOne(params, populate);
   },
 
   /**
@@ -30,7 +42,7 @@ export default {
    * @return {Promise}
    */
   count(params) {
-    return strapi.query(`plugin::${pluginId}.deploy`).count(params);
+    return strapi.query(`plugin::${pluginId}.${MODEL_NAME}`).count(params);
   },
 
   /**
@@ -39,65 +51,141 @@ export default {
    * @return {Promise}
    */
   search(params) {
-    return strapi.query(`plugin::${pluginId}.deploy`).search(params);
+    return strapi.query(`plugin::${pluginId}.${MODEL_NAME}`).search(params);
   },
 
-  /**
-   * Promise to edit record
-   *
-   * @return {Promise}
-   */
+  startNewDeploy: async (
+    data: ICreateDeployDTO,
+    user?: { username: string }
+  ) => {
+    console.log(
+      `STRAPI: plugin::${pluginId}.${MODEL_NAME} -`,
+      strapi.query(`plugin::${pluginId}.${MODEL_NAME}`)
+    );
+    const settings: IDeploySetting[] = await strapi
+      .plugin(pluginId)
+      .service("settings")
+      .find();
+    const currentSetting = settings.find((s) => s.name === data.name);
+    if (!currentSetting)
+      throw new ApplicationError("Odpovídající nastaveni nebylo nalezeno");
 
-  async update(params, data, { files }) {
-    const existingEntry = await strapi
-      .query(`plugin::${pluginId}.deploy`)
-      .findOne(params);
+    const notFinalItems = await strapi
+      .plugin(pluginId)
+      .service(MODEL_NAME)
+      .find({
+        orderBy: { createdAt: "DESC" },
+        where: { isFinal: false, name: data.name },
+      });
+    if (notFinalItems?.length > 0)
+      throw new ApplicationError("Some previous build has isFinal: false");
 
-    const validData = await strapi.entityValidator.validateEntityUpdate(
-      strapi.plugins[pluginId].models.deploy,
-      data,
-      {
-        isDraft: contentTypes.isDraft(
-          existingEntry,
-          strapi.plugins[pluginId].models.deploy
-        ),
-      }
+    console.log("CREATE DEPLOY: ", data);
+
+    const createDeploy: IDeploy = await strapi
+      .query(`plugin::${pluginId}.${MODEL_NAME}`)
+      .create({
+        data: {
+          name: data.name,
+          isFinal: data.isFinal,
+        },
+      });
+
+    console.log("CREATED DEPLOY: ", createDeploy);
+
+    const createStatusMessageBody_init: IDeployStatus = {
+      deploy: { id: createDeploy.id },
+      message: data.message,
+      stage: data.stage,
+      status: data.status,
+      createdBy:
+        typeof data.createdBy === "number"
+          ? data.createdBy
+          : data.createdBy?.id,
+      updatedBy:
+        typeof data.updatedBy === "number"
+          ? data.updatedBy
+          : data.updatedBy?.id,
+    };
+    const { error } = await validateDeployStatus(createStatusMessageBody_init);
+    if (error) throw new ValidationError(error);
+
+    const createStatusMessage_init: IDeployStatus = await strapi
+      .query(`plugin::${pluginId}.deploy-status`)
+      .create({ data: createStatusMessageBody_init });
+    console.log(
+      "CREATE DEPLOY STATUS MESSAGE INIT RESPONSE: ",
+      createStatusMessage_init
     );
 
-    const deployStatus_validData =
-      await strapi.entityValidator.validateEntityCreation(
-        strapi.plugins[pluginId].models.deployStatus,
+    try {
+      const { data: externalServiceResponse } = await axios(
+        currentSetting.deploy,
         {
-          message: data.message,
-          status: data.status,
-          stage: data.stage,
-          deploy: { id: params.id },
-        },
-        {
-          isDraft: contentTypes.isDraft(
-            data,
-            strapi.plugins[pluginId].models.deploy
-          ),
+          params: {
+            release: createDeploy.id,
+          },
+          httpsAgent: new https.Agent({
+            rejectUnauthorized: false,
+          }),
+          headers: {
+            "x-user": user?.username,
+            authorization: process.env.DEPLOY_AUTHORIZATION || "",
+          },
         }
       );
-
-    await strapi
-      .query(`plugin::${pluginId}.deployStatus`)
-      .create(deployStatus_validData);
-
-    const entry = await strapi
-      .query(`plugin::${pluginId}.deploy`)
-      .update(params, validData);
-
-    if (files) {
-      // automatically uploads the files based on the entry and the model
-      await strapi.entityService.uploadFiles(entry, files, {
-        model: "deploy",
-        source: pluginId,
+      console.log("EXTERNAL SERVICE RESPONSE: ", externalServiceResponse);
+      await strapi.query(`plugin::${pluginId}.deploy-status`).create({
+        data: {
+          message: "Spuštěno sestavení aplikace",
+          stage: "BE Strapi",
+          status: "info",
+          deploy: { id: createDeploy.id },
+          createdBy:
+            typeof data.createdBy === "number"
+              ? data.createdBy
+              : data.createdBy?.id,
+          updatedBy:
+            typeof data.updatedBy === "number"
+              ? data.updatedBy
+              : data.updatedBy?.id,
+        },
       });
-      return this.findOne({ id: entry.id });
+    } catch (error) {
+      if (error.response) {
+        // Request made and server responded
+        console.warn("error.response", error.response);
+        console.warn("error.request.headers:::", error.request);
+      } else if (error.request)
+        // The request was made but no response was received
+        console.warn("error.request", error.request);
+      // Something happened in setting up the request that triggered an Error
+      else console.warn("error.message", error.message);
+
+      await strapi.query(`plugin::${pluginId}.deploy-status`).create({
+        data: {
+          message: `Nebylo možné spustit sestavení aplikace: ${error.message}`,
+          stage: "BE Strapi",
+          status: "error",
+          deploy: { id: createDeploy.id },
+          createdBy:
+            typeof data.createdBy === "number"
+              ? data.createdBy
+              : data.createdBy?.id,
+          updatedBy:
+            typeof data.updatedBy === "number"
+              ? data.updatedBy
+              : data.updatedBy?.id,
+        },
+      });
+      const updatedBody = {
+        isFinal: true,
+      };
+      return await strapi
+        .query(`plugin::${pluginId}.${MODEL_NAME}`)
+        .update({ where: { id: createDeploy.id }, data: updatedBody });
     }
 
-    return entry;
+    return createDeploy;
   },
 };
