@@ -17,8 +17,13 @@ import { EmptyStateLayout } from "@strapi/design-system/EmptyStateLayout";
 import { useSettingsData } from "../../hooks/useSettingsData";
 import { useUser } from "../../hooks/useUser";
 import { Illo } from "../../components/Illo";
+import styled from "styled-components";
 
 import { useTranslation } from "../../hooks/useTranslation";
+
+const CustomGridLayout = styled(GridLayout)`
+  grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr));
+`;
 
 const HomePage = () => {
   const { settingsData, isLoading } = useSettingsData();
@@ -49,7 +54,7 @@ const HomePage = () => {
           />
         )}
         <Box padding={8} background="neutral100">
-          <GridLayout>
+          <CustomGridLayout>
             {settingsData.map((entry) => (
               <StageContainer
                 key={entry.id}
@@ -57,7 +62,7 @@ const HomePage = () => {
                 refetchTimer={count}
               />
             ))}
-          </GridLayout>
+          </CustomGridLayout>
         </Box>
       </ContentLayout>
     </>

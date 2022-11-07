@@ -33,7 +33,9 @@ const https = __importStar(require("https"));
 const axios_1 = __importDefault(require("axios"));
 const pluginId_1 = __importDefault(require("../pluginId"));
 const utils_1 = require("@strapi/utils");
-const deploy_status_1 = require("../validators/deploy-status");
+const deploy_status_1 = require("../content-types/deploy-status");
+const deploy_status_2 = require("../validators/deploy-status");
+const random_1 = __importDefault(require("lodash/random"));
 const { ApplicationError, ValidationError } = utils_1.errors;
 const MODEL_NAME = "deploy";
 exports.default = {
@@ -72,7 +74,7 @@ exports.default = {
         return strapi.query(`plugin::${pluginId_1.default}.${MODEL_NAME}`).search(params);
     },
     startNewDeploy: async (data, user) => {
-        var _a, _b, _c, _d, _e, _f;
+        var _a, _b;
         console.log(`STRAPI: plugin::${pluginId_1.default}.${MODEL_NAME} -`, strapi.query(`plugin::${pluginId_1.default}.${MODEL_NAME}`));
         const settings = await strapi
             .plugin(pluginId_1.default)
@@ -100,11 +102,7 @@ exports.default = {
             },
         });
         console.log("CREATED DEPLOY: ", createDeploy);
-        const createStatusMessageBody_init = {
-            deploy: { id: createDeploy.id },
-            message: data.message,
-            stage: data.stage,
-            status: data.status,
+        const userData = {
             createdBy: typeof data.createdBy === "number"
                 ? data.createdBy
                 : (_a = data.createdBy) === null || _a === void 0 ? void 0 : _a.id,
@@ -112,7 +110,14 @@ exports.default = {
                 ? data.updatedBy
                 : (_b = data.updatedBy) === null || _b === void 0 ? void 0 : _b.id,
         };
-        const { error } = await (0, deploy_status_1.validateDeployStatus)(createStatusMessageBody_init);
+        const createStatusMessageBody_init = {
+            deploy: { id: createDeploy.id },
+            message: data.message,
+            stage: data.stage,
+            status: data.status,
+            ...userData,
+        };
+        const { error } = await (0, deploy_status_2.validateDeployStatus)(createStatusMessageBody_init);
         if (error)
             throw new ValidationError(error);
         const createStatusMessage_init = await strapi
@@ -139,14 +144,15 @@ exports.default = {
                     stage: "BE Strapi",
                     status: "info",
                     deploy: { id: createDeploy.id },
-                    createdBy: typeof data.createdBy === "number"
-                        ? data.createdBy
-                        : (_c = data.createdBy) === null || _c === void 0 ? void 0 : _c.id,
-                    updatedBy: typeof data.updatedBy === "number"
-                        ? data.updatedBy
-                        : (_d = data.updatedBy) === null || _d === void 0 ? void 0 : _d.id,
+                    ...userData,
                 },
             });
+            // TODO: just for testing, imitate BE responses that manipulates with strapi DB
+            strapi
+                .plugin(pluginId_1.default)
+                .service("deploy")
+                .generateRandomDeployStatuses(createDeploy.id, (0, random_1.default)(2, 7), userData);
+            // TODO: delete when TEST BE is provided
         }
         catch (error) {
             if (error.response) {
@@ -166,12 +172,7 @@ exports.default = {
                     stage: "BE Strapi",
                     status: "error",
                     deploy: { id: createDeploy.id },
-                    createdBy: typeof data.createdBy === "number"
-                        ? data.createdBy
-                        : (_e = data.createdBy) === null || _e === void 0 ? void 0 : _e.id,
-                    updatedBy: typeof data.updatedBy === "number"
-                        ? data.updatedBy
-                        : (_f = data.updatedBy) === null || _f === void 0 ? void 0 : _f.id,
+                    ...userData,
                 },
             });
             const updatedBody = {
@@ -182,5 +183,40 @@ exports.default = {
                 .update({ where: { id: createDeploy.id }, data: updatedBody });
         }
         return createDeploy;
+    },
+    // TODO: delete function when TEST BE is provided
+    generateRandomDeployStatuses: async (id, count, userData) => {
+        const statuses = [
+            deploy_status_1.DeployStatusEnum.info,
+            deploy_status_1.DeployStatusEnum.error,
+            deploy_status_1.DeployStatusEnum.warning,
+        ];
+        const stages = ["DOCKER", "GitLab", "NUXT", "NEXT"];
+        for (let i = 0; i < count; i++) {
+            await new Promise((resolve) => setTimeout(resolve, (0, random_1.default)(1, 5) * 1000));
+            const randomStatus = statuses[(0, random_1.default)(0, statuses.length - 1)];
+            const randomStage = stages[(0, random_1.default)(0, stages.length - 1)];
+            const createStatusMessageBody = {
+                deploy: { id },
+                message: `Random message ${(0, random_1.default)(1, 1000)}`,
+                stage: randomStage,
+                status: randomStatus,
+                ...userData,
+            };
+            const { error } = await (0, deploy_status_2.validateDeployStatus)(createStatusMessageBody);
+            if (error)
+                return new ValidationError(error);
+            const createStatusMessage = await strapi
+                .query(`plugin::${pluginId_1.default}.deploy-status`)
+                .create({ data: createStatusMessageBody });
+            console.log("CREATE DEPLOY STATUS MESSAGE RESPONSE: ", createStatusMessage);
+        }
+        // update deploy by id, with isFinish: true
+        const updatedBody = {
+            isFinal: true,
+        };
+        return await strapi
+            .query(`plugin::${pluginId_1.default}.${MODEL_NAME}`)
+            .update({ where: { id }, data: updatedBody });
     },
 };

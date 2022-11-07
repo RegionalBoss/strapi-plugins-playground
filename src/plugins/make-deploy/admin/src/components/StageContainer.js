@@ -9,7 +9,7 @@ import {
   Typography,
 } from "@strapi/design-system";
 
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 
 import {
   faExclamationCircle,
@@ -40,6 +40,21 @@ const WaitingForNextRow = styled.span`
   margin-top: 1rem;
   display: flex;
   justify-content: center;
+`;
+
+const animateSlideUp = keyframes`
+  from {
+    transform: translateY(1rem);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+`;
+
+const AnimatedStatusCard = styled(Card)`
+  animation: ${animateSlideUp} 0.5s ease-in-out;
 `;
 
 const STAGE_STATUS_ICON = {
@@ -110,7 +125,7 @@ export function StageContainer({ deploySetting, refetchTimer }) {
               </small>
             </Typography>
             {deploy.deployStatuses?.map((deployStatus) => (
-              <Card
+              <AnimatedStatusCard
                 id={`${deployStatus.id}`}
                 key={deployStatus.id}
                 style={{ marginBottom: "0.5rem" }}
@@ -134,7 +149,7 @@ export function StageContainer({ deploySetting, refetchTimer }) {
                       STAGE_STATUS_ICON.info}
                   </Box>
                 </StageCardBody>
-              </Card>
+              </AnimatedStatusCard>
             ))}
             {deploy.isFinal ? (
               <WaitingForNextRow>
