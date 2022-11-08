@@ -23,7 +23,10 @@ export const useDeploy = () => {
       }
       return data;
     } catch (error) {
-      showNotification(error.message, "warning");
+      showNotification(
+        error?.response?.data?.error?.message ?? error.message,
+        "warning"
+      );
       return [];
     } finally {
       setLoading(false);

@@ -57,8 +57,7 @@ export default {
       createdBy: ctx.state.user,
       updatedBy: ctx.state.user,
     };
-    // TODO: získaní roli uživatele, a práce s permissions
-    // const roleID = ctx.state.user.roles;
+
     const createDeployBody: ICreateDeployDTO = {
       ...ctx.request.body,
       ...userObject,

@@ -9,10 +9,14 @@ import {
   TextInput,
   Box,
   Loader,
+  Select,
+  Option,
 } from "@strapi/design-system";
 import { settingsRequests } from "../../api/settings";
 import { useTranslation } from "../../hooks/useTranslation";
 import { useNotification } from "@strapi/helper-plugin";
+import { axiosInstance } from "../../utils/axiosInstance";
+import { useRoles } from "../../hooks/useRoles";
 
 const FORM_VALUES = [
   {
@@ -47,6 +51,7 @@ export const FormModal = ({
 }) => {
   const { formatMessage } = useTranslation();
   const [status, setStatus] = useState();
+  const { roles } = useRoles();
   const [formValues, setFormValues] = useState(values);
   const [formErrors, setFormErrors] = useState({});
   const toggleNotification = useNotification();
@@ -59,8 +64,14 @@ export const FormModal = ({
 
   const getError = (name) => {
     const value = formValues[name];
-    const valueSettings = FORM_VALUES.find((v) => v.name === name);
-    if (valueSettings.required && !value?.trim().length) {
+    const valueSettings = [
+      ...FORM_VALUES,
+      { name: "roles", required: true },
+    ].find((v) => v.name === name);
+    if (
+      valueSettings.required &&
+      !(Array.isArray(value) ? value.length : value?.trim().length)
+    ) {
       const message = "Pole je povinné";
       setFormErrors((prev) => ({ ...prev, [name]: message }));
       return message;
@@ -71,9 +82,9 @@ export const FormModal = ({
 
   const isInvalid = () => {
     const invalid =
-      typeof FORM_VALUES.map((entry) => getError(entry.name)).find(
-        (res) => res !== null
-      ) !== "undefined";
+      typeof [...FORM_VALUES, { name: "roles", required: true }]
+        .map((entry) => getError(entry.name))
+        .find((res) => res !== null) !== "undefined";
     return invalid;
   };
 
@@ -99,6 +110,8 @@ export const FormModal = ({
       }
     }
   };
+
+  console.log("formErrors", formErrors);
 
   return (
     <ModalLayout
@@ -127,6 +140,34 @@ export const FormModal = ({
             />
           </Box>
         ))}
+        <Box>
+          <Select
+            id="select-roles"
+            label="Role"
+            placeholder="Vyberte role"
+            onClear={() =>
+              handleValueChange({ target: { name: "roles", value: [] } })
+            }
+            name="roles"
+            error={formErrors["roles"]}
+            value={formValues["roles"] ?? []}
+            onChange={(val) =>
+              handleValueChange({ target: { name: "roles", value: val } })
+            }
+            // customizeContent={(values) =>
+            //   `${values.length} currently selected`
+            // }
+            required
+            multi
+            withTags
+          >
+            {roles?.map((role) => (
+              <Option key={role.id} value={role.id}>
+                {role.name}
+              </Option>
+            ))}
+          </Select>
+        </Box>
       </ModalBody>
       <ModalFooter
         startActions={

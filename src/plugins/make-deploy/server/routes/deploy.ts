@@ -11,7 +11,6 @@ export default {
       handler: "deploy.find",
       config: {
         // policies: [["admin::hasPermissions", ["plugins::make-deploy.read"]]],
-        auth: false,
       },
     },
     {
@@ -20,13 +19,13 @@ export default {
       handler: "deploy.findOne",
       config: {
         // policies: [["admin::hasPermissions", ["plugins::make-deploy.read"]]],
-        auth: false,
       },
     },
     {
       method: "POST",
       path: "/deploy",
       handler: "deploy.startNewDeploy",
+      config: {},
     },
   ],
 };

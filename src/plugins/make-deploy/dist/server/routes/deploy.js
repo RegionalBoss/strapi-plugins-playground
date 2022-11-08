@@ -11,8 +11,7 @@ exports.default = {
             path: "/deploy",
             handler: "deploy.find",
             config: {
-                // policies: [["admin::hasPermissions", ["plugins::make-deploy.read"]]],
-                auth: false,
+            // policies: [["admin::hasPermissions", ["plugins::make-deploy.read"]]],
             },
         },
         {
@@ -20,14 +19,14 @@ exports.default = {
             path: "/deploy/:id",
             handler: "deploy.findOne",
             config: {
-                // policies: [["admin::hasPermissions", ["plugins::make-deploy.read"]]],
-                auth: false,
+            // policies: [["admin::hasPermissions", ["plugins::make-deploy.read"]]],
             },
         },
         {
             method: "POST",
             path: "/deploy",
             handler: "deploy.startNewDeploy",
+            config: {},
         },
     ],
 };

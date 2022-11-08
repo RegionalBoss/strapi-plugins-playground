@@ -3,6 +3,7 @@
  * A set of functions called "actions" for `settings`
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+const settings_1 = require("../validators/settings");
 exports.default = {
     find: async (ctx) => {
         try {
@@ -14,6 +15,9 @@ exports.default = {
     },
     create: async (ctx) => {
         const { body } = ctx.request;
+        const { error } = await (0, settings_1.validateSettings)(body);
+        if (error)
+            return ctx.badRequest("ValidationError", { errors: error });
         try {
             ctx.body = await strapi
                 .plugin("make-deploy")
@@ -26,6 +30,9 @@ exports.default = {
     },
     updateOne: async (ctx) => {
         const { body } = ctx.request;
+        const { error } = await (0, settings_1.validateSettings)(body);
+        if (error)
+            return ctx.badRequest("ValidationError", { errors: error });
         try {
             ctx.body = await strapi
                 .plugin("make-deploy")

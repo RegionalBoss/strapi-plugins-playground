@@ -2,6 +2,8 @@
  * A set of functions called "actions" for `settings`
  */
 
+import { validateSettings } from "../validators/settings";
+
 export default {
   find: async (ctx) => {
     try {
@@ -12,6 +14,8 @@ export default {
   },
   create: async (ctx) => {
     const { body } = ctx.request;
+    const { error } = await validateSettings(body);
+    if (error) return ctx.badRequest("ValidationError", { errors: error });
     try {
       ctx.body = await strapi
         .plugin("make-deploy")
@@ -23,6 +27,8 @@ export default {
   },
   updateOne: async (ctx) => {
     const { body } = ctx.request;
+    const { error } = await validateSettings(body);
+    if (error) return ctx.badRequest("ValidationError", { errors: error });
     try {
       ctx.body = await strapi
         .plugin("make-deploy")

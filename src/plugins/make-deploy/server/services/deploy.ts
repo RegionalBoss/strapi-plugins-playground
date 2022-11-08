@@ -14,6 +14,7 @@ import {
 } from "../content-types/deploy-status";
 import { validateDeployStatus } from "../validators/deploy-status";
 import random from "lodash/random";
+import intersection from "lodash/intersection";
 
 const { ApplicationError, ValidationError } = errors;
 
@@ -60,7 +61,7 @@ export default {
 
   startNewDeploy: async (
     data: ICreateDeployDTO,
-    user?: { username: string }
+    user?: { username: string; roles: [{ id: number }] }
   ) => {
     console.log(
       `STRAPI: plugin::${pluginId}.${MODEL_NAME} -`,
@@ -73,7 +74,14 @@ export default {
     const currentSetting = settings.find((s) => s.name === data.name);
     if (!currentSetting)
       throw new ApplicationError("Odpovídající nastaveni nebylo nalezeno");
-
+    if (
+      intersection(
+        (currentSetting && currentSetting.roles) || [],
+        (user.roles || []).map((role) => role.id)
+      ).length === 0
+    ) {
+      throw new ApplicationError("Account is not authorized to run this build");
+    }
     const notFinalItems = await strapi
       .plugin(pluginId)
       .service(MODEL_NAME)

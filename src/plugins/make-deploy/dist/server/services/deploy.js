@@ -36,6 +36,7 @@ const utils_1 = require("@strapi/utils");
 const deploy_status_1 = require("../content-types/deploy-status");
 const deploy_status_2 = require("../validators/deploy-status");
 const random_1 = __importDefault(require("lodash/random"));
+const intersection_1 = __importDefault(require("lodash/intersection"));
 const { ApplicationError, ValidationError } = utils_1.errors;
 const MODEL_NAME = "deploy";
 exports.default = {
@@ -83,6 +84,9 @@ exports.default = {
         const currentSetting = settings.find((s) => s.name === data.name);
         if (!currentSetting)
             throw new ApplicationError("Odpovídající nastaveni nebylo nalezeno");
+        if ((0, intersection_1.default)((currentSetting && currentSetting.roles) || [], (user.roles || []).map((role) => role.id)).length === 0) {
+            throw new ApplicationError("Account is not authorized to run this build");
+        }
         const notFinalItems = await strapi
             .plugin(pluginId_1.default)
             .service(MODEL_NAME)

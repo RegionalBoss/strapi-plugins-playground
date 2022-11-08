@@ -13,6 +13,7 @@ import {
   ContentLayout,
   GridLayout,
 } from "@strapi/design-system";
+import intersection from "lodash/intersection";
 import { EmptyStateLayout } from "@strapi/design-system/EmptyStateLayout";
 import { useSettingsData } from "../../hooks/useSettingsData";
 import { useUser } from "../../hooks/useUser";
@@ -55,13 +56,21 @@ const HomePage = () => {
         )}
         <Box padding={8} background="neutral100">
           <CustomGridLayout>
-            {settingsData.map((entry) => (
-              <StageContainer
-                key={entry.id}
-                deploySetting={entry}
-                refetchTimer={count}
-              />
-            ))}
+            {settingsData
+              .filter(
+                (setting) =>
+                  intersection(
+                    ((user && user.roles) || []).map((role) => role.id),
+                    (setting && setting.roles) || []
+                  ).length > 0
+              )
+              .map((entry) => (
+                <StageContainer
+                  key={entry.id}
+                  deploySetting={entry}
+                  refetchTimer={count}
+                />
+              ))}
           </CustomGridLayout>
         </Box>
       </ContentLayout>
