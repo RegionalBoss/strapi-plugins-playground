@@ -2,6 +2,7 @@
  *  service
  */
 
-import { factories } from '@strapi/strapi';
+import { factories } from "@strapi/strapi";
+import pluginId from "../pluginId";
 
-export default factories.createCoreService('plugin::make-deploy.deploy-status');
+export default factories.createCoreService(`plugin::${pluginId}.deploy-status`);

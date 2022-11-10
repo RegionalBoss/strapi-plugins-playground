@@ -52,7 +52,10 @@ export const FormModal = ({
   const { formatMessage } = useTranslation();
   const [status, setStatus] = useState();
   const { roles } = useRoles();
-  const [formValues, setFormValues] = useState(values);
+  const [formValues, setFormValues] = useState({
+    ...values,
+    roles: values.roles?.map((r) => r.id) ?? [],
+  });
   const [formErrors, setFormErrors] = useState({});
   const toggleNotification = useNotification();
 
@@ -96,8 +99,18 @@ export const FormModal = ({
       try {
         setStatus("loading");
         await (isUpdate
-          ? settingsRequests.updateSetting(formValues.id, formValues)
-          : settingsRequests.setSettings(formValues));
+          ? settingsRequests.updateSetting(formValues.id, {
+              ...formValues,
+              roles: formValues.roles
+                .map((r) => roles.find((role) => role.id === r))
+                .filter((r) => r !== undefined),
+            })
+          : settingsRequests.setSettings({
+              ...formValues,
+              roles: formValues.roles
+                .map((r) => roles.find((role) => role.id === r))
+                .filter((r) => r !== undefined),
+            }));
         setStatus("success");
         toggleNotification({
           type: "success",
@@ -110,8 +123,6 @@ export const FormModal = ({
       }
     }
   };
-
-  console.log("formErrors", formErrors);
 
   return (
     <ModalLayout

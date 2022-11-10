@@ -84,7 +84,7 @@ exports.default = {
         const currentSetting = settings.find((s) => s.name === data.name);
         if (!currentSetting)
             throw new ApplicationError("Odpovídající nastaveni nebylo nalezeno");
-        if ((0, intersection_1.default)((currentSetting && currentSetting.roles) || [], (user.roles || []).map((role) => role.id)).length === 0) {
+        if ((0, intersection_1.default)(((currentSetting && currentSetting.roles) || []).map((role) => role.id), (user.roles || []).map((role) => role.id)).length === 0) {
             throw new ApplicationError("Account is not authorized to run this build");
         }
         const notFinalItems = await strapi

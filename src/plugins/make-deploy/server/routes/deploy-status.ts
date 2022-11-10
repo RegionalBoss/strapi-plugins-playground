@@ -2,6 +2,7 @@
  *  router
  */
 
-import { factories } from '@strapi/strapi';
+import { factories } from "@strapi/strapi";
+import pluginId from "../pluginId";
 
-export default factories.createCoreRouter('plugin::make-deploy.deploy-status');
+export default factories.createCoreRouter(`plugin::${pluginId}.deploy-status`);

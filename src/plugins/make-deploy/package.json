@@ -1,12 +1,16 @@
 {
-  "name": "make-deploy",
-  "version": "0.0.0",
+  "name": "@regionalboss/strapi-plugin-make-deploy",
+  "version": "1.0.0",
   "description": "This is the description of the plugin.",
   "strapi": {
     "name": "make-deploy",
     "description": "Description of make-deploy plugin",
     "kind": "plugin",
     "icon": "plug"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RegionalBoss/strapi-plugins-playground"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.2.0",
@@ -20,13 +24,9 @@
     "@types/uuid": "^8.3.4",
     "typescript": "4.6.3"
   },
-  "author": {
-    "name": "A Strapi developer"
-  },
+  "author": "RegionalBoss <eduard.karbovanec@gmail.com>",
   "maintainers": [
-    {
-      "name": "A Strapi developer"
-    }
+    "RegionalBoss <eduard.karbovanec@gmail.com>"
   ],
   "engines": {
     "node": ">=14.19.1 <=18.x.x",
@@ -37,5 +37,10 @@
     "dev": "tsc -w",
     "build": "tsc"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/RegionalBoss/strapi-plugin-todo/issues"
+  },
+  "homepage": "https://github.com/RegionalBoss/strapi-plugin-todo#readme",
+  "main": "strapi-admin.js"
 }

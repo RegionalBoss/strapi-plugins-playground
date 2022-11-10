@@ -76,7 +76,7 @@ export default {
       throw new ApplicationError("Odpovídající nastaveni nebylo nalezeno");
     if (
       intersection(
-        (currentSetting && currentSetting.roles) || [],
+        ((currentSetting && currentSetting.roles) || []).map((role) => role.id),
         (user.roles || []).map((role) => role.id)
       ).length === 0
     ) {

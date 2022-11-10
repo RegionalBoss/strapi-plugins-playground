@@ -2,12 +2,13 @@
  * A set of functions called "actions" for `settings`
  */
 
+import pluginId from "../pluginId";
 import { validateSettings } from "../validators/settings";
 
 export default {
   find: async (ctx) => {
     try {
-      ctx.body = await strapi.plugin("make-deploy").service("settings").find();
+      ctx.body = await strapi.plugin(pluginId).service("settings").find();
     } catch (err) {
       ctx.throw(500, err);
     }
@@ -17,10 +18,7 @@ export default {
     const { error } = await validateSettings(body);
     if (error) return ctx.badRequest("ValidationError", { errors: error });
     try {
-      ctx.body = await strapi
-        .plugin("make-deploy")
-        .service("settings")
-        .create(body);
+      ctx.body = await strapi.plugin(pluginId).service("settings").create(body);
     } catch (err) {
       ctx.throw(500, err);
     }
@@ -31,7 +29,7 @@ export default {
     if (error) return ctx.badRequest("ValidationError", { errors: error });
     try {
       ctx.body = await strapi
-        .plugin("make-deploy")
+        .plugin(pluginId)
         .service("settings")
         .updateOne(ctx.params.id, body);
     } catch (err) {
@@ -41,7 +39,7 @@ export default {
   deleteOne: async (ctx) => {
     try {
       ctx.body = await strapi
-        .plugin("make-deploy")
+        .plugin(pluginId)
         .service("settings")
         .deleteOne(ctx.params.id);
     } catch (err) {

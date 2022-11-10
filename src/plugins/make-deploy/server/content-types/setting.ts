@@ -3,5 +3,11 @@ export interface IDeploySetting {
   deploy: string;
   link: string;
   id: string;
-  roles: number[];
+  roles: {
+    id: number;
+    name: string;
+    code: string;
+    description: string;
+    [x: string]: unknown;
+  }[];
 }

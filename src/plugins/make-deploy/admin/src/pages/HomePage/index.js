@@ -61,7 +61,7 @@ const HomePage = () => {
                 (setting) =>
                   intersection(
                     ((user && user.roles) || []).map((role) => role.id),
-                    (setting && setting.roles) || []
+                    ((setting && setting.roles) || []).map((role) => role.id)
                   ).length > 0
               )
               .map((entry) => (
