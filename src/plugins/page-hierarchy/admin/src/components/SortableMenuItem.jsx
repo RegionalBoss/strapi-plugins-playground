@@ -73,24 +73,36 @@ const TreeItem = React.forwardRef(
     ref
   ) => {
     return (
-      <Box
-        padding={4}
-        hasRadius
-        background="neutral0"
-        shadow="tableShadow"
+      <div
         ref={wrapperRef}
         style={{
           marginBottom: "0.5rem",
           "--spacing": `${indentationWidth * depth}px`,
-          marginLeft: "var(--spacing)",
+          paddingLeft: clone ? "0.5rem" : "var(--spacing)",
+          paddingTop: clone ? "0.3rem" : "0",
+          maxWidth: clone ? "30%" : "100%",
+          maxHeight: clone ? "1.2rem" : "100%",
+          opacity: ghost ? 0.5 : 1,
+          marginLeft: clone ? "0.2rem" : 0,
         }}
-        {...props}
       >
-        <LeftItemDiv ref={ref} style={style}>
-          <Handle {...handleProps}></Handle>
-          <Typography as="h3">{value}</Typography>
-        </LeftItemDiv>
-      </Box>
+        <Box
+          padding={4}
+          hasRadius
+          background="neutral0"
+          shadow="tableShadow"
+          ref={ref}
+          style={style}
+          {...props}
+        >
+          <LeftItemDiv>
+            <Handle {...handleProps}></Handle>
+            <Typography as="h3" style={{ marginLeft: "1rem" }}>
+              {value}
+            </Typography>
+          </LeftItemDiv>
+        </Box>
+      </div>
     );
   }
 );
@@ -106,8 +118,8 @@ const Handle = React.forwardRef((props, ref) => {
       <Typography
         as="span"
         style={{
-          marginRight: "1rem",
           fontSize: "0.8rem",
+          padding: "0 0.5rem",
         }}
       >
         <FontAwesomeIcon icon={faGripVertical} />

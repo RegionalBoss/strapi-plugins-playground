@@ -3,7 +3,6 @@ import { arrayMove } from "@dnd-kit/sortable";
 function getDragDepth(offset, indentationWidth) {
   return Math.round(offset / indentationWidth);
 }
-
 function getMaxDepth({ previousItem }) {
   if (previousItem) {
     return previousItem.depth + 1;
@@ -11,7 +10,6 @@ function getMaxDepth({ previousItem }) {
 
   return 0;
 }
-
 function getMinDepth({ nextItem }) {
   if (nextItem) {
     return nextItem.depth;
@@ -19,7 +17,6 @@ function getMinDepth({ nextItem }) {
 
   return 0;
 }
-
 function flatten(items = [], parentId = null, depth = 0) {
   return items.reduce((acc, item, index) => {
     return [
@@ -117,7 +114,7 @@ export function setProperty(items, id, property, setter) {
 
 export function findItemDeep(items = [], itemId) {
   for (const item of items) {
-    const { id, children } = item;
+    const { id, children = [] } = item;
 
     if (id === itemId) {
       return item;
@@ -136,12 +133,12 @@ export function findItemDeep(items = [], itemId) {
 }
 
 export function buildTree(flattenedItems) {
-  const root = { id: "root", children: [] };
+  const root = { id: 0, children: [] };
   const nodes = { [root.id]: root };
   const items = flattenedItems.map((item) => ({ ...item, children: [] }));
 
   for (const item of items) {
-    const { id, children } = item;
+    const { id, children = [] } = item;
     const parentId = item.parentId ?? root.id;
     const parent = nodes[parentId] ?? findItem(items, parentId);
 
@@ -155,9 +152,8 @@ export function buildTree(flattenedItems) {
 export function findItem(items, itemId) {
   return items.find(({ id }) => id === itemId);
 }
-
 function countChildren(items = [], count = 0) {
-  return items.reduce((acc, { children }) => {
+  return items.reduce((acc, { children = [] }) => {
     if (children.length) {
       return countChildren(children, acc + 1);
     }
