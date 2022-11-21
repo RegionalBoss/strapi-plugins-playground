@@ -10,17 +10,20 @@ import { Switch, Route } from "react-router-dom";
 import { NotFound } from "@strapi/helper-plugin";
 import pluginId from "../../pluginId";
 import HomePage from "../HomePage";
-import { EditViewContextProvider } from "../../lib/EditViewContext";
+import { EditViewContextProvider } from "../../lib/contexts/EditViewContext";
+import { ConfirmDialogProvider } from "../../lib/contexts/ConfirmDialogContext";
 
 const App = () => {
   return (
     <div>
-      <EditViewContextProvider>
-        <Switch>
-          <Route path={`/plugins/${pluginId}`} component={HomePage} exact />
-          <Route component={NotFound} />
-        </Switch>
-      </EditViewContextProvider>
+      <ConfirmDialogProvider>
+        <EditViewContextProvider>
+          <Switch>
+            <Route path={`/plugins/${pluginId}`} component={HomePage} exact />
+            <Route component={NotFound} />
+          </Switch>
+        </EditViewContextProvider>
+      </ConfirmDialogProvider>
     </div>
   );
 };

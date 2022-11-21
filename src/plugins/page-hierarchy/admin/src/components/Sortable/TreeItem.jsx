@@ -1,10 +1,9 @@
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import { faGripVertical } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Box, Typography } from "@strapi/design-system";
 import React from "react";
 import styled from "styled-components";
+import { EditViewContext } from "../../lib/contexts/EditViewContext";
 
 const LeftItemDiv = styled.div`
   display: flex;
@@ -12,47 +11,34 @@ const LeftItemDiv = styled.div`
   align-items: center;
 `;
 
-const animateLayoutChanges = ({ isSorting, wasDragging }) =>
-  isSorting || wasDragging ? false : true;
+const Container = styled.div`
+  position: relative;
+  margin-bottom: 0.5rem;
+  padding-left: ${({ clone }) => (clone ? "0.5rem" : "var(--spacing)")};
+  padding-top: ${({ clone }) => (clone ? "0.3rem" : "0")};
+  max-width: ${({ clone }) => (clone ? "30%" : "100%")};
+  max-height: ${({ clone }) => (clone ? "1.2rem" : "100%")};
+  opacity: ${({ ghost }) => (ghost ? 0.5 : 1)};
+  margin-left: ${({ clone }) => (clone ? "0.2rem" : 0)};
+`;
 
-export const SortableMenuItem = ({ id, depth, ...props }) => {
-  const {
-    attributes,
-    isDragging,
-    isSorting,
-    listeners,
-    setDraggableNodeRef,
-    setDroppableNodeRef,
-    transform,
-    transition,
-  } = useSortable({
-    id,
-    animateLayoutChanges,
-  });
+const Count = styled.span`
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: ${({ theme }) => theme.colors.primary600};
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #fff;
+`;
 
-  const style = {
-    transform: CSS.Translate.toString(transform),
-    transition,
-  };
-
-  return (
-    <TreeItem
-      ref={setDraggableNodeRef}
-      wrapperRef={setDroppableNodeRef}
-      style={style}
-      depth={depth}
-      ghost={isDragging}
-      disableInteraction={isSorting}
-      handleProps={{
-        ...attributes,
-        ...listeners,
-      }}
-      {...props}
-    />
-  );
-};
-
-const TreeItem = React.forwardRef(
+export const TreeItem = React.forwardRef(
   (
     {
       childCount,
@@ -72,19 +58,13 @@ const TreeItem = React.forwardRef(
     },
     ref
   ) => {
+    const { isEditMode } = React.useContext(EditViewContext);
     return (
-      <div
+      <Container
         ref={wrapperRef}
-        style={{
-          marginBottom: "0.5rem",
-          "--spacing": `${indentationWidth * depth}px`,
-          paddingLeft: clone ? "0.5rem" : "var(--spacing)",
-          paddingTop: clone ? "0.3rem" : "0",
-          maxWidth: clone ? "30%" : "100%",
-          maxHeight: clone ? "1.2rem" : "100%",
-          opacity: ghost ? 0.5 : 1,
-          marginLeft: clone ? "0.2rem" : 0,
-        }}
+        style={{ "--spacing": `${indentationWidth * depth}px` }}
+        clone={clone}
+        ghost={ghost}
       >
         <Box
           padding={4}
@@ -96,17 +76,19 @@ const TreeItem = React.forwardRef(
           {...props}
         >
           <LeftItemDiv>
-            <Handle {...handleProps}></Handle>
+            {isEditMode ? <Handle {...handleProps} /> : null}
             <Typography as="h3" style={{ marginLeft: "1rem" }}>
-              {value}
+              {value.name}
             </Typography>
           </LeftItemDiv>
+          {clone && childCount && childCount > 1 ? (
+            <Count>{childCount}</Count>
+          ) : null}
         </Box>
-      </div>
+      </Container>
     );
   }
 );
-
 const Handle = React.forwardRef((props, ref) => {
   return (
     <button

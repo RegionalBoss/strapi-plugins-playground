@@ -17,14 +17,14 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import React from "react";
 import { createPortal } from "react-dom";
-import { EditViewContext } from "../lib/EditViewContext";
+import { EditViewContext } from "../../lib/contexts/EditViewContext";
 import {
   buildTree,
   flattenTree,
   getChildCount,
   getProjection,
   removeChildrenOf,
-} from "../utils/sortableTree";
+} from "../../utils/sortableTree";
 import { SortableMenuItem } from "./SortableMenuItem";
 
 const indentationWidth = 50;
@@ -110,17 +110,19 @@ export const SortableMenu = React.memo(() => {
       onDragCancel={handleDragCancel}
     >
       <SortableContext items={sortedIds} strategy={verticalListSortingStrategy}>
-        {flattenedItems.map(({ id, depth }) => (
-          <SortableMenuItem
-            key={id}
-            id={id}
-            value={id}
-            depth={id === activeId && projected ? projected.depth : depth}
-            indentationWidth={indentationWidth}
-            onRemove={() => handleRemove(id)}
-          />
-        ))}
-        {/* <SortableMenu items={flattenedItems} /> */}
+        {flattenedItems.map((item) => {
+          const { id, depth } = item;
+          return (
+            <SortableMenuItem
+              key={id}
+              id={id}
+              value={item}
+              depth={id === activeId && projected ? projected.depth : depth}
+              indentationWidth={indentationWidth}
+              onRemove={() => handleRemove(id)}
+            />
+          );
+        })}
         {createPortal(
           <DragOverlay dropAnimation={dropAnimationConfig}>
             {activeId && activeItem ? (
@@ -129,7 +131,7 @@ export const SortableMenu = React.memo(() => {
                 depth={activeItem.depth}
                 clone
                 childCount={getChildCount(items, activeId) + 1}
-                value={activeId.toString()}
+                value={activeItem}
                 indentationWidth={indentationWidth}
               />
             ) : null}
@@ -139,14 +141,6 @@ export const SortableMenu = React.memo(() => {
       </SortableContext>
     </DndContext>
   );
-
-  function handleCollapse(id) {
-    setItems((items) =>
-      setProperty(items, id, "collapsed", (value) => {
-        return !value;
-      })
-    );
-  }
 
   function handleRemove(id) {
     console.log("REMOVE", id);

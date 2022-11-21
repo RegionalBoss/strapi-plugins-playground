@@ -1,13 +1,17 @@
 import React, { useState } from "react";
-import pluginId from "../pluginId";
-import { axiosInstance } from "../utils/axiosInstance";
+import pluginId from "../../pluginId";
+import { axiosInstance } from "../../utils/axiosInstance";
 
-export const EditViewContext = React.createContext({});
+export const EditViewContext = React.createContext({
+  isEditMode: false,
+  items: [],
+  pages: [],
+});
 
 export const EditViewContextProvider = ({ children }) => {
   const [items, setItems] = useState([]);
   const [pages, setPages] = useState([]);
-  const [isEditView, setIsEditView] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   React.useEffect(async () => {
     try {
@@ -23,9 +27,17 @@ export const EditViewContextProvider = ({ children }) => {
     }
   }, []);
 
+  const toggleEditMode = () => setIsEditMode((prev) => !prev);
+
   return (
     <EditViewContext.Provider
-      value={{ isEditView, setIsEditView, items, setItems, pages }}
+      value={{
+        isEditMode,
+        toggleEditMode,
+        items,
+        setItems,
+        pages,
+      }}
     >
       {children}
     </EditViewContext.Provider>
