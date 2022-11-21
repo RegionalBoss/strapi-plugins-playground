@@ -1,0 +1,23 @@
+{
+  "kind": "collectionType",
+  "collectionName": "audit_log",
+  "info": {
+    "singularName": "audit-log",
+    "pluralName": "audit-logs",
+    "displayName": "AuditLog",
+    "name": "auditLog"
+  },
+  "options": {
+    "timestamps": true,
+    "increments": true,
+    "comment": ""
+  },
+  "attributes": {
+    "type": {
+      "type": "string"
+    },
+    "data_log": {
+      "type": "json"
+    }
+  }
+}

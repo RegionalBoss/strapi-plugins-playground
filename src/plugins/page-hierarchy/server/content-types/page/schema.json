@@ -1,0 +1,36 @@
+{
+  "kind": "collectionType",
+  "collectionName": "pages",
+  "info": {
+    "singularName": "page",
+    "pluralName": "pages",
+    "displayName": "Page",
+    "name": "page"
+  },
+  "options": {
+    "timestamps": true,
+    "increments": true,
+    "comment": ""
+  },
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "slug": {
+      "type": "string"
+    },
+    "visible_from": {
+      "type": "date"
+    },
+    "visible_to": {
+      "type": "date"
+    },
+    "publication_state": {
+      "type": "enumeration",
+      "enum": [
+        "draft",
+        "published"
+      ]
+    }
+  }
+}

@@ -8,6 +8,8 @@ import axios from "axios";
 import https from "https";
 import { validateCreateDeploy } from "../validators/deploy";
 import { ICreateDeployDTO, IDeploy } from "../content-types/deploy";
+import { factories } from "@strapi/strapi";
+import { Context } from "koa";
 
 const SERVICE = "deploy";
 
@@ -18,7 +20,7 @@ export default {
    * @return {Array}
    */
 
-  async find(ctx): Promise<IDeploy[]> {
+  async find(ctx: Context): Promise<IDeploy[]> {
     const entities = ctx.query._q
       ? await strapi.plugin(pluginId).service(SERVICE).search(ctx.query)
       : await strapi.plugin(pluginId).service(SERVICE).find(ctx.query);
@@ -31,7 +33,7 @@ export default {
    * @return {Object}
    */
 
-  async findOne(ctx): Promise<IDeploy> {
+  async findOne(ctx: Context): Promise<IDeploy> {
     const { id } = ctx.params;
 
     const entity = await strapi.plugin(pluginId).service(SERVICE).findOne({
@@ -45,14 +47,14 @@ export default {
    * @return {Number}
    */
 
-  count(ctx) {
+  count(ctx: Context) {
     if (ctx.query._q) {
       return strapi.plugin(pluginId).service(SERVICE).countSearch(ctx.query);
     }
     return strapi.plugin(pluginId).service(SERVICE).count(ctx.query);
   },
 
-  async startNewDeploy(ctx) {
+  async startNewDeploy(ctx: Context) {
     const userObject = {
       createdBy: ctx.state.user,
       updatedBy: ctx.state.user,

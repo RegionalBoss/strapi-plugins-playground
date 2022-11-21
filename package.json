@@ -4,15 +4,21 @@
   "version": "0.1.0",
   "description": "A Strapi application",
   "scripts": {
-    "build-slugify": "cd src/plugins/slugify && yarn build && cd ../../..",
     "dev": "yarn build && yarn develop --watch-admin",
     "develop": "strapi develop",
     "start": "strapi start",
     "build": "strapi build",
     "strapi": "strapi"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "react-dnd": "10.0.2",
+    "react-dnd-html5-backend": "10.0.2"
+  },
   "dependencies": {
+    "@buffetjs/core": "^3.3.8",
+    "@buffetjs/custom": "^3.3.8",
+    "@buffetjs/hooks": "^3.3.8",
+    "@buffetjs/styles": "^3.3.8",
     "@strapi/plugin-i18n": "4.4.6",
     "@strapi/plugin-users-permissions": "4.4.6",
     "@strapi/strapi": "4.4.6",
@@ -26,7 +32,7 @@
     "uuid": "c3456380-1507-4b9e-9d37-b293c2335bd5"
   },
   "engines": {
-    "node": ">=12.x.x <=16.x.x",
+    "node": ">=12.x.x <=18.x.x",
     "npm": ">=6.0.0"
   },
   "license": "MIT"

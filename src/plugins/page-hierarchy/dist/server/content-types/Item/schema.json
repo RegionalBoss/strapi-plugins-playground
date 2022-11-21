@@ -1,0 +1,72 @@
+{
+    "kind": "collectionType",
+    "collectionName": "items",
+    "info": {
+        "singularName": "item",
+        "pluralName": "items",
+        "displayName": "Item",
+        "name": "Item"
+    },
+    "options": {
+        "timestamps": true,
+        "increments": true,
+        "comment": ""
+    },
+    "attributes": {
+        "name": {
+            "type": "string"
+        },
+        "absolute_link_url": {
+            "type": "string"
+        },
+        "page": {
+            "type": "relation",
+            "relation": "oneToOne",
+            "target": "plugin::page-hierarchy.page"
+        },
+        "parent_item": {
+            "type": "relation",
+            "relation": "oneToOne",
+            "target": "plugin::page-hierarchy.item"
+        },
+        "child_order": {
+            "type": "integer"
+        },
+        "is_visible": {
+            "type": "boolean",
+            "default": false
+        },
+        "is_protected": {
+            "type": "boolean",
+            "default": false
+        },
+        "is_highlighted": {
+            "type": "boolean",
+            "default": false
+        },
+        "exclude_from_hierarchy": {
+            "type": "boolean",
+            "default": false
+        },
+        "go_to_closest_child": {
+            "type": "boolean",
+            "default": false
+        },
+        "visible_from": {
+            "type": "date"
+        },
+        "visible_to": {
+            "type": "date"
+        },
+        "type": {
+            "type": "enumeration",
+            "enum": [
+                "SYMBOLIC_LINK",
+                "HARD_LINK",
+                "URL",
+                "PAGE",
+                "LABEL"
+            ]
+        }
+    }
+}

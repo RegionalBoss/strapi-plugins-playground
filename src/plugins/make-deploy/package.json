@@ -4,8 +4,9 @@
   "description": "This is the description of the plugin.",
   "strapi": {
     "name": "make-deploy",
-    "description": "Description of make-deploy plugin",
+    "description": "Description of Make deploy plugin",
     "kind": "plugin",
+    "displayName": "Make deploy",
     "icon": "plug"
   },
   "repository": {
