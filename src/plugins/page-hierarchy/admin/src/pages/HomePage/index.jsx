@@ -15,7 +15,7 @@ import { useTranslation } from "../../hooks/useTranslation";
 import { ITEM_TYPE } from "../../lib/constants";
 import { EditViewContext } from "../../lib/contexts/EditViewContext";
 import { useConfirmDialog } from "../../lib/contexts/ConfirmDialogContext";
-import { flattenTree } from "../../utils/sortableTree";
+import { buildTree, flattenTree } from "../../utils/sortableTree";
 import { axiosInstance } from "../../utils/axiosInstance";
 import pluginId from "../../pluginId";
 
@@ -43,8 +43,16 @@ const CREATE_NEW_BUTTONS = [
 ];
 
 const HomePage = () => {
-  const { isEditMode, toggleEditMode, addNewItem, items, pages, refreshData } =
-    React.useContext(EditViewContext);
+  const {
+    isEditMode,
+    toggleEditMode,
+    addNewItem,
+    items,
+    setItems,
+    setPages,
+    pages,
+    refreshData,
+  } = React.useContext(EditViewContext);
   const { showConfirmDialog } = useConfirmDialog();
   const { t } = useTranslation();
 
@@ -80,13 +88,15 @@ const HomePage = () => {
           onClick={async () => {
             console.log("save state", flattenTree(items));
             try {
-              await axiosInstance.put(`/${pluginId}/items`, {
+              const { data } = await axiosInstance.put(`/${pluginId}/items`, {
                 items: flattenTree(items).map((item, index) => ({
                   ...item,
                   childOrder: index,
                 })),
                 pages,
               });
+              setItems(buildTree(data.items));
+              setPages(data.pages);
             } catch (e) {
               console.error(e);
             }

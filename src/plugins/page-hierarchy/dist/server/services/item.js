@@ -3,17 +3,24 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.transformDbItems = void 0;
 const pluginId_1 = __importDefault(require("../pluginId"));
 const format_1 = __importDefault(require("date-fns/format"));
 const pluralize_1 = require("pluralize");
 const utils_1 = require("../utils");
 const MODEL = "item";
-const transformDbItems = (dbItem) => ({
-    ...(0, utils_1.convertKeysFromSnakeCaseToCamelCase)(dbItem),
-    // TODO: refactor frontend or DB for consistent flow
-    parentId: dbItem.parent_item,
-    pageId: dbItem.page,
-});
+const transformDbItems = (dbItem) => {
+    var _a, _b;
+    return ({
+        ...(0, utils_1.convertKeysFromSnakeCaseToCamelCase)(dbItem),
+        // TODO: refactor frontend or DB for consistent flow
+        parentItem: undefined,
+        page: undefined,
+        parentId: (_a = dbItem.parent_item) === null || _a === void 0 ? void 0 : _a.id,
+        pageId: (_b = dbItem.page) === null || _b === void 0 ? void 0 : _b.id,
+    });
+};
+exports.transformDbItems = transformDbItems;
 // add default strapi connection as default value ???
 const duplicateItem = async (tableName, item, customAttrs
 // { transacting }: { transacting: Knex.Transaction<any, any[]> }
@@ -83,6 +90,7 @@ const service = {
     flatFind: async () => (await strapi.entityService.findMany(`plugin::${pluginId_1.default}.${MODEL}`, {
         populate: {
             parent_item: true,
+            page: true,
         },
         sort: { child_order: "ASC" },
     })),
@@ -98,6 +106,7 @@ const service = {
         return (await strapi.entityService.findMany(`plugin::${pluginId_1.default}.${MODEL}`, {
             populate: {
                 parent_item: true,
+                page: true,
             },
         }));
     },
@@ -228,11 +237,14 @@ const service = {
         // await trx.commit();
         const [updatedPages, updatedDbItems] = await Promise.all([
             await strapi.entityService.findMany(`plugin::${pluginId_1.default}.page`),
-            await strapi.entityService.findMany(`plugin::${pluginId_1.default}.item`),
+            await strapi.entityService.findMany(`plugin::${pluginId_1.default}.item`, {
+                populate: { parent_item: true, page: true },
+                sort: { child_order: "ASC" },
+            }),
         ]);
         return {
             pages: updatedPages.map(utils_1.convertKeysFromSnakeCaseToCamelCase),
-            items: updatedDbItems.map(transformDbItems),
+            items: updatedDbItems.map(exports.transformDbItems),
             pageFrontEndIdDatabaseIdMapper,
             itemFrontEndIdDatabaseIdMapper,
         };

@@ -8,11 +8,13 @@ import { convertKeysFromSnakeCaseToCamelCase } from "../utils";
 
 const MODEL = "item";
 
-const transformDbItems = (dbItem) => ({
+export const transformDbItems = (dbItem) => ({
   ...convertKeysFromSnakeCaseToCamelCase(dbItem),
   // TODO: refactor frontend or DB for consistent flow
-  parentId: dbItem.parent_item,
-  pageId: dbItem.page,
+  parentItem: undefined,
+  page: undefined,
+  parentId: dbItem.parent_item?.id,
+  pageId: dbItem.page?.id,
 });
 
 // add default strapi connection as default value ???
@@ -116,6 +118,7 @@ const service = {
     (await strapi.entityService.findMany(`plugin::${pluginId}.${MODEL}`, {
       populate: {
         parent_item: true,
+        page: true,
       },
       sort: { child_order: "ASC" },
     })) as any[],
@@ -134,6 +137,7 @@ const service = {
       {
         populate: {
           parent_item: true,
+          page: true,
         },
       }
     )) as IItem[];
@@ -313,7 +317,10 @@ const service = {
     // await trx.commit();
     const [updatedPages, updatedDbItems] = await Promise.all([
       await strapi.entityService.findMany(`plugin::${pluginId}.page`),
-      await strapi.entityService.findMany(`plugin::${pluginId}.item`),
+      await strapi.entityService.findMany(`plugin::${pluginId}.item`, {
+        populate: { parent_item: true, page: true },
+        sort: { child_order: "ASC" },
+      }),
     ]);
 
     return {

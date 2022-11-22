@@ -1,20 +1,9 @@
-import { Knex } from "knex";
-import { plural } from "pluralize";
+import { sanitize } from "@strapi/utils";
 import { Context } from "koa";
 import pluginId from "../pluginId";
-import { ItemsService } from "../services/item";
-import { convertKeysFromSnakeCaseToCamelCase } from "../utils";
-import { sanitize } from "@strapi/utils";
+import { ItemsService, transformDbItems } from "../services/item";
 
 const service = () => strapi.plugin(pluginId).service("item") as ItemsService;
-
-const transformDbItems = (dbItem) => ({
-  ...convertKeysFromSnakeCaseToCamelCase(dbItem),
-  // TODO: refactor frontend or DB for consistent flow
-  parentItem: undefined,
-  parentId: dbItem.parent_item?.id,
-  pageId: dbItem.page,
-});
 
 // TODO:
 // > add data validations?

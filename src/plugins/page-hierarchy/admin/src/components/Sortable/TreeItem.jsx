@@ -161,12 +161,14 @@ export const TreeItem = React.forwardRef(
                   ></IconButton>
                 )}
               </IconWrapper>
-              <IconButton
-                onClick={() => setItemToUpdate(value)}
-                label="Upravit"
-                noBorder
-                icon={<Pencil />}
-              />
+              {isEditMode ? (
+                <IconButton
+                  onClick={() => setItemToUpdate(value)}
+                  label="Upravit"
+                  noBorder
+                  icon={<Pencil />}
+                />
+              ) : null}
             </Flex>
           ) : null}
           {clone && childCount && childCount > 1 ? (
