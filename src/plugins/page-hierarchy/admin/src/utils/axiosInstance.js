@@ -5,11 +5,6 @@
 import axios from "axios";
 import { auth } from "@strapi/helper-plugin";
 
-console.log(
-  "process.env.STRAPI_ADMIN_BACKEND_URL",
-  process.env.STRAPI_ADMIN_BACKEND_URL
-);
-
 const instance = axios.create({
   baseURL: process.env.STRAPI_ADMIN_BACKEND_URL,
 });

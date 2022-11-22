@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const pluginId_1 = __importDefault(require("../pluginId"));
+const format_1 = __importDefault(require("date-fns/format"));
 const pluralize_1 = require("pluralize");
 const utils_1 = require("../utils");
 const MODEL = "item";
@@ -210,8 +211,12 @@ const service = {
                 is_highlighted: i.isHighlighted,
                 exclude_from_hierarchy: i.excludeFromHierarchy,
                 go_to_closest_child: i.goToClosestChild,
-                visible_from: null,
-                visible_to: null,
+                visible_from: i.visibleFrom
+                    ? (0, format_1.default)(new Date(i.visibleFrom), "yyyy-MM-dd")
+                    : null,
+                visible_to: i.visibleTo
+                    ? (0, format_1.default)(new Date(i.visibleTo), "yyyy-MM-dd")
+                    : null,
                 type: i.type,
             },
         }));

@@ -3,14 +3,7 @@ import pluginId from "../../pluginId";
 import { generateId } from "../../utils";
 import { axiosInstance } from "../../utils/axiosInstance";
 import { buildTree } from "../../utils/sortableTree";
-
-export const ITEM_TYPE = {
-  SYMBOLIC_LINK: "SYMBOLIC_LINK",
-  HARD_LINK: "HARD_LINK",
-  URL: "URL",
-  PAGE: "PAGE",
-  LABEL: "LABEL",
-};
+import { EditMenuItemForm } from "../../components/EditMenuItemForm";
 
 export const EditViewContext = React.createContext({
   isEditMode: false,
@@ -21,6 +14,7 @@ export const EditViewContext = React.createContext({
 export const EditViewContextProvider = ({ children }) => {
   const [items, setItems] = useState([]);
   const [pages, setPages] = useState([]);
+  const [itemToUpdate, setItemToUpdate] = useState();
   const [isEditMode, setIsEditMode] = useState(false);
 
   React.useEffect(() => {
@@ -55,6 +49,7 @@ export const EditViewContextProvider = ({ children }) => {
       visibleTo: null,
     };
     console.log("newItem: ", { newItem, type, itemsNames });
+    setItemToUpdate(newItem);
   };
 
   const toggleEditMode = () => setIsEditMode((prev) => !prev);
@@ -69,8 +64,13 @@ export const EditViewContextProvider = ({ children }) => {
         pages,
         addNewItem,
         refreshData: loadInitData,
+        setItemToUpdate,
+        itemToUpdate,
       }}
     >
+      {itemToUpdate ? (
+        <EditMenuItemForm onClose={() => setItemToUpdate(undefined)} />
+      ) : null}
       {children}
     </EditViewContext.Provider>
   );

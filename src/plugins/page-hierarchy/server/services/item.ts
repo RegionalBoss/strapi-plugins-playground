@@ -1,6 +1,7 @@
 import { IItem } from "../content-types/Item";
 import { IPage } from "../content-types/page";
 import pluginId from "../pluginId";
+import format from "date-fns/format";
 import { Knex } from "knex";
 import { singular } from "pluralize";
 import { convertKeysFromSnakeCaseToCamelCase } from "../utils";
@@ -291,8 +292,12 @@ const service = {
             is_highlighted: i.isHighlighted,
             exclude_from_hierarchy: i.excludeFromHierarchy,
             go_to_closest_child: i.goToClosestChild,
-            visible_from: null,
-            visible_to: null,
+            visible_from: i.visibleFrom
+              ? format(new Date(i.visibleFrom), "yyyy-MM-dd")
+              : null,
+            visible_to: i.visibleTo
+              ? format(new Date(i.visibleTo), "yyyy-MM-dd")
+              : null,
             type: i.type,
           },
         }

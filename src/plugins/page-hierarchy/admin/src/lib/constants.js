@@ -1,0 +1,7 @@
+export const ITEM_TYPE = {
+  SYMBOLIC_LINK: "SYMBOLIC_LINK",
+  HARD_LINK: "HARD_LINK",
+  URL: "URL",
+  PAGE: "PAGE",
+  LABEL: "LABEL",
+};

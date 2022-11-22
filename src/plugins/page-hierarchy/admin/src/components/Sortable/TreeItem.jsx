@@ -11,7 +11,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Box, IconButton, Typography, Flex } from "@strapi/design-system";
 import React from "react";
 import styled from "styled-components";
-import { EditViewContext, ITEM_TYPE } from "../../lib/contexts/EditViewContext";
+import { EditViewContext } from "../../lib/contexts/EditViewContext";
+import { ITEM_TYPE } from "../../lib/constants";
 
 import Pencil from "@strapi/icons/Pencil";
 
@@ -91,7 +92,7 @@ export const TreeItem = React.forwardRef(
     },
     ref
   ) => {
-    const { isEditMode } = React.useContext(EditViewContext);
+    const { isEditMode, setItemToUpdate } = React.useContext(EditViewContext);
     return (
       <Container
         ref={wrapperRef}
@@ -161,7 +162,7 @@ export const TreeItem = React.forwardRef(
                 )}
               </IconWrapper>
               <IconButton
-                onClick={() => {}}
+                onClick={() => setItemToUpdate(value)}
                 label="Upravit"
                 noBorder
                 icon={<Pencil />}
