@@ -18,10 +18,10 @@ const transformDbItems = (dbItem) => ({
 const duplicateItem = async (
   tableName: string,
   item: Record<string, unknown>,
-  customAttrs: Record<string, unknown>,
-  { transacting }: { transacting: Knex.Transaction<any, any[]> }
+  customAttrs: Record<string, unknown>
+  // { transacting }: { transacting: Knex.Transaction<any, any[]> }
 ) => {
-  const knex = transacting || ((strapi.db as any).connection as Knex);
+  const knex = (strapi.db as any).connection as Knex;
   const newItem = Object.fromEntries(
     Object.entries({
       ...item,
@@ -56,10 +56,10 @@ const duplicateItem = async (
  */
 const recursiveCopyRowFrom = async (
   tableName: string,
-  sourceRowId: number,
-  { transacting }: { transacting: Knex.Transaction<any, any[]> }
+  sourceRowId: number
+  // { transacting }: { transacting: Knex.Transaction<any, any[]> }
 ) => {
-  const knex = transacting || ((strapi.db as any).connection as Knex);
+  const knex = (strapi.db as any).connection as Knex;
 
   const itemToDuplicate = await knex(tableName)
     .where("id", sourceRowId)
@@ -68,8 +68,8 @@ const recursiveCopyRowFrom = async (
   const duplicatedRowId = await duplicateItem(
     tableName,
     itemToDuplicate,
-    undefined,
-    { transacting }
+    undefined
+    // { transacting }
   );
   const componentTableName = `${tableName}_components`;
 
@@ -91,8 +91,8 @@ const recursiveCopyRowFrom = async (
     for (const component of connectedComponents) {
       const createdComponentId = await recursiveCopyRowFrom(
         component.component_type,
-        component.component_id,
-        { transacting }
+        component.component_id
+        // { transacting }
       );
 
       await duplicateItem(
@@ -101,8 +101,8 @@ const recursiveCopyRowFrom = async (
         {
           component_id: createdComponentId,
           [joinComponentTableColumnName]: duplicatedRowId,
-        },
-        { transacting }
+        }
+        // { transacting }
       );
     }
   }
@@ -112,25 +112,29 @@ const recursiveCopyRowFrom = async (
 
 const service = {
   flatFind: async () =>
-    (await strapi.entityService.findMany(
-      `plugin::${pluginId}.${MODEL}`
-    )) as any[],
+    (await strapi.entityService.findMany(`plugin::${pluginId}.${MODEL}`, {
+      populate: {
+        parent_item: true,
+      },
+      sort: { child_order: "ASC" },
+    })) as any[],
   /**
    * Promise to fetch all records
    *
    * @return {Promise}
    */
   find: async (where?: Record<string, unknown>): Promise<IItem[]> => {
-    // console.log(strapi.query(`plugin::${pluginId}.${MODEL}`), where);
-
     const knex = (strapi.db as any).connection as Knex;
     knex("items").where({ id: 1 }).then(console.log);
     knex("pages").insert({}).returning("id");
 
-    console.log(strapi.entityService.create.toString());
-
     return (await strapi.entityService.findMany(
-      `plugin::${pluginId}.${MODEL}`
+      `plugin::${pluginId}.${MODEL}`,
+      {
+        populate: {
+          parent_item: true,
+        },
+      }
     )) as IItem[];
   },
   /**
@@ -142,10 +146,10 @@ const service = {
     (await strapi.query(`plugin::${pluginId}.${MODEL}`).findOne({ id })) as any,
   updateItems: async (
     bodyItems: IItem[],
-    bodyPages: IPage[],
-    transaction?: Knex.Transaction<any, any[]>
+    bodyPages: IPage[]
+    // transaction?: Knex.Transaction<any, any[]>
   ) => {
-    const knex = (strapi.db as any).connection as Knex;
+    // const knex = (strapi.db as any).connection as Knex;
     const [dbPages, dbItems] = await Promise.all([
       strapi.entityService.findMany(`plugin::${pluginId}.page`) as IPage[],
       strapi.query(`plugin::${pluginId}.item`).findMany() as IItem[],
@@ -185,7 +189,7 @@ const service = {
     // -----------------------------------------------------------
     // whole data mutation code is wrapped into one sql transaction
     // for better consistent data model if some of the inserts will not work correctly
-    const trx = transaction || (await knex.transaction());
+    // const trx = transaction || (await knex.transaction());
 
     const duplicatedPages = [];
     // I can't write data asynchronously (`Promise.all`) because
@@ -194,13 +198,14 @@ const service = {
       const sourceRowId = pageToBeDuplicated._duplicatedFromPageId;
       const pageDuplicatedRowId = await recursiveCopyRowFrom(
         "pages",
-        sourceRowId,
-        {
-          transacting: trx,
-        }
+        sourceRowId
+        // {
+        //   transacting: trx,
+        // }
       );
       duplicatedPages.push([pageToBeDuplicated.id, pageDuplicatedRowId]);
     }
+
     const pageQueriesToCreate = pagesToCreate.map(async (newPage) => [
       newPage.id,
       await strapi.entityService.create(`plugin::${pluginId}.page`, {
@@ -265,30 +270,33 @@ const service = {
     ]);
     // first of all i create empty items for getting IDs then i update values
     const itemQueriesToUpdate = [...itemsToCreate, ...itemsToUpdate].map((i) =>
-      trx("items")
-        // remapped values to sql IDs
-        .where("id", itemFrontEndIdDatabaseIdMapper[i.id])
-        .update({
-          page:
-            i.type === "PAGE" ||
-            i.type === "HARD_LINK" ||
-            i.type === "SYMBOLIC_LINK"
-              ? pageFrontEndIdDatabaseIdMapper[i.pageId]
-              : null,
-          // TODO; rename `paren_item` to the ` parent_item_id`
-          parent_item: itemFrontEndIdDatabaseIdMapper[i.parentId] || null,
-          name: i.name,
-          absolute_link_url: i.absoluteLinkUrl,
-          child_order: i.childOrder,
-          is_visible: i.isVisible,
-          is_protected: i.isProtected,
-          is_highlighted: i.isHighlighted,
-          exclude_from_hierarchy: i.excludeFromHierarchy,
-          go_to_closest_child: i.goToClosestChild,
-          visible_from: i.visibleFrom ? new Date(i.visibleFrom) : null,
-          visible_to: i.visibleTo ? new Date(i.visibleTo) : null,
-          type: i.type,
-        })
+      strapi.entityService.update(
+        `plugin::${pluginId}.item`,
+        itemFrontEndIdDatabaseIdMapper[i.id],
+        {
+          data: {
+            page:
+              i.type === "PAGE" ||
+              i.type === "HARD_LINK" ||
+              i.type === "SYMBOLIC_LINK"
+                ? pageFrontEndIdDatabaseIdMapper[i.pageId]
+                : null,
+            // TODO; rename `paren_item` to the ` parent_item_id`
+            parent_item: itemFrontEndIdDatabaseIdMapper[i.parentId] || null,
+            name: i.name,
+            absolute_link_url: i.absoluteLinkUrl,
+            child_order: i.childOrder,
+            is_visible: i.isVisible,
+            is_protected: i.isProtected,
+            is_highlighted: i.isHighlighted,
+            exclude_from_hierarchy: i.excludeFromHierarchy,
+            go_to_closest_child: i.goToClosestChild,
+            visible_from: null,
+            visible_to: null,
+            type: i.type,
+          },
+        }
+      )
     );
     const itemQueriesToDelete = itemsIdsToDelete.map((id) =>
       strapi.entityService.delete(`plugin::${pluginId}.item`, id)
@@ -297,7 +305,7 @@ const service = {
       Promise.all(itemQueriesToUpdate),
       Promise.all(itemQueriesToDelete),
     ]);
-    await trx.commit();
+    // await trx.commit();
     const [updatedPages, updatedDbItems] = await Promise.all([
       await strapi.entityService.findMany(`plugin::${pluginId}.page`),
       await strapi.entityService.findMany(`plugin::${pluginId}.item`),

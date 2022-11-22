@@ -11,7 +11,8 @@ const service = () => strapi.plugin(pluginId).service("item") as ItemsService;
 const transformDbItems = (dbItem) => ({
   ...convertKeysFromSnakeCaseToCamelCase(dbItem),
   // TODO: refactor frontend or DB for consistent flow
-  parentId: dbItem.parent_item,
+  parentItem: undefined,
+  parentId: dbItem.parent_item?.id,
   pageId: dbItem.page,
 });
 
@@ -46,19 +47,21 @@ export default {
       strapi.getModel(`plugin::${pluginId}.item`)
     ),
   updateItems: async (ctx: Context) => {
-    const trx = await ((strapi.db as any).connection as Knex).transaction();
+    // const trx = await ((strapi.db as any).connection as Knex).transaction();
     try {
       const body = (ctx.request as any).body;
       const bodyItems = body.items;
       const bodyPages = body.pages;
-      return service().updateItems(bodyItems, bodyPages, trx);
+      console.log("START UPDATE\n", bodyItems, "\nPAGES:\n", bodyPages);
+      // return [];
+      return service().updateItems(bodyItems, bodyPages);
     } catch (err) {
       console.error(err);
       ctx.status = 500;
 
-      if (trx && !trx.isCompleted()) {
-        await trx.rollback();
-      }
+      // if (trx && !trx.isCompleted()) {
+      //   await trx.rollback();
+      // }
 
       return err.toString();
     }

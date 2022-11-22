@@ -7,12 +7,16 @@ const pluginId_1 = __importDefault(require("../pluginId"));
 const utils_1 = require("../utils");
 const utils_2 = require("@strapi/utils");
 const service = () => strapi.plugin(pluginId_1.default).service("item");
-const transformDbItems = (dbItem) => ({
-    ...(0, utils_1.convertKeysFromSnakeCaseToCamelCase)(dbItem),
-    // TODO: refactor frontend or DB for consistent flow
-    parentId: dbItem.parent_item,
-    pageId: dbItem.page,
-});
+const transformDbItems = (dbItem) => {
+    var _a;
+    return ({
+        ...(0, utils_1.convertKeysFromSnakeCaseToCamelCase)(dbItem),
+        // TODO: refactor frontend or DB for consistent flow
+        parentItem: undefined,
+        parentId: (_a = dbItem.parent_item) === null || _a === void 0 ? void 0 : _a.id,
+        pageId: dbItem.page,
+    });
+};
 // TODO:
 // > add data validations?
 // > add cascade deleting?
@@ -30,19 +34,21 @@ exports.default = {
     },
     findOne: async (ctx) => await utils_2.sanitize.contentAPI.output(await service().findOne(ctx.params.id), strapi.getModel(`plugin::${pluginId_1.default}.item`)),
     updateItems: async (ctx) => {
-        const trx = await strapi.db.connection.transaction();
+        // const trx = await ((strapi.db as any).connection as Knex).transaction();
         try {
             const body = ctx.request.body;
             const bodyItems = body.items;
             const bodyPages = body.pages;
-            return service().updateItems(bodyItems, bodyPages, trx);
+            console.log("START UPDATE\n", bodyItems, "\nPAGES:\n", bodyPages);
+            // return [];
+            return service().updateItems(bodyItems, bodyPages);
         }
         catch (err) {
             console.error(err);
             ctx.status = 500;
-            if (trx && !trx.isCompleted()) {
-                await trx.rollback();
-            }
+            // if (trx && !trx.isCompleted()) {
+            //   await trx.rollback();
+            // }
             return err.toString();
         }
     },

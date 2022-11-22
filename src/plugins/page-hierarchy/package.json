@@ -15,7 +15,8 @@
     "@fortawesome/free-solid-svg-icons": "^6.2.1",
     "@fortawesome/react-fontawesome": "^0.2.0",
     "lodash": "^4.17.21",
-    "pluralize": "^8.0.0"
+    "pluralize": "^8.0.0",
+    "react-hook-form": "^7.39.5"
   },
   "devDependencies": {
     "@types/koa": "^2.13.5",

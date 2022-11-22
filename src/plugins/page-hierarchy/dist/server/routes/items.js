@@ -29,7 +29,9 @@ exports.default = {
             method: "PUT",
             path: "/items",
             handler: "item.updateItems",
-            config: {},
+            config: {
+                auth: false,
+            },
         },
     ],
 };

@@ -14,8 +14,10 @@ const transformDbItems = (dbItem) => ({
     pageId: dbItem.page,
 });
 // add default strapi connection as default value ???
-const duplicateItem = async (tableName, item, customAttrs, { transacting }) => {
-    const knex = transacting || strapi.db.connection;
+const duplicateItem = async (tableName, item, customAttrs
+// { transacting }: { transacting: Knex.Transaction<any, any[]> }
+) => {
+    const knex = strapi.db.connection;
     const newItem = Object.fromEntries(Object.entries({
         ...item,
         ...customAttrs,
@@ -42,12 +44,16 @@ const duplicateItem = async (tableName, item, customAttrs, { transacting }) => {
  * @returns ID of created row
  *
  */
-const recursiveCopyRowFrom = async (tableName, sourceRowId, { transacting }) => {
-    const knex = transacting || strapi.db.connection;
+const recursiveCopyRowFrom = async (tableName, sourceRowId
+// { transacting }: { transacting: Knex.Transaction<any, any[]> }
+) => {
+    const knex = strapi.db.connection;
     const itemToDuplicate = await knex(tableName)
         .where("id", sourceRowId)
         .first();
-    const duplicatedRowId = await duplicateItem(tableName, itemToDuplicate, undefined, { transacting });
+    const duplicatedRowId = await duplicateItem(tableName, itemToDuplicate, undefined
+    // { transacting }
+    );
     const componentTableName = `${tableName}_components`;
     // TODO: test that postgreSQL have same consistent API
     const isComponentTableExists = await knex.schema.hasTable(componentTableName);
@@ -59,29 +65,40 @@ const recursiveCopyRowFrom = async (tableName, sourceRowId, { transacting }) => 
         const connectedComponents = await knex(componentTableName).where(joinComponentTableColumnName, sourceRowId);
         // I can't use `Promise.all` coz `last_insert_rowid()` starts to be inconsistent and db will be inconsistent
         for (const component of connectedComponents) {
-            const createdComponentId = await recursiveCopyRowFrom(component.component_type, component.component_id, { transacting });
+            const createdComponentId = await recursiveCopyRowFrom(component.component_type, component.component_id
+            // { transacting }
+            );
             await duplicateItem(componentTableName, component, {
                 component_id: createdComponentId,
                 [joinComponentTableColumnName]: duplicatedRowId,
-            }, { transacting });
+            }
+            // { transacting }
+            );
         }
     }
     return duplicatedRowId;
 };
 const service = {
-    flatFind: async () => (await strapi.entityService.findMany(`plugin::${pluginId_1.default}.${MODEL}`)),
+    flatFind: async () => (await strapi.entityService.findMany(`plugin::${pluginId_1.default}.${MODEL}`, {
+        populate: {
+            parent_item: true,
+        },
+        sort: { child_order: "ASC" },
+    })),
     /**
      * Promise to fetch all records
      *
      * @return {Promise}
      */
     find: async (where) => {
-        // console.log(strapi.query(`plugin::${pluginId}.${MODEL}`), where);
         const knex = strapi.db.connection;
         knex("items").where({ id: 1 }).then(console.log);
         knex("pages").insert({}).returning("id");
-        console.log(strapi.entityService.create.toString());
-        return (await strapi.entityService.findMany(`plugin::${pluginId_1.default}.${MODEL}`));
+        return (await strapi.entityService.findMany(`plugin::${pluginId_1.default}.${MODEL}`, {
+            populate: {
+                parent_item: true,
+            },
+        }));
     },
     /**
      * Promise to fetch record
@@ -89,8 +106,10 @@ const service = {
      * @return {Promise}
      */
     findOne: async (id) => (await strapi.query(`plugin::${pluginId_1.default}.${MODEL}`).findOne({ id })),
-    updateItems: async (bodyItems, bodyPages, transaction) => {
-        const knex = strapi.db.connection;
+    updateItems: async (bodyItems, bodyPages
+    // transaction?: Knex.Transaction<any, any[]>
+    ) => {
+        // const knex = (strapi.db as any).connection as Knex;
         const [dbPages, dbItems] = await Promise.all([
             strapi.entityService.findMany(`plugin::${pluginId_1.default}.page`),
             strapi.query(`plugin::${pluginId_1.default}.item`).findMany(),
@@ -112,15 +131,17 @@ const service = {
         // -----------------------------------------------------------
         // whole data mutation code is wrapped into one sql transaction
         // for better consistent data model if some of the inserts will not work correctly
-        const trx = transaction || (await knex.transaction());
+        // const trx = transaction || (await knex.transaction());
         const duplicatedPages = [];
         // I can't write data asynchronously (`Promise.all`) because
         // `last_insert_rowid()` starts to be inconsistent and database connections will be incorrect
         for (const pageToBeDuplicated of pagesToBeDuplicated) {
             const sourceRowId = pageToBeDuplicated._duplicatedFromPageId;
-            const pageDuplicatedRowId = await recursiveCopyRowFrom("pages", sourceRowId, {
-                transacting: trx,
-            });
+            const pageDuplicatedRowId = await recursiveCopyRowFrom("pages", sourceRowId
+            // {
+            //   transacting: trx,
+            // }
+            );
             duplicatedPages.push([pageToBeDuplicated.id, pageDuplicatedRowId]);
         }
         const pageQueriesToCreate = pagesToCreate.map(async (newPage) => [
@@ -172,35 +193,34 @@ const service = {
             ...createdItems.map(([feId, item]) => [feId, item.id]),
         ]);
         // first of all i create empty items for getting IDs then i update values
-        const itemQueriesToUpdate = [...itemsToCreate, ...itemsToUpdate].map((i) => trx("items")
-            // remapped values to sql IDs
-            .where("id", itemFrontEndIdDatabaseIdMapper[i.id])
-            .update({
-            page: i.type === "PAGE" ||
-                i.type === "HARD_LINK" ||
-                i.type === "SYMBOLIC_LINK"
-                ? pageFrontEndIdDatabaseIdMapper[i.pageId]
-                : null,
-            // TODO; rename `paren_item` to the ` parent_item_id`
-            parent_item: itemFrontEndIdDatabaseIdMapper[i.parentId] || null,
-            name: i.name,
-            absolute_link_url: i.absoluteLinkUrl,
-            child_order: i.childOrder,
-            is_visible: i.isVisible,
-            is_protected: i.isProtected,
-            is_highlighted: i.isHighlighted,
-            exclude_from_hierarchy: i.excludeFromHierarchy,
-            go_to_closest_child: i.goToClosestChild,
-            visible_from: i.visibleFrom ? new Date(i.visibleFrom) : null,
-            visible_to: i.visibleTo ? new Date(i.visibleTo) : null,
-            type: i.type,
+        const itemQueriesToUpdate = [...itemsToCreate, ...itemsToUpdate].map((i) => strapi.entityService.update(`plugin::${pluginId_1.default}.item`, itemFrontEndIdDatabaseIdMapper[i.id], {
+            data: {
+                page: i.type === "PAGE" ||
+                    i.type === "HARD_LINK" ||
+                    i.type === "SYMBOLIC_LINK"
+                    ? pageFrontEndIdDatabaseIdMapper[i.pageId]
+                    : null,
+                // TODO; rename `paren_item` to the ` parent_item_id`
+                parent_item: itemFrontEndIdDatabaseIdMapper[i.parentId] || null,
+                name: i.name,
+                absolute_link_url: i.absoluteLinkUrl,
+                child_order: i.childOrder,
+                is_visible: i.isVisible,
+                is_protected: i.isProtected,
+                is_highlighted: i.isHighlighted,
+                exclude_from_hierarchy: i.excludeFromHierarchy,
+                go_to_closest_child: i.goToClosestChild,
+                visible_from: null,
+                visible_to: null,
+                type: i.type,
+            },
         }));
         const itemQueriesToDelete = itemsIdsToDelete.map((id) => strapi.entityService.delete(`plugin::${pluginId_1.default}.item`, id));
         await Promise.all([
             Promise.all(itemQueriesToUpdate),
             Promise.all(itemQueriesToDelete),
         ]);
-        await trx.commit();
+        // await trx.commit();
         const [updatedPages, updatedDbItems] = await Promise.all([
             await strapi.entityService.findMany(`plugin::${pluginId_1.default}.page`),
             await strapi.entityService.findMany(`plugin::${pluginId_1.default}.item`),

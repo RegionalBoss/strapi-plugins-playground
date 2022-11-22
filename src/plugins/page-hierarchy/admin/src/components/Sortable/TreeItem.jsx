@@ -1,9 +1,19 @@
-import { faGripVertical } from "@fortawesome/free-solid-svg-icons";
+import {
+  faBookmark,
+  faClock,
+  faEye,
+  faEyeSlash,
+  faFile,
+  faGripVertical,
+  faLink,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Box, Typography } from "@strapi/design-system";
+import { Box, IconButton, Typography, Flex } from "@strapi/design-system";
 import React from "react";
 import styled from "styled-components";
-import { EditViewContext } from "../../lib/contexts/EditViewContext";
+import { EditViewContext, ITEM_TYPE } from "../../lib/contexts/EditViewContext";
+
+import Pencil from "@strapi/icons/Pencil";
 
 const LeftItemDiv = styled.div`
   display: flex;
@@ -38,6 +48,29 @@ const Count = styled.span`
   color: #fff;
 `;
 
+const TreeItemBox = styled(Box)`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+`;
+
+const IconWrapper = styled.div`
+  display: flex;
+  margin-right: 1rem;
+
+  button {
+    cursor: initial;
+    opacity: 0.4;
+    transition: opacity 0.2s ease-in-out;
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  svg {
+    margin: 10px;
+  }
+`;
 export const TreeItem = React.forwardRef(
   (
     {
@@ -66,7 +99,7 @@ export const TreeItem = React.forwardRef(
         clone={clone}
         ghost={ghost}
       >
-        <Box
+        <TreeItemBox
           padding={4}
           hasRadius
           background="neutral0"
@@ -81,10 +114,64 @@ export const TreeItem = React.forwardRef(
               {value.name}
             </Typography>
           </LeftItemDiv>
+          {!clone && !ghost ? (
+            <Flex>
+              <IconWrapper>
+                {value.isVisible ? (
+                  <IconButton
+                    noBorder
+                    label="Viditelné"
+                    icon={<FontAwesomeIcon icon={faEye} />}
+                  />
+                ) : (
+                  <IconButton
+                    noBorder
+                    label="Neviditelné"
+                    icon={<FontAwesomeIcon icon={faEyeSlash} />}
+                  ></IconButton>
+                )}
+                {(value.visibleFrom || value.visibleTo) && (
+                  <IconButton
+                    noBorder
+                    label="Časové omezeni"
+                    icon={<FontAwesomeIcon icon={faClock} />}
+                  ></IconButton>
+                )}
+                {value.type === ITEM_TYPE.PAGE && (
+                  <IconButton
+                    noBorder
+                    label="Interní stránka"
+                    icon={<FontAwesomeIcon icon={faFile} />}
+                  ></IconButton>
+                )}
+                {(value.type === ITEM_TYPE.SYMBOLIC_LINK ||
+                  value.type === ITEM_TYPE.URL) && (
+                  <IconButton
+                    noBorder
+                    label="Externí odkaz"
+                    icon={<FontAwesomeIcon icon={faLink} />}
+                  ></IconButton>
+                )}
+                {value.type === ITEM_TYPE.LABEL && (
+                  <IconButton
+                    noBorder
+                    label="Označení"
+                    icon={<FontAwesomeIcon icon={faBookmark} />}
+                  ></IconButton>
+                )}
+              </IconWrapper>
+              <IconButton
+                onClick={() => {}}
+                label="Upravit"
+                noBorder
+                icon={<Pencil />}
+              />
+            </Flex>
+          ) : null}
           {clone && childCount && childCount > 1 ? (
             <Count>{childCount}</Count>
           ) : null}
-        </Box>
+        </TreeItemBox>
       </Container>
     );
   }
