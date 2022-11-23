@@ -1,6 +1,7 @@
 import {
   faBookmark,
   faClock,
+  faCopy,
   faExclamationTriangle,
   faEye,
   faEyeSlash,
@@ -96,6 +97,7 @@ const IconWrapper = styled.div`
     margin: 10px;
   }
 `;
+
 export const TreeItem = React.forwardRef(
   (
     {
@@ -121,7 +123,8 @@ export const TreeItem = React.forwardRef(
       setItemToUpdate,
       deleteItem,
       pages,
-      saveDataAndPickByPageId,
+      saveDataAndPickById,
+      duplicateItem,
     } = React.useContext(EditViewContext);
     const { t } = useTranslation();
     const history = useHistory();
@@ -146,6 +149,51 @@ export const TreeItem = React.forwardRef(
         deleteItem(value);
     };
 
+    const handleEditPageClick = async (e) => {
+      // magic complicated function
+      // tricky validate link that can handle logic if redirect is valid
+      // validate if link can be used
+
+      if (page._feGenerated) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        console.log("page is FE generated");
+
+        const saveDataAndRedirect = await showConfirmDialog(
+          t("PageHierarchyEditor.update.button.confirm.haveToSave.header"),
+          t("PageHierarchyEditor.update.button.confirm.haveToSave.body")
+        );
+
+        if (!saveDataAndRedirect) {
+          return;
+        }
+
+        // ID does not exist so we have to redirect by our own
+        const dbPageId = await saveDataAndPickById(page.id, "page");
+        history.push(`${DETAIL_PATH}/${dbPageId}?redirectUrl=${LOCATION_PATH}`);
+        return;
+      }
+
+      if (!isEditMode) {
+        return;
+      }
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      const shouldContinue = await showConfirmDialog(
+        t(
+          "PageHierarchyEditor.update.button.confirm.willDiscardChanges.header"
+        ),
+        t("PageHierarchyEditor.update.button.confirm.willDiscardChanges.body")
+      );
+      if (shouldContinue) {
+        const redirectUrl = `${DETAIL_PATH}/${page.id}?redirectUrl=${LOCATION_PATH}`;
+        history.push(redirectUrl);
+      }
+    };
+
     const UpdatePageButton = React.useCallback(() => {
       if (!havePage) return null;
       if (!page)
@@ -159,56 +207,7 @@ export const TreeItem = React.forwardRef(
       return (
         <Link
           to={`${DETAIL_PATH}/${page.id}?redirectUrl=${LOCATION_PATH}`}
-          onClick={async (e) => {
-            // magic complicated function
-            // tricky validate link that can handle logic if redirect is valid
-            // validate if link can be used
-
-            console.log("on click!");
-
-            if (page._feGenerated) {
-              e.preventDefault();
-              e.stopPropagation();
-
-              const saveDataAndRedirect = await showConfirmDialog(
-                t(
-                  "PageHierarchyEditor.update.button.confirm.haveToSave.header"
-                ),
-                t("PageHierarchyEditor.update.button.confirm.haveToSave.body")
-              );
-
-              if (!saveDataAndRedirect) {
-                return;
-              }
-
-              // ID does not exist so we have to redirect by our own
-              const dbPageId = await saveDataAndPickByPageId(page.id);
-              history.push(
-                `${DETAIL_PATH}/${dbPageId}?redirectUrl=${LOCATION_PATH}`
-              );
-              return;
-            }
-
-            if (!isEditMode) {
-              return;
-            }
-
-            e.preventDefault();
-            e.stopPropagation();
-
-            const shouldContinue = await showConfirmDialog(
-              t(
-                "PageHierarchyEditor.update.button.confirm.willDiscardChanges.header"
-              ),
-              t(
-                "PageHierarchyEditor.update.button.confirm.willDiscardChanges.body"
-              )
-            );
-            if (shouldContinue) {
-              const redirectUrl = `${DETAIL_PATH}/${page.id}?redirectUrl=${LOCATION_PATH}`;
-              history.push(redirectUrl);
-            }
-          }}
+          onClick={handleEditPageClick}
         >
           <UpdateIconButton
             noBorder
@@ -217,12 +216,40 @@ export const TreeItem = React.forwardRef(
           />
         </Link>
       );
-    }, [havePage, page, isEditMode]);
+    }, [havePage, page, isEditMode, value, handleEditPageClick]);
+
+    const handleDuplicateItem = async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      let itemIdToDuplicate = value.id;
+
+      // special FE-x-BE case where we have to sync data with database
+      if (havePage && page._feGenerated) {
+        const saveDataAndDuplicate = await showConfirmDialog(
+          t(
+            "PageHierarchyEditor.update.duplicatePageItem.button.haveToSave.confirm.title"
+          ),
+          t(
+            "PageHierarchyEditor.update.duplicatePageItem.button.haveToSave.confirm.message"
+          )
+        );
+        if (!saveDataAndDuplicate) return;
+        itemIdToDuplicate = await saveDataAndPickById(item.id);
+      }
+
+      duplicateItem(itemIdToDuplicate);
+    };
+
+    const spacing = React.useMemo(() => {
+      console.log("update spacing");
+      return depth * indentationWidth;
+    }, [depth, indentationWidth]);
 
     return (
       <Container
         ref={wrapperRef}
-        style={{ "--spacing": `${indentationWidth * depth}px` }}
+        style={{ "--spacing": `${spacing}px` }}
         clone={clone}
         ghost={ghost}
       >
@@ -306,16 +333,35 @@ export const TreeItem = React.forwardRef(
               {isEditMode ? (
                 <>
                   <IconButton
-                    onClick={handleRemove}
-                    label="Smazat"
+                    disabled={havePage && !page}
+                    onClick={handleDuplicateItem}
+                    label={t(
+                      havePage
+                        ? page
+                          ? "PageHierarchyEditor.update.duplicatePageItem.button"
+                          : "PageHierarchyEditor.update.duplicate.pendingSave.warning.button"
+                        : "PageHierarchyEditor.update.duplicateNonPageItem.button"
+                    )}
+                    style={{ marginRight: "0.5rem" }}
                     noBorder
-                    icon={<FontAwesomeIcon icon={faTrash} />}
+                    icon={<FontAwesomeIcon icon={faCopy} />}
                   />
                   <IconButton
                     onClick={() => setItemToUpdate(value)}
                     label="Upravit"
+                    style={{ marginRight: "0.5rem" }}
                     noBorder
                     icon={<Pencil />}
+                  />
+                  <IconButton
+                    onClick={handleRemove}
+                    label={
+                      havePage
+                        ? t("EditMenuItemForm.delete.itemAndPage")
+                        : t("EditMenuItemForm.delete.item")
+                    }
+                    noBorder
+                    icon={<FontAwesomeIcon icon={faTrash} />}
                   />
                 </>
               ) : null}

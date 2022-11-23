@@ -55,7 +55,9 @@ const dropAnimationConfig = {
 export const SortableMenu = React.memo(() => {
   const { items, setItems, isEditMode } = React.useContext(EditViewContext);
   const [activeId, setActiveId] = React.useState(null);
-  const [overId, setOverId] = React.useState(null);
+  const overId = React.useRef(null);
+  // const [overId, setOverId] = React.useState(null);
+  // const offsetLeft = React.useRef(0);
   const [offsetLeft, setOffsetLeft] = React.useState(0);
 
   const sensors = useSensors(
@@ -80,12 +82,13 @@ export const SortableMenu = React.memo(() => {
   }, [activeId, items]);
 
   const projected =
-    activeId && overId
+    activeId && overId.current
       ? getProjection(
           flattenedItems,
           activeId,
-          overId,
+          overId.current,
           offsetLeft,
+          // offsetLeft.current,
           indentationWidth
         )
       : null;
@@ -95,9 +98,10 @@ export const SortableMenu = React.memo(() => {
     [flattenedItems]
   );
 
-  const activeItem = activeId
-    ? flattenedItems.find(({ id }) => id === activeId)
-    : null;
+  const activeItem = React.useMemo(
+    () => (activeId ? flattenedItems.find(({ id }) => id === activeId) : null),
+    [activeId]
+  );
 
   return (
     <DndContext
@@ -146,23 +150,22 @@ export const SortableMenu = React.memo(() => {
     </DndContext>
   );
 
-  function handleRemove(id) {
-    console.log("REMOVE", id);
-  }
-
   function handleDragStart({ active: { id: activeId } }) {
     setActiveId(activeId);
-    setOverId(activeId);
+    overId.current = activeId;
+    // setOverId(activeId);
 
     document.body.style.setProperty("cursor", "grabbing");
   }
 
   function handleDragMove({ delta }) {
+    // offsetLeft.current = delta.x;
     setOffsetLeft(delta.x);
   }
 
   function handleDragOver({ over }) {
-    setOverId(over?.id ?? null);
+    overId.current = over?.id ?? null;
+    // setOverId(over?.id ?? null);
   }
 
   function handleDragEnd({ active, over }) {
@@ -187,8 +190,10 @@ export const SortableMenu = React.memo(() => {
   }
 
   function resetState() {
-    setOverId(null);
+    overId.current = null;
+    // setOverId(null);
     setActiveId(null);
+    // offsetLeft.current = 0;
     setOffsetLeft(0);
 
     document.body.style.setProperty("cursor", "");

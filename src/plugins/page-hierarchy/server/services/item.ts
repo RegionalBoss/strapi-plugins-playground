@@ -166,16 +166,17 @@ const service = {
       (page) => !initDbPageIds.includes(page.id)
     );
 
-    const pagesToCreate = pagesToAddToDb.filter(
-      (p) => !p._duplicatedFromPageId
-    );
-    const pagesToBeDuplicated = pagesToAddToDb.filter((p) =>
-      Boolean(p._duplicatedFromPageId)
-    );
+    const pagesToCreate = pagesToAddToDb;
+    // .filter(
+    //   (p) => !p._duplicatedFromPageId
+    // );
+    const pagesToBeDuplicated = [];
+    //  pagesToAddToDb.filter((p) =>
+    //   Boolean(p._duplicatedFromPageId)
+    // );
     const pagesIdsToDelete = initDbPageIds.filter(
       (id) => !bodyPageIds.includes(id)
     );
-    console.log("PAGES IDS TO DELETE", pagesIdsToDelete);
 
     // -----------------------------------
     // --------- API validations ---------
@@ -224,7 +225,6 @@ const service = {
     ]);
 
     const pageQueriesToDelete = pagesIdsToDelete.map((id) => {
-      console.log("DELETE PAGE: ", id);
       return strapi.entityService.delete(`plugin::${pluginId}.page`, id);
     });
 
@@ -232,8 +232,6 @@ const service = {
       Promise.all(pageQueriesToCreate),
       Promise.all(pageQueriesToDelete),
     ]);
-
-    console.log("CREATED PAGES", createdPages);
 
     // mapped client-generated-ids x db-ids HASH-MAP
     // TODO: it includes pages to delete

@@ -33,6 +33,10 @@ export const EditViewContextProvider = ({ children }) => {
     loadInitData();
   }, []);
 
+  React.useEffect(() => {
+    console.log("ITEMS CHANGED", items);
+  }, [items]);
+
   const loadInitData = async () => {
     try {
       const [pages, items] = await Promise.all([
@@ -73,10 +77,12 @@ export const EditViewContextProvider = ({ children }) => {
     }
   };
 
-  const saveDataAndPickByPageId = async (feGeneratedPageId) => {
+  const saveDataAndPickById = async (feGeneratedPageId, dataType = "item") => {
     const response = await saveData();
     if (!response) return;
-    return response.pageFrontEndIdDatabaseIdMapper[feGeneratedPageId];
+    return response[`${dataType}FrontEndIdDatabaseIdMapper`]?.[
+      feGeneratedPageId
+    ];
   };
 
   const deleteItem = (itemToDelete) => {
@@ -144,8 +150,7 @@ export const EditViewContextProvider = ({ children }) => {
           t("createNew.item.default.PAGE.name")
         );
 
-        setPages((prev) => {
-          const currentPages = prev;
+        setPages((currentPages) => {
           const pagesNames = currentPages.map(({ title }) => title);
           const pageName = getNextNameInTheSequence(
             pagesNames,
@@ -203,8 +208,90 @@ export const EditViewContextProvider = ({ children }) => {
     setItemToUpdate(newItem);
   };
 
+  const duplicateItem = async (sourceItemId) => {
+    const sourceItem = flattenTree(items).find(({ id }) => id === sourceItemId);
+    const itemsNames = items.map(({ name }) => name);
+    const itemName = getNextNameInTheSequence(itemsNames, sourceItem.name);
+
+    const newItem = {
+      ...sourceItem,
+      id: generateId(),
+      name: itemName,
+      childOrder: 0,
+    };
+    if (newItem.type === ITEM_TYPE.PAGE) {
+      const newPageId = generateId();
+      const prevPage = pages.find(({ id }) => id === sourceItem.pageId);
+
+      if (prevPage._feGenerated) {
+        if (!prevPage._duplicatedFromPageId) {
+          toggleNotification({
+            type: "warning",
+            message: `${pluginId}.duplicateItem.warning.message`,
+          });
+          return;
+        }
+        const prevPageDuplicateFromPage = pages.find(
+          ({ id }) => id === prevPage._duplicatedFromPageId
+        );
+        if (prevPageDuplicateFromPage._feGenerated) {
+          toggleNotification({
+            type: "warning",
+            message: `${pluginId}.duplicateItem.warning.extend.message`,
+          });
+          return;
+        }
+      }
+
+      const newPage = {
+        ...prevPage,
+        id: newPageId,
+        title: itemName,
+        slug: stringToSlug(itemName),
+        _feGenerated: true,
+        _duplicatedFromPageId: prevPage._duplicatedFromPageId
+          ? prevPage._duplicatedFromPageId
+          : prevPage.id,
+      };
+
+      setPages((currentPages) => [...currentPages, newPage]);
+      setIsEditMode(true);
+      newItem.pageId = newPageId;
+    }
+    setItems((prev) => {
+      const flatItems = flattenTree(prev);
+      const sourceItemIndex = flatItems.findIndex(
+        ({ id }) => id === sourceItemId
+      );
+      return buildTree([
+        ...flatItems.slice(0, sourceItemIndex + 1),
+        newItem,
+        ...flatItems.slice(sourceItemIndex + 1),
+      ]);
+    });
+    setItemToUpdate(newItem);
+  };
+
   const toggleEditMode = () => setIsEditMode((prev) => !prev);
 
+  const handleFormModalClose = (updateValue) => {
+    if (updateValue) {
+      console.log({ pages, items });
+      setItems((prev) => {
+        const flatTree = flattenTree(prev);
+        const { id } = updateValue;
+        const itemToUpdateIndex = flatTree.findIndex((item) => item.id === id);
+        // replace the item in the array with the updated one by index
+        const updatedItems = [
+          ...flatTree.slice(0, itemToUpdateIndex),
+          updateValue,
+          ...flatTree.slice(itemToUpdateIndex + 1),
+        ];
+        return buildTree(updatedItems);
+      });
+    }
+    setItemToUpdate(undefined);
+  };
   return (
     <EditViewContext.Provider
       value={{
@@ -220,32 +307,12 @@ export const EditViewContextProvider = ({ children }) => {
         itemToUpdate,
         deleteItem,
         saveData,
-        saveDataAndPickByPageId,
+        saveDataAndPickById,
+        duplicateItem,
       }}
     >
       {itemToUpdate ? (
-        <EditMenuItemForm
-          onClose={(updateValue) => {
-            if (updateValue) {
-              console.log({ pages, items });
-              setItems((prev) => {
-                const flatTree = flattenTree(prev);
-                const { id } = updateValue;
-                const itemToUpdateIndex = flatTree.findIndex(
-                  (item) => item.id === id
-                );
-                // replace the item in the array with the updated one by index
-                const updatedItems = [
-                  ...flatTree.slice(0, itemToUpdateIndex),
-                  updateValue,
-                  ...flatTree.slice(itemToUpdateIndex + 1),
-                ];
-                setItems(buildTree(updatedItems));
-              });
-            }
-            setItemToUpdate(undefined);
-          }}
-        />
+        <EditMenuItemForm onClose={handleFormModalClose} />
       ) : null}
       {children}
     </EditViewContext.Provider>

@@ -4,20 +4,23 @@
  *
  */
 
-import { BaseHeaderLayout, ContentLayout } from "@strapi/design-system";
-import React from "react";
-import { Button, Flex } from "@strapi/design-system";
-import Pencil from "@strapi/icons/Pencil";
-import Cross from "@strapi/icons/Cross";
+import {
+  BaseHeaderLayout,
+  Button,
+  ContentLayout,
+  Flex,
+  Layout,
+} from "@strapi/design-system";
 import Check from "@strapi/icons/Check";
+import Cross from "@strapi/icons/Cross";
+import Pencil from "@strapi/icons/Pencil";
+import React from "react";
 import { SortableMenu } from "../../components/Sortable/SortableMenu";
 import { useTranslation } from "../../hooks/useTranslation";
 import { ITEM_TYPE } from "../../lib/constants";
-import { EditViewContext } from "../../lib/contexts/EditViewContext";
 import { useConfirmDialog } from "../../lib/contexts/ConfirmDialogContext";
-import { buildTree, flattenTree } from "../../utils/sortableTree";
-import { axiosInstance } from "../../utils/axiosInstance";
-import pluginId from "../../pluginId";
+import { EditViewContext } from "../../lib/contexts/EditViewContext";
+import styled from "styled-components";
 
 const CREATE_NEW_BUTTONS = [
   {
@@ -102,16 +105,18 @@ const HomePage = () => {
 
   return (
     <>
-      <BaseHeaderLayout
-        title={t("plugin.name")}
-        subtitle={t("description")}
-        as="h2"
-        primaryAction={<PrimaryActions />}
-      />
-      <ContentLayout>
-        <EditNewButtons />
-        <SortableMenu />
-      </ContentLayout>
+      <Layout>
+        <BaseHeaderLayout
+          title={t("plugin.name")}
+          subtitle={t("description")}
+          as="h2"
+          primaryAction={<PrimaryActions />}
+        />
+        <ContentLayout>
+          <EditNewButtons />
+          <SortableMenu />
+        </ContentLayout>
+      </Layout>
     </>
   );
 };

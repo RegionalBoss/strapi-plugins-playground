@@ -33,7 +33,7 @@
   "EditMenuItemForm.input.visibleFrom.label": "Viditelný v menu od",
   "EditMenuItemForm.input.visibleTo.label": "Viditelný v menu do",
   "EditMenuItemForm.delete.itemAndPage": "Smazat položku + stránku",
-  "EditMenuItemForm.delete.item": "Smazat Položku",
+  "EditMenuItemForm.delete.item": "Smazat položku",
   "EditMenuItemForm.delete.warning.confirm.title": "Opravdu chcete smazat položku?",
   "EditMenuItemForm.delete.warning.confirm.message": "Potvrzením smažete i všechny její zanořené prvky a všechny reference na smazané stránky a jejich zanoření",
   "EditMenuItemForm.editConnectedPaged.button": "Vybrat propojenou stránku",
@@ -65,5 +65,7 @@
   "menuType.SYMBOLIC_LINK": "Symbolický link",
   "menuType.LABEL": "Label",
   "menuType.HARD_LINK": "Hard link",
-  "onUnsavedChanges.alert": "You have unsaved changes, are you sure you want to leav?"
+  "onUnsavedChanges.alert": "You have unsaved changes, are you sure you want to leav?",
+  "duplicateItem.warning.message": "můžete duplikovat pouze položky feGen, které rozšiřují stránky uložené v databázi",
+  "duplicateItem.warning.extend.message": "nelze rozšířit fe vygenerovanou stránku"
 }

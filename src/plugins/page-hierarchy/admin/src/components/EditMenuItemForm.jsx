@@ -1,30 +1,27 @@
-import React, { useState, useCallback } from "react";
 import {
-  Flex,
-  ModalLayout,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Typography,
-  Button,
-  TextInput,
   Box,
-  Loader,
-  FieldHint,
-  FieldError,
-  Select,
-  Option,
-  ToggleCheckbox,
+  Button,
   DatePicker,
   Field,
+  FieldError,
+  FieldHint,
   FieldInput,
   FieldLabel,
+  ModalBody,
+  ModalFooter,
+  ModalHeader,
+  ModalLayout,
+  Option,
+  Select,
+  ToggleCheckbox,
+  Typography,
 } from "@strapi/design-system";
-import { EditViewContext } from "../lib/contexts/EditViewContext";
-import { ITEM_TYPE } from "../lib/constants";
-import { useForm, Control, Controller } from "react-hook-form";
+import React from "react";
+import { Controller, useForm } from "react-hook-form";
 import styled from "styled-components";
 import { useTranslation } from "../hooks/useTranslation";
+import { ITEM_TYPE } from "../lib/constants";
+import { EditViewContext } from "../lib/contexts/EditViewContext";
 
 const HalfInline = styled.div`
   display: inline-block;
@@ -74,15 +71,7 @@ const FormDatePicker = React.forwardRef((props, ref) => (
 export const EditMenuItemForm = ({ onClose }) => {
   const { itemToUpdate, pages } = React.useContext(EditViewContext);
   const { t } = useTranslation();
-  const {
-    register,
-    handleSubmit,
-    formState,
-    getValues,
-    setValue,
-    setError: setFormError,
-    control,
-  } = useForm({
+  const { handleSubmit, formState, setValue, control } = useForm({
     defaultValues: {
       ...itemToUpdate,
       visibleFrom: itemToUpdate.visibleFrom
@@ -96,7 +85,8 @@ export const EditMenuItemForm = ({ onClose }) => {
   const { errors } = formState;
 
   const handleClose = (e) => {
-    if (e.target.type === "button" && typeof onClose === "function") onClose();
+    if ((!e || e.target.type === "button") && typeof onClose === "function")
+      onClose();
   };
 
   const FORM_INPUTS = React.useMemo(
