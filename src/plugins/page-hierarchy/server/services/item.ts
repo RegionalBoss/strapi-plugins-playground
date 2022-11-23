@@ -175,6 +175,7 @@ const service = {
     const pagesIdsToDelete = initDbPageIds.filter(
       (id) => !bodyPageIds.includes(id)
     );
+    console.log("PAGES IDS TO DELETE", pagesIdsToDelete);
 
     // -----------------------------------
     // --------- API validations ---------
@@ -222,14 +223,17 @@ const service = {
       }),
     ]);
 
-    const pageQueriesToDelete = pagesIdsToDelete.map((id) =>
-      strapi.entityService.delete(`plugin::${pluginId}.page`, id)
-    );
+    const pageQueriesToDelete = pagesIdsToDelete.map((id) => {
+      console.log("DELETE PAGE: ", id);
+      return strapi.entityService.delete(`plugin::${pluginId}.page`, id);
+    });
 
     const [createdPages] = await Promise.all([
       Promise.all(pageQueriesToCreate),
       Promise.all(pageQueriesToDelete),
     ]);
+
+    console.log("CREATED PAGES", createdPages);
 
     // mapped client-generated-ids x db-ids HASH-MAP
     // TODO: it includes pages to delete
@@ -253,6 +257,8 @@ const service = {
     const itemsIdsToDelete = initDbItemIds.filter(
       (id) => !bodyItemIds.includes(id)
     );
+
+    console.log("ITEMS IDS TO DELETE", itemsIdsToDelete);
 
     // first of all crate new empty skeleton of items without parent_item reference
     // then we will fill them with validate SQL relationship IDs
@@ -307,9 +313,11 @@ const service = {
         }
       )
     );
-    const itemQueriesToDelete = itemsIdsToDelete.map((id) =>
-      strapi.entityService.delete(`plugin::${pluginId}.item`, id)
-    );
+    const itemQueriesToDelete = itemsIdsToDelete.map((id) => {
+      console.log("DELETE ITEM: ", id);
+
+      return strapi.entityService.delete(`plugin::${pluginId}.item`, id);
+    });
     await Promise.all([
       Promise.all(itemQueriesToUpdate),
       Promise.all(itemQueriesToDelete),

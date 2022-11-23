@@ -182,6 +182,7 @@ export const EditMenuItemForm = ({ onClose }) => {
       },
       {
         type: "dom",
+        name: "box_new_line",
         component: Box,
       },
       {
@@ -300,15 +301,6 @@ export const EditMenuItemForm = ({ onClose }) => {
         {FORM_INPUTS.map((formInput) => (
           <FormInput key={formInput.name} {...formInput} />
         ))}
-        <Typography as="p">
-          Laborum labore occaecat aliquip non non deserunt aute sint et
-          incididunt id et. Sit irure cupidatat sit quis commodo irure eu nulla
-          sint. Commodo adipisicing anim nulla nostrud aliquip dolore laboris et
-          non incididunt tempor dolor officia. Sunt est qui irure mollit Lorem
-          enim. Nostrud aute labore dolore tempor proident ullamco ea enim ut
-          eiusmod dolor minim elit irure. Labore labore laborum nulla ex
-          eiusmod.
-        </Typography>
       </ModalBody>
       <ModalFooter
         startActions={

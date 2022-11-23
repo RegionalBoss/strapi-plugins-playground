@@ -9,11 +9,11 @@ const pluginId_1 = __importDefault(require("../../pluginId"));
  * to customize this model
  */
 exports.default = {
-    beforeDelete: async ({ model }) => {
+    beforeDelete: async (params) => {
         const itemToDelete = await strapi
             .query(`plugin::${pluginId_1.default}.item`)
-            .findOne({ where: { id: model.id } });
-        await strapi.query(`plugin::${pluginId_1.default}.auditLog`).create({
+            .findOne(params);
+        await strapi.query(`plugin::${pluginId_1.default}.audit-log`).create({
             data: {
                 type: "ITEM",
                 data_log: JSON.stringify(itemToDelete),

@@ -130,6 +130,7 @@ const service = {
         const pagesToCreate = pagesToAddToDb.filter((p) => !p._duplicatedFromPageId);
         const pagesToBeDuplicated = pagesToAddToDb.filter((p) => Boolean(p._duplicatedFromPageId));
         const pagesIdsToDelete = initDbPageIds.filter((id) => !bodyPageIds.includes(id));
+        console.log("PAGES IDS TO DELETE", pagesIdsToDelete);
         // -----------------------------------
         // --------- API validations ---------
         // todo: what about that id prefix rule?
@@ -164,11 +165,15 @@ const service = {
                 },
             }),
         ]);
-        const pageQueriesToDelete = pagesIdsToDelete.map((id) => strapi.entityService.delete(`plugin::${pluginId_1.default}.page`, id));
+        const pageQueriesToDelete = pagesIdsToDelete.map((id) => {
+            console.log("DELETE PAGE: ", id);
+            return strapi.entityService.delete(`plugin::${pluginId_1.default}.page`, id);
+        });
         const [createdPages] = await Promise.all([
             Promise.all(pageQueriesToCreate),
             Promise.all(pageQueriesToDelete),
         ]);
+        console.log("CREATED PAGES", createdPages);
         // mapped client-generated-ids x db-ids HASH-MAP
         // TODO: it includes pages to delete
         const pageFrontEndIdDatabaseIdMapper = Object.fromEntries([
@@ -184,6 +189,7 @@ const service = {
         const itemsToCreate = bodyItems.filter((item) => !initDbItemIds.includes(item.id));
         const itemsToUpdate = bodyItems.filter((item) => initDbItemIds.includes(item.id));
         const itemsIdsToDelete = initDbItemIds.filter((id) => !bodyItemIds.includes(id));
+        console.log("ITEMS IDS TO DELETE", itemsIdsToDelete);
         // first of all crate new empty skeleton of items without parent_item reference
         // then we will fill them with validate SQL relationship IDs
         // problem is that we don't know real SQL IDs from the frontend application
@@ -229,7 +235,10 @@ const service = {
                 type: i.type,
             },
         }));
-        const itemQueriesToDelete = itemsIdsToDelete.map((id) => strapi.entityService.delete(`plugin::${pluginId_1.default}.item`, id));
+        const itemQueriesToDelete = itemsIdsToDelete.map((id) => {
+            console.log("DELETE ITEM: ", id);
+            return strapi.entityService.delete(`plugin::${pluginId_1.default}.item`, id);
+        });
         await Promise.all([
             Promise.all(itemQueriesToUpdate),
             Promise.all(itemQueriesToDelete),

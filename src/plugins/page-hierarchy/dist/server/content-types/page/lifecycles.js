@@ -9,11 +9,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const pluginId_1 = __importDefault(require("../../pluginId"));
 exports.default = {
-    beforeDelete: async ({ model }) => {
+    beforeDelete: async ({ params }) => {
         const pageToDelete = await strapi
             .query(`plugin::${pluginId_1.default}.page`)
-            .findOne({ where: { id: model.id } });
-        await strapi.query(`plugin::${pluginId_1.default}.auditLog`).create({
+            .findOne(params);
+        await strapi.query(`plugin::${pluginId_1.default}.audit-log`).create({
             data: {
                 type: "PAGE",
                 data_log: JSON.stringify(pageToDelete),

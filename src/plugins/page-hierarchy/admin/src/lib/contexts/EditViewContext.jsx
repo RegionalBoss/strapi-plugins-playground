@@ -6,7 +6,7 @@ import {
   stringToSlug,
 } from "../../utils";
 import { axiosInstance } from "../../utils/axiosInstance";
-import { buildTree } from "../../utils/sortableTree";
+import { buildTree, flattenTree } from "../../utils/sortableTree";
 import { EditMenuItemForm } from "../../components/EditMenuItemForm";
 import { ITEM_TYPE } from "../constants";
 import { useTranslation } from "../../hooks/useTranslation";
@@ -41,6 +41,53 @@ export const EditViewContextProvider = ({ children }) => {
     } catch (ex) {
       console.error(ex);
     }
+  };
+
+  const deleteItem = (itemToDelete) => {
+    setItems((prevItems) => {
+      let filteredData = [prevItems, pages];
+
+      /**
+       * gets all children from item in a flat list with that item, with pages ids of that items
+       * filters list of items, removing all items that are in the list of items to delete
+       * [[...items], [...pages]] - filtered items and page ids to be deleted thet left after deleting
+       * goes through all items and checks if there is a page relation, to a page id thet must be deleted
+       * if there is a relation, it will do the same thing with that item and its children recursively, reducing the list of items that left, and populating list of pages to delete
+       *
+       */
+      const getFilteredDataRecursively = (item) => {
+        const nestedItemsToDelete = [item, ...flattenTree(item.children)];
+        const itemsIdsToDelete = nestedItemsToDelete.map((item) => item.id);
+        const pagesIdsToDelete = nestedItemsToDelete
+          .filter((item) => item.type === ITEM_TYPE.PAGE)
+          .map((item) => item.pageId);
+
+        filteredData = [
+          buildTree(
+            flattenTree(filteredData[0]).filter(
+              ({ id }) => !itemsIdsToDelete.includes(id)
+            )
+          ),
+          filteredData[1].filter(({ id }) => !pagesIdsToDelete.includes(id)),
+        ];
+
+        flattenTree(filteredData[0]).forEach((item) => {
+          if (pagesIdsToDelete.includes(item.pageId)) {
+            getFilteredDataRecursively(item);
+          }
+        });
+      };
+      getFilteredDataRecursively(itemToDelete);
+
+      console.log("filteredData", filteredData);
+
+      setPages(filteredData[1]);
+      return filteredData[0];
+    });
+    setItemToUpdate(undefined);
+    // setPages((prevPages) =>
+    //   prevPages.filter((page) => !pagesIdsToDelete.includes(page.id))
+    // );
   };
 
   const addNewItem = (type) => {
@@ -140,6 +187,7 @@ export const EditViewContextProvider = ({ children }) => {
         refreshData: loadInitData,
         setItemToUpdate,
         itemToUpdate,
+        deleteItem,
       }}
     >
       {itemToUpdate ? (
@@ -148,17 +196,18 @@ export const EditViewContextProvider = ({ children }) => {
             if (updateValue) {
               console.log({ pages, items });
               setItems((prev) => {
+                const flatTree = flattenTree(prev);
                 const { id } = updateValue;
-                const itemToUpdateIndex = prev.findIndex(
+                const itemToUpdateIndex = flatTree.findIndex(
                   (item) => item.id === id
                 );
                 // replace the item in the array with the updated one by index
                 const updatedItems = [
-                  ...prev.slice(0, itemToUpdateIndex),
+                  ...flatTree.slice(0, itemToUpdateIndex),
                   updateValue,
-                  ...prev.slice(itemToUpdateIndex + 1),
+                  ...flatTree.slice(itemToUpdateIndex + 1),
                 ];
-                setItems(updatedItems);
+                setItems(buildTree(updatedItems));
               });
             }
             setItemToUpdate(undefined);

@@ -8,12 +8,12 @@ import pluginId from "../../pluginId";
  */
 
 export default {
-  beforeDelete: async ({ model }) => {
+  beforeDelete: async (params) => {
     const itemToDelete = await strapi
       .query(`plugin::${pluginId}.item`)
-      .findOne({ where: { id: model.id } });
+      .findOne(params);
 
-    await strapi.query(`plugin::${pluginId}.auditLog`).create({
+    await strapi.query(`plugin::${pluginId}.audit-log`).create({
       data: {
         type: "ITEM",
         data_log: JSON.stringify(itemToDelete),

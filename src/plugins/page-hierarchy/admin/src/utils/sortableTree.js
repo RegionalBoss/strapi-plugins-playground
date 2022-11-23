@@ -1,35 +1,29 @@
 import { arrayMove } from "@dnd-kit/sortable";
 
-function getDragDepth(offset, indentationWidth) {
-  return Math.round(offset / indentationWidth);
-}
-function getMaxDepth({ previousItem }) {
-  if (previousItem) {
-    return previousItem.depth + 1;
-  }
+// Calculates depth of a dragged item
+const getDragDepth = (offset, indentationWidth) =>
+  Math.round(offset / indentationWidth);
 
-  return 0;
-}
-function getMinDepth({ nextItem }) {
-  if (nextItem) {
-    return nextItem.depth;
-  }
+// Calculates the max depth of a dragged item
+const getMaxDepth = ({ previousItem }) =>
+  previousItem ? previousItem.depth + 1 : 0;
 
-  return 0;
-}
-function flatten(items = [], parentId = null, depth = 0) {
-  return items.reduce((acc, item, index) => {
-    return [
+// Calculates the min depth of a dragged item
+const getMinDepth = ({ nextItem }) => (nextItem ? nextItem.depth : 0);
+
+// Returns flat list of items without nesting children
+const flatten = (items = [], parentId = null, depth = 0) =>
+  items.reduce(
+    (acc, item, index) => [
       ...acc,
       { ...item, parentId, depth, index },
       ...flatten(item.children, item.id, depth + 1),
-    ];
-  }, []);
-}
+    ],
+    []
+  );
 
-export function flattenTree(items) {
-  return flatten(items);
-}
+// Returns flat list of items
+export const flattenTree = (items) => flatten(items);
 
 export function removeChildrenOf(items, ids) {
   const excludeParentIds = [...ids];
@@ -149,9 +143,9 @@ export function buildTree(flattenedItems) {
   return root.children;
 }
 
-export function findItem(items, itemId) {
-  return items.find(({ id }) => id === itemId);
-}
+export const findItem = (items, itemId) =>
+  items.find(({ id }) => id === itemId);
+
 function countChildren(items = [], count = 0) {
   return items.reduce((acc, { children = [] }) => {
     if (children.length) {

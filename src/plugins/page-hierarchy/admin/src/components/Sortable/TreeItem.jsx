@@ -6,6 +6,7 @@ import {
   faFile,
   faGripVertical,
   faLink,
+  faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Box, IconButton, Typography, Flex } from "@strapi/design-system";
@@ -15,6 +16,8 @@ import { EditViewContext } from "../../lib/contexts/EditViewContext";
 import { ITEM_TYPE } from "../../lib/constants";
 
 import Pencil from "@strapi/icons/Pencil";
+import { useConfirmDialog } from "../../lib/contexts/ConfirmDialogContext";
+import { useTranslation } from "../../hooks/useTranslation";
 
 const LeftItemDiv = styled.div`
   display: flex;
@@ -92,7 +95,30 @@ export const TreeItem = React.forwardRef(
     },
     ref
   ) => {
-    const { isEditMode, setItemToUpdate } = React.useContext(EditViewContext);
+    const { isEditMode, setItemToUpdate, deleteItem, pages } =
+      React.useContext(EditViewContext);
+    const { t } = useTranslation();
+    const { showConfirmDialog } = useConfirmDialog();
+
+    const havePage = React.useMemo(
+      () => value.type === ITEM_TYPE.PAGE,
+      [value.type]
+    );
+    const page = React.useMemo(
+      () => (havePage ? pages.find((page) => page.id === value.pageId) : null),
+      [havePage, value.pageId, pages]
+    );
+
+    const handleRemove = async () => {
+      if (
+        await showConfirmDialog(
+          t("EditMenuItemForm.delete.warning.confirm.title"),
+          t("EditMenuItemForm.delete.warning.confirm.message")
+        )
+      )
+        deleteItem(value);
+    };
+
     return (
       <Container
         ref={wrapperRef}
@@ -111,9 +137,17 @@ export const TreeItem = React.forwardRef(
         >
           <LeftItemDiv>
             {isEditMode ? <Handle {...handleProps} /> : null}
-            <Typography as="h3" style={{ marginLeft: "1rem" }}>
-              {value.name}
-            </Typography>
+            <div style={{ marginLeft: "1rem" }}>
+              <Typography as="h3">
+                <div>{value.name}</div>
+              </Typography>
+              <Typography
+                as="small"
+                style={{ fontSize: "0.7rem", opacity: 0.8 }}
+              >
+                {havePage && page?.slug}
+              </Typography>
+            </div>
           </LeftItemDiv>
           {!clone && !ghost ? (
             <Flex>
@@ -162,12 +196,20 @@ export const TreeItem = React.forwardRef(
                 )}
               </IconWrapper>
               {isEditMode ? (
-                <IconButton
-                  onClick={() => setItemToUpdate(value)}
-                  label="Upravit"
-                  noBorder
-                  icon={<Pencil />}
-                />
+                <>
+                  <IconButton
+                    onClick={handleRemove}
+                    label="Smazat"
+                    noBorder
+                    icon={<FontAwesomeIcon icon={faTrash} />}
+                  />
+                  <IconButton
+                    onClick={() => setItemToUpdate(value)}
+                    label="Upravit"
+                    noBorder
+                    icon={<Pencil />}
+                  />
+                </>
               ) : null}
             </Flex>
           ) : null}
