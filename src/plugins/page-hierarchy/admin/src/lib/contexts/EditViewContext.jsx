@@ -60,7 +60,7 @@ export const EditViewContextProvider = ({ children }) => {
 
       toggleNotification({
         type: "success",
-        message: t("saveData.success"),
+        message: `${pluginId}.saveData.success`,
       });
 
       setItems(buildTree(data.items));

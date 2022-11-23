@@ -48,26 +48,23 @@ const FormTextInput = React.forwardRef((props, ref) => {
   const { label = "" } = props;
 
   return (
-    <Field name={props.name} error={props.error} novalidate formnovalidate>
+    <Field name={props.name} error={props.error}>
       <FieldLabel>
         {label}
         {props.required ? <RequiredStar>*</RequiredStar> : null}
       </FieldLabel>
-      <FieldInput {...props} ref={ref} novalidate formnovalidate />
+      <FieldInput {...props} ref={ref} />
       <FieldHint />
       <FieldError />
     </Field>
   );
 });
 
-const FormSelect = React.forwardRef((props, ref) => {
-  console.log("FormSelect", props);
-  return (
-    <div ref={ref}>
-      <Select {...props} />
-    </div>
-  );
-});
+const FormSelect = React.forwardRef((props, ref) => (
+  <div ref={ref}>
+    <Select {...props} />
+  </div>
+));
 const FormDatePicker = React.forwardRef((props, ref) => (
   <div ref={ref}>
     <DatePicker {...props} />
@@ -96,9 +93,7 @@ export const EditMenuItemForm = ({ onClose }) => {
         : null,
     },
   });
-  const { errors, isValid } = formState;
-
-  console.log("pages", pages);
+  const { errors } = formState;
 
   const handleClose = (e) => {
     if (e.target.type === "button" && typeof onClose === "function") onClose();
@@ -271,7 +266,6 @@ export const EditMenuItemForm = ({ onClose }) => {
           </HalfInline>
         );
       }
-      console.log(errors);
       return typeof formInput.condition === "undefined" ||
         (typeof formInput.condition === "function" &&
           formInput.condition(itemToUpdate)) ? (

@@ -236,7 +236,14 @@ export const TreeItem = React.forwardRef(
           {...props}
         >
           <LeftItemDiv>
-            {isEditMode ? <Handle {...handleProps} /> : null}
+            <Handle
+              {...handleProps}
+              style={{
+                opacity: isEditMode ? 1 : 0.2,
+                cursor: isEditMode ? "grab" : "default",
+              }}
+              disabled={!isEditMode}
+            />
             <div style={{ marginLeft: "1rem" }}>
               <Typography as="h3">
                 <div>{value.name}</div>

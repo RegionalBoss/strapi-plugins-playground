@@ -53,7 +53,7 @@ const dropAnimationConfig = {
 };
 
 export const SortableMenu = React.memo(() => {
-  const { items, setItems } = React.useContext(EditViewContext);
+  const { items, setItems, isEditMode } = React.useContext(EditViewContext);
   const [activeId, setActiveId] = React.useState(null);
   const [overId, setOverId] = React.useState(null);
   const [offsetLeft, setOffsetLeft] = React.useState(0);
@@ -109,7 +109,11 @@ export const SortableMenu = React.memo(() => {
       onDragOver={handleDragOver}
       onDragCancel={handleDragCancel}
     >
-      <SortableContext items={sortedIds} strategy={verticalListSortingStrategy}>
+      <SortableContext
+        items={sortedIds}
+        strategy={verticalListSortingStrategy}
+        disabled={!isEditMode}
+      >
         {flattenedItems.map((item) => {
           const { id, depth } = item;
           return (
