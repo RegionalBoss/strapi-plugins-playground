@@ -8,6 +8,8 @@ import {
 import { axiosInstance } from "../../utils/axiosInstance";
 import { buildTree, flattenTree } from "../../utils/sortableTree";
 import { EditMenuItemForm } from "../../components/EditMenuItemForm";
+import { useNotification } from "@strapi/helper-plugin";
+
 import { ITEM_TYPE } from "../constants";
 import { useTranslation } from "../../hooks/useTranslation";
 
@@ -22,6 +24,8 @@ export const EditViewContextProvider = ({ children }) => {
   const [pages, setPages] = useState([]);
   const [itemToUpdate, setItemToUpdate] = useState();
   const [isEditMode, setIsEditMode] = useState(false);
+
+  const toggleNotification = useNotification();
 
   const { t } = useTranslation();
 
@@ -41,6 +45,38 @@ export const EditViewContextProvider = ({ children }) => {
     } catch (ex) {
       console.error(ex);
     }
+  };
+
+  const saveData = async () => {
+    console.log("save state", flattenTree(items));
+    try {
+      const { data } = await axiosInstance.put(`/${pluginId}/items`, {
+        items: flattenTree(items).map((item, index) => ({
+          ...item,
+          childOrder: index,
+        })),
+        pages,
+      });
+
+      toggleNotification({
+        type: "success",
+        message: t("saveData.success"),
+      });
+
+      setItems(buildTree(data.items));
+      setPages(data.pages);
+      return data;
+    } catch (e) {
+      console.error(e);
+    } finally {
+      toggleEditMode();
+    }
+  };
+
+  const saveDataAndPickByPageId = async (feGeneratedPageId) => {
+    const response = await saveData();
+    if (!response) return;
+    return response.pageFrontEndIdDatabaseIdMapper[feGeneratedPageId];
   };
 
   const deleteItem = (itemToDelete) => {
@@ -79,15 +115,10 @@ export const EditViewContextProvider = ({ children }) => {
       };
       getFilteredDataRecursively(itemToDelete);
 
-      console.log("filteredData", filteredData);
-
       setPages(filteredData[1]);
       return filteredData[0];
     });
     setItemToUpdate(undefined);
-    // setPages((prevPages) =>
-    //   prevPages.filter((page) => !pagesIdsToDelete.includes(page.id))
-    // );
   };
 
   const addNewItem = (type) => {
@@ -188,6 +219,8 @@ export const EditViewContextProvider = ({ children }) => {
         setItemToUpdate,
         itemToUpdate,
         deleteItem,
+        saveData,
+        saveDataAndPickByPageId,
       }}
     >
       {itemToUpdate ? (

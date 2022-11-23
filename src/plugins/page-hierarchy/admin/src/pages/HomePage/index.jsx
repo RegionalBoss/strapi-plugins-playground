@@ -43,16 +43,8 @@ const CREATE_NEW_BUTTONS = [
 ];
 
 const HomePage = () => {
-  const {
-    isEditMode,
-    toggleEditMode,
-    addNewItem,
-    items,
-    setItems,
-    setPages,
-    pages,
-    refreshData,
-  } = React.useContext(EditViewContext);
+  const { isEditMode, toggleEditMode, addNewItem, saveData, refreshData } =
+    React.useContext(EditViewContext);
   const { showConfirmDialog } = useConfirmDialog();
   const { t } = useTranslation();
 
@@ -83,26 +75,7 @@ const HomePage = () => {
         >
           {t("cancelEditMode")}
         </Button>
-        <Button
-          startIcon={<Check />}
-          onClick={async () => {
-            console.log("save state", flattenTree(items));
-            try {
-              const { data } = await axiosInstance.put(`/${pluginId}/items`, {
-                items: flattenTree(items).map((item, index) => ({
-                  ...item,
-                  childOrder: index,
-                })),
-                pages,
-              });
-              setItems(buildTree(data.items));
-              setPages(data.pages);
-            } catch (e) {
-              console.error(e);
-            }
-            toggleEditMode();
-          }}
-        >
+        <Button startIcon={<Check />} onClick={saveData}>
           {t("saveChanges")}
         </Button>
       </Flex>

@@ -10,6 +10,8 @@ import {
   TextInput,
   Box,
   Loader,
+  FieldHint,
+  FieldError,
   Select,
   Option,
   ToggleCheckbox,
@@ -46,21 +48,26 @@ const FormTextInput = React.forwardRef((props, ref) => {
   const { label = "" } = props;
 
   return (
-    <Field error={props.error}>
+    <Field name={props.name} error={props.error} novalidate formnovalidate>
       <FieldLabel>
         {label}
         {props.required ? <RequiredStar>*</RequiredStar> : null}
       </FieldLabel>
-      <FieldInput {...props} ref={ref} />
+      <FieldInput {...props} ref={ref} novalidate formnovalidate />
+      <FieldHint />
+      <FieldError />
     </Field>
   );
 });
 
-const FormSelect = React.forwardRef((props, ref) => (
-  <div ref={ref}>
-    <Select {...props} />
-  </div>
-));
+const FormSelect = React.forwardRef((props, ref) => {
+  console.log("FormSelect", props);
+  return (
+    <div ref={ref}>
+      <Select {...props} />
+    </div>
+  );
+});
 const FormDatePicker = React.forwardRef((props, ref) => (
   <div ref={ref}>
     <DatePicker {...props} />
@@ -89,9 +96,13 @@ export const EditMenuItemForm = ({ onClose }) => {
         : null,
     },
   });
-  const { errors } = formState;
+  const { errors, isValid } = formState;
 
   console.log("pages", pages);
+
+  const handleClose = (e) => {
+    if (e.target.type === "button" && typeof onClose === "function") onClose();
+  };
 
   const FORM_INPUTS = React.useMemo(
     () => [
@@ -260,6 +271,7 @@ export const EditMenuItemForm = ({ onClose }) => {
           </HalfInline>
         );
       }
+      console.log(errors);
       return typeof formInput.condition === "undefined" ||
         (typeof formInput.condition === "function" &&
           formInput.condition(itemToUpdate)) ? (
@@ -272,7 +284,12 @@ export const EditMenuItemForm = ({ onClose }) => {
               <formInput.input
                 label={t(formInput.label)}
                 {...formInput.props}
-                error={errors[formInput.name]}
+                error={
+                  errors[formInput.name]?.type &&
+                  errors[formInput.name]?.type === "required"
+                    ? t("EditMenuItemForm.input.required")
+                    : null
+                }
                 {...field}
               >
                 {formInput.children}
@@ -282,17 +299,19 @@ export const EditMenuItemForm = ({ onClose }) => {
         </Box>
       ) : null;
     },
-    [formState]
+    [errors]
   );
 
   return (
     <ModalLayout
-      onClose={() => onClose()}
+      onClose={handleClose}
       labelledBy="title"
       as="form"
       onSubmit={handleSubmit(onSubmit)}
+      noValidate
+      noFormValidate
     >
-      <ModalHeader>
+      <ModalHeader closeLabel="Zrušit">
         <Typography fontWeight="bold" textColor="neutral800" as="h2" id="title">
           {t("EditMenuItemForm.header")}
         </Typography>

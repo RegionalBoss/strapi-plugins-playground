@@ -1,14 +1,18 @@
 import {
   faBookmark,
   faClock,
+  faExclamationTriangle,
   faEye,
   faEyeSlash,
   faFile,
   faGripVertical,
   faLink,
+  faPen,
   faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useHistory, Link } from "react-router-dom";
+
 import { Box, IconButton, Typography, Flex } from "@strapi/design-system";
 import React from "react";
 import styled from "styled-components";
@@ -18,6 +22,10 @@ import { ITEM_TYPE } from "../../lib/constants";
 import Pencil from "@strapi/icons/Pencil";
 import { useConfirmDialog } from "../../lib/contexts/ConfirmDialogContext";
 import { useTranslation } from "../../hooks/useTranslation";
+import pluginId from "../../pluginId";
+
+const DETAIL_PATH = `/content-manager/collectionType/plugin::${pluginId}.page`;
+const LOCATION_PATH = `/plugins/${pluginId}`;
 
 const LeftItemDiv = styled.div`
   display: flex;
@@ -50,6 +58,19 @@ const Count = styled.span`
   font-size: 0.8rem;
   font-weight: 600;
   color: #fff;
+`;
+
+const UpdateIconButton = styled(IconButton)`
+  opacity: 0.6;
+
+  &:hover {
+    opacity: 1;
+  }
+
+  svg path,
+  &:hover svg path {
+    fill: ${({ theme }) => theme.colors.primary600};
+  }
 `;
 
 const TreeItemBox = styled(Box)`
@@ -95,9 +116,15 @@ export const TreeItem = React.forwardRef(
     },
     ref
   ) => {
-    const { isEditMode, setItemToUpdate, deleteItem, pages } =
-      React.useContext(EditViewContext);
+    const {
+      isEditMode,
+      setItemToUpdate,
+      deleteItem,
+      pages,
+      saveDataAndPickByPageId,
+    } = React.useContext(EditViewContext);
     const { t } = useTranslation();
+    const history = useHistory();
     const { showConfirmDialog } = useConfirmDialog();
 
     const havePage = React.useMemo(
@@ -118,6 +145,79 @@ export const TreeItem = React.forwardRef(
       )
         deleteItem(value);
     };
+
+    const UpdatePageButton = React.useCallback(() => {
+      if (!havePage) return null;
+      if (!page)
+        return (
+          <IconButton
+            noBorder
+            label={t("PageHierarchyEditor.pageDoesNotExists.warning")}
+            icon={<FontAwesomeIcon icon={faExclamationTriangle} />}
+          />
+        );
+      return (
+        <Link
+          to={`${DETAIL_PATH}/${page.id}?redirectUrl=${LOCATION_PATH}`}
+          onClick={async (e) => {
+            // magic complicated function
+            // tricky validate link that can handle logic if redirect is valid
+            // validate if link can be used
+
+            console.log("on click!");
+
+            if (page._feGenerated) {
+              e.preventDefault();
+              e.stopPropagation();
+
+              const saveDataAndRedirect = await showConfirmDialog(
+                t(
+                  "PageHierarchyEditor.update.button.confirm.haveToSave.header"
+                ),
+                t("PageHierarchyEditor.update.button.confirm.haveToSave.body")
+              );
+
+              if (!saveDataAndRedirect) {
+                return;
+              }
+
+              // ID does not exist so we have to redirect by our own
+              const dbPageId = await saveDataAndPickByPageId(page.id);
+              history.push(
+                `${DETAIL_PATH}/${dbPageId}?redirectUrl=${LOCATION_PATH}`
+              );
+              return;
+            }
+
+            if (!isEditMode) {
+              return;
+            }
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            const shouldContinue = await showConfirmDialog(
+              t(
+                "PageHierarchyEditor.update.button.confirm.willDiscardChanges.header"
+              ),
+              t(
+                "PageHierarchyEditor.update.button.confirm.willDiscardChanges.body"
+              )
+            );
+            if (shouldContinue) {
+              const redirectUrl = `${DETAIL_PATH}/${page.id}?redirectUrl=${LOCATION_PATH}`;
+              history.push(redirectUrl);
+            }
+          }}
+        >
+          <UpdateIconButton
+            noBorder
+            label={t("PageHierarchyEditor.update.button.page")}
+            icon={<FontAwesomeIcon icon={faPen} />}
+          />
+        </Link>
+      );
+    }, [havePage, page, isEditMode]);
 
     return (
       <Container
@@ -151,6 +251,7 @@ export const TreeItem = React.forwardRef(
           </LeftItemDiv>
           {!clone && !ghost ? (
             <Flex>
+              <UpdatePageButton />
               <IconWrapper>
                 {value.isVisible ? (
                   <IconButton
