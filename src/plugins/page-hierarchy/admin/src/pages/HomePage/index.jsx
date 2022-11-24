@@ -46,8 +46,14 @@ const CREATE_NEW_BUTTONS = [
 ];
 
 const HomePage = () => {
-  const { isEditMode, toggleEditMode, addNewItem, saveData, refreshData } =
-    React.useContext(EditViewContext);
+  const {
+    isEditMode,
+    toggleEditMode,
+    addNewItem,
+    saveData,
+    refreshData,
+    globalLoading,
+  } = React.useContext(EditViewContext);
   const { showConfirmDialog } = useConfirmDialog();
   const { t } = useTranslation();
 
@@ -64,6 +70,8 @@ const HomePage = () => {
           variant="tertiary"
           startIcon={<Cross />}
           style={{ marginRight: "0.5rem" }}
+          disabled={globalLoading}
+          loading={globalLoading}
           onClick={async () => {
             if (
               await showConfirmDialog(
@@ -78,12 +86,17 @@ const HomePage = () => {
         >
           {t("cancelEditMode")}
         </Button>
-        <Button startIcon={<Check />} onClick={saveData}>
-          {t("saveChanges")}
+        <Button
+          startIcon={<Check />}
+          onClick={saveData}
+          disabled={globalLoading}
+          loading={globalLoading}
+        >
+          {globalLoading ? t("savingChanges") : t("saveChanges")}
         </Button>
       </Flex>
     );
-  }, [isEditMode, toggleEditMode]);
+  }, [isEditMode, toggleEditMode, globalLoading]);
 
   const EditNewButtons = React.useCallback(() => {
     if (!isEditMode) return null;

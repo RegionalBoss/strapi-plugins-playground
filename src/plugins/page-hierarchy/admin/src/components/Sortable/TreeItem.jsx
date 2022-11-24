@@ -78,6 +78,14 @@ const TreeItemBox = styled(Box)`
   display: flex;
   align-items: center;
   justify-content: space-between;
+  transition: all 0.4s;
+
+  &:hover {
+    transform: scale(1.01);
+    -webkit-box-shadow: ${({ theme }) => theme.shadows.filterShadow};
+    -moz-box-shadow: ${({ theme }) => theme.shadows.filterShadow};
+    box-shadow: ${({ theme }) => theme.shadows.filterShadow};
+  }
 `;
 
 const IconWrapper = styled.div`
@@ -241,15 +249,10 @@ export const TreeItem = React.forwardRef(
       duplicateItem(itemIdToDuplicate);
     };
 
-    const spacing = React.useMemo(() => {
-      console.log("update spacing");
-      return depth * indentationWidth;
-    }, [depth, indentationWidth]);
-
     return (
       <Container
         ref={wrapperRef}
-        style={{ "--spacing": `${spacing}px` }}
+        style={{ "--spacing": `${depth * indentationWidth}px` }}
         clone={clone}
         ghost={ghost}
       >

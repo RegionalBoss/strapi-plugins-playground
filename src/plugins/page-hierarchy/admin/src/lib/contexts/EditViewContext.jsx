@@ -20,6 +20,7 @@ export const EditViewContext = React.createContext({
 });
 
 export const EditViewContextProvider = ({ children }) => {
+  const [globalLoading, setGlobalLoading] = useState(false);
   const [items, setItems] = useState([]);
   const [pages, setPages] = useState([]);
   const [itemToUpdate, setItemToUpdate] = useState();
@@ -52,6 +53,7 @@ export const EditViewContextProvider = ({ children }) => {
   };
 
   const saveData = async () => {
+    setGlobalLoading(true);
     console.log("save state", flattenTree(items));
     try {
       const { data } = await axiosInstance.put(`/${pluginId}/items`, {
@@ -74,6 +76,7 @@ export const EditViewContextProvider = ({ children }) => {
       console.error(e);
     } finally {
       toggleEditMode();
+      setGlobalLoading(false);
     }
   };
 
@@ -309,6 +312,7 @@ export const EditViewContextProvider = ({ children }) => {
         saveData,
         saveDataAndPickById,
         duplicateItem,
+        globalLoading,
       }}
     >
       {itemToUpdate ? (
