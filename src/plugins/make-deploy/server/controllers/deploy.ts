@@ -61,7 +61,7 @@ export default {
     };
 
     const createDeployBody: ICreateDeployDTO = {
-      ...ctx.request.body,
+      ...(ctx.request as any).body,
       ...userObject,
     };
     const { error } = await validateCreateDeploy(createDeployBody);

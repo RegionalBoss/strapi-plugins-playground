@@ -103,13 +103,13 @@ export const FormModal = ({
               ...formValues,
               roles: formValues.roles
                 .map((r) => roles.find((role) => role.id === r))
-                .filter((r) => r !== undefined),
+                ?.filter((r) => r !== undefined),
             })
           : settingsRequests.setSettings({
               ...formValues,
               roles: formValues.roles
                 .map((r) => roles.find((role) => role.id === r))
-                .filter((r) => r !== undefined),
+                ?.filter((r) => r !== undefined),
             }));
         setStatus("success");
         toggleNotification({

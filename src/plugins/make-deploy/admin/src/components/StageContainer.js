@@ -5,7 +5,6 @@ import {
   CardBody,
   CardContent,
   Flex,
-  Link,
   Typography,
 } from "@strapi/design-system";
 
@@ -16,6 +15,7 @@ import {
   faExclamationTriangle,
   faInfoCircle,
   faFlagCheckered,
+  faLink,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
@@ -24,6 +24,7 @@ import React from "react";
 import { useDeploy } from "../hooks/useDeploy";
 import { useTranslation } from "../hooks/useTranslation";
 import { Spinner } from "./Spinner";
+import { ErrorBoundary } from "./ErrorBoundary";
 
 const SuccessIcon = styled(FontAwesomeIcon)`
   font-size: 200%;
@@ -50,6 +51,20 @@ const animateSlideUp = keyframes`
   to {
     transform: translateY(0);
     opacity: 1;
+  }
+`;
+
+const Link = styled.a`
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  position: relative;
+  outline: none;
+  color: ${({ theme }) => theme.colors.primary600};
+  transition: color 0.2s ease-in-out;
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.primary800};
   }
 `;
 
@@ -92,15 +107,23 @@ export function StageContainer({ deploySetting, refetchTimer }) {
   return (
     <Box padding={4} hasRadius background="neutral0" shadow="tableShadow">
       <Flex style={{ marginBottom: "1rem" }}>
-        <Link href={deploySetting.link} isExternal title={t("jobs.link")}>
-          <Typography
-            as="h2"
-            style={{ fontWeight: "bold" }}
-            title={t("jobs.name.label")}
+        <ErrorBoundary>
+          <Link
+            href={deploySetting?.link ?? ""}
+            // isExternal
+            title={t("jobs.link")}
+            target="_blank"
           >
-            {deploySetting.name}
-          </Typography>
-        </Link>
+            <Typography
+              as="h2"
+              style={{ fontWeight: "bold" }}
+              title={t("jobs.name.label")}
+            >
+              {deploySetting?.name ?? ""}
+            </Typography>
+            <FontAwesomeIcon icon={faLink} />
+          </Link>
+        </ErrorBoundary>
       </Flex>
       <Button
         disabled={isRunning}
@@ -111,62 +134,64 @@ export function StageContainer({ deploySetting, refetchTimer }) {
       >
         {t(isRunning ? "jobs.state.running" : "jobs.button.start")}
       </Button>
-      <ul>
-        {deploys?.map((deploy) => (
-          <li key={deploy.id}>
-            <Typography as="h3" style={{ margin: "1rem 0" }}>
-              <span>
-                {deploy?.createdBy?.firstname} {deploy?.createdBy?.lastname}
-              </span>
-              <small>
-                {deploy.createdAt
-                  ? format(new Date(deploy.createdAt), "dd.MM.yyyy HH:mm:ss")
-                  : ""}
-              </small>
-            </Typography>
-            {deploy.deployStatuses?.map((deployStatus) => (
-              <AnimatedStatusCard
-                id={`${deployStatus.id}`}
-                key={deployStatus.id}
-                style={{ marginBottom: "0.5rem" }}
-              >
-                <StageCardBody>
-                  <Box style={{ marginRight: "0.5rem" }}>
-                    <Typography as="strong" style={{ fontWeight: "bold" }}>
-                      {deployStatus.stage}
-                    </Typography>
-                    <Typography as="div">
-                      {deployStatus.createdAt
-                        ? format(new Date(deployStatus.createdAt), "HH:mm:ss")
-                        : ""}
-                    </Typography>
-                  </Box>
-                  <CardContent style={{ marginRight: "0.5rem" }}>
-                    <Typography as="p">{deployStatus.message}</Typography>
-                  </CardContent>
-                  <Box>
-                    {STAGE_STATUS_ICON[deployStatus.status] ??
-                      STAGE_STATUS_ICON.info}
-                  </Box>
-                </StageCardBody>
-              </AnimatedStatusCard>
-            ))}
-            {deploy.isFinal ? (
-              <WaitingForNextRow>
-                <SuccessIcon
-                  icon={faFlagCheckered}
-                  title="Build finished"
-                  style={{ color: "#007bff" }}
-                />
-              </WaitingForNextRow>
-            ) : (
-              <WaitingForNextRow>
-                <Spinner />
-              </WaitingForNextRow>
-            )}
-          </li>
-        ))}
-      </ul>
+      <ErrorBoundary>
+        <ul>
+          {deploys?.map((deploy) => (
+            <li key={deploy.id}>
+              <Typography as="h3" style={{ margin: "1rem 0" }}>
+                <span>
+                  {deploy?.createdBy?.firstname} {deploy?.createdBy?.lastname}
+                </span>
+                <small>
+                  {deploy.createdAt
+                    ? format(new Date(deploy.createdAt), "dd.MM.yyyy HH:mm:ss")
+                    : ""}
+                </small>
+              </Typography>
+              {deploy.deployStatuses?.map((deployStatus) => (
+                <AnimatedStatusCard
+                  id={`${deployStatus.id}`}
+                  key={deployStatus.id}
+                  style={{ marginBottom: "0.5rem" }}
+                >
+                  <StageCardBody>
+                    <Box style={{ marginRight: "0.5rem" }}>
+                      <Typography as="strong" style={{ fontWeight: "bold" }}>
+                        {deployStatus.stage}
+                      </Typography>
+                      <Typography as="div">
+                        {deployStatus.createdAt
+                          ? format(new Date(deployStatus.createdAt), "HH:mm:ss")
+                          : ""}
+                      </Typography>
+                    </Box>
+                    <CardContent style={{ marginRight: "0.5rem" }}>
+                      <Typography as="p">{deployStatus.message}</Typography>
+                    </CardContent>
+                    <Box>
+                      {STAGE_STATUS_ICON[deployStatus.status] ??
+                        STAGE_STATUS_ICON.info}
+                    </Box>
+                  </StageCardBody>
+                </AnimatedStatusCard>
+              ))}
+              {deploy.isFinal ? (
+                <WaitingForNextRow>
+                  <SuccessIcon
+                    icon={faFlagCheckered}
+                    title="Build finished"
+                    style={{ color: "#007bff" }}
+                  />
+                </WaitingForNextRow>
+              ) : (
+                <WaitingForNextRow>
+                  <Spinner />
+                </WaitingForNextRow>
+              )}
+            </li>
+          ))}
+        </ul>
+      </ErrorBoundary>
     </Box>
   );
 }

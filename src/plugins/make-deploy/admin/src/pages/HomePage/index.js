@@ -56,8 +56,8 @@ const HomePage = () => {
         )}
         <Box padding={8} background="neutral100">
           <CustomGridLayout>
-            {settingsData
-              .filter(
+            {(settingsData ?? [])
+              ?.filter(
                 (setting) =>
                   intersection(
                     ((user && user.roles) || []).map((role) => role.id),
