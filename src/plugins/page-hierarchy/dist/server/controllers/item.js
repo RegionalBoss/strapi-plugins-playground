@@ -18,27 +18,19 @@ exports.default = {
     flatFind: async () => (await service().flatFind()).map(item_1.transformDbItems),
     find: async (ctx) => {
         const items = await service().find(ctx.query);
-        // console.log(strapi.getModel(`plugin::${pluginId}.item`), ctx.query, items);
-        // console.log(strapi.plugin(pluginId).contentTypes);
         return Promise.all(items.map(async (entity) => await utils_1.sanitize.contentAPI.output(entity, strapi.getModel(`plugin::${pluginId_1.default}.item`))));
     },
     findOne: async (ctx) => await utils_1.sanitize.contentAPI.output(await service().findOne(ctx.params.id), strapi.getModel(`plugin::${pluginId_1.default}.item`)),
     updateItems: async (ctx) => {
-        // const trx = await ((strapi.db as any).connection as Knex).transaction();
         try {
             const body = ctx.request.body;
             const bodyItems = body.items;
             const bodyPages = body.pages;
-            console.log("START UPDATE\n", bodyItems, "\nPAGES:\n", bodyPages);
-            // return [];
             return service().updateItems(bodyItems, bodyPages);
         }
         catch (err) {
             console.error(err);
             ctx.status = 500;
-            // if (trx && !trx.isCompleted()) {
-            //   await trx.rollback();
-            // }
             return err.toString();
         }
     },

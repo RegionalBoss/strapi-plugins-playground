@@ -14,7 +14,6 @@ exports.default = {
     flatFind: async (ctx) => {
         // I don't want to send collection-Types builder attributes
         const data = await strapi.entityService.findMany(`plugin::${pluginId_1.default}.page`);
-        console.log("pages flat find", data);
         return (data
             // todo: add sanitizeEntity
             // .map(p => sanitizeEntity(p, { model: global.strapi.models.page }))

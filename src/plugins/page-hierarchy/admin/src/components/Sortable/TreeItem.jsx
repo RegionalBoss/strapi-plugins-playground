@@ -78,10 +78,9 @@ const TreeItemBox = styled(Box)`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  transition: all 0.4s;
+  transition: box-shadow 0.2s;
 
   &:hover {
-    transform: scale(1.01);
     -webkit-box-shadow: ${({ theme }) => theme.shadows.filterShadow};
     -moz-box-shadow: ${({ theme }) => theme.shadows.filterShadow};
     box-shadow: ${({ theme }) => theme.shadows.filterShadow};
