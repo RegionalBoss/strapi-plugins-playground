@@ -64,7 +64,7 @@ const Link = styled.a`
   transition: color 0.2s ease-in-out;
 
   &:hover {
-    color: ${({ theme }) => theme.colors.primary800};
+    color: ${({ theme }) => theme.colors.primary700};
   }
 `;
 
@@ -115,8 +115,8 @@ export function StageContainer({ deploySetting, refetchTimer }) {
             target="_blank"
           >
             <Typography
-              as="h2"
-              style={{ fontWeight: "bold" }}
+              as="span"
+              style={{ fontWeight: "bold", marginRight: "0.5rem" }}
               title={t("jobs.name.label")}
             >
               {deploySetting?.name ?? ""}
