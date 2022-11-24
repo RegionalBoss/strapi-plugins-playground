@@ -1,6 +1,6 @@
 {
   "name": "@regionalboss/strapi-plugin-make-deploy",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "This is the description of the plugin.",
   "strapi": {
     "name": "make-deploy",
@@ -36,7 +36,8 @@
   "scripts": {
     "develop": "tsc -w",
     "dev": "tsc -w",
-    "build": "tsc"
+    "build": "tsc",
+    "prepublish": "yarn build"
   },
   "license": "MIT",
   "bugs": {
