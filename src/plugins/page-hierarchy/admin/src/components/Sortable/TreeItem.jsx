@@ -166,8 +166,6 @@ export const TreeItem = React.forwardRef(
         e.preventDefault();
         e.stopPropagation();
 
-        console.log("page is FE generated");
-
         const saveDataAndRedirect = await showConfirmDialog(
           t("PageHierarchyEditor.update.button.confirm.haveToSave.header"),
           t("PageHierarchyEditor.update.button.confirm.haveToSave.body")

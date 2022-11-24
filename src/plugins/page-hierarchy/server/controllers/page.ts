@@ -12,7 +12,6 @@ export default {
     const data = await strapi.entityService.findMany(
       `plugin::${pluginId}.page`
     );
-    console.log("pages flat find", data);
     return (
       data
         // todo: add sanitizeEntity

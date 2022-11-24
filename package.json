@@ -19,6 +19,7 @@
     "@buffetjs/custom": "^3.3.8",
     "@buffetjs/hooks": "^3.3.8",
     "@buffetjs/styles": "^3.3.8",
+    "@strapi/plugin-graphql": "4.4.6",
     "@strapi/plugin-i18n": "4.4.6",
     "@strapi/plugin-users-permissions": "4.4.6",
     "@strapi/strapi": "4.4.6",

@@ -17,9 +17,6 @@ export default {
   find: async (ctx: Context) => {
     const items = await service().find(ctx.query);
 
-    // console.log(strapi.getModel(`plugin::${pluginId}.item`), ctx.query, items);
-    // console.log(strapi.plugin(pluginId).contentTypes);
-
     return Promise.all(
       items.map(
         async (entity) =>
@@ -36,21 +33,14 @@ export default {
       strapi.getModel(`plugin::${pluginId}.item`)
     ),
   updateItems: async (ctx: Context) => {
-    // const trx = await ((strapi.db as any).connection as Knex).transaction();
     try {
       const body = (ctx.request as any).body;
       const bodyItems = body.items;
       const bodyPages = body.pages;
-      console.log("START UPDATE\n", bodyItems, "\nPAGES:\n", bodyPages);
-      // return [];
       return service().updateItems(bodyItems, bodyPages);
     } catch (err) {
       console.error(err);
       ctx.status = 500;
-
-      // if (trx && !trx.isCompleted()) {
-      //   await trx.rollback();
-      // }
 
       return err.toString();
     }

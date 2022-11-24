@@ -34,17 +34,12 @@ export const EditViewContextProvider = ({ children }) => {
     loadInitData();
   }, []);
 
-  React.useEffect(() => {
-    console.log("ITEMS CHANGED", items);
-  }, [items]);
-
   const loadInitData = async () => {
     try {
       const [pages, items] = await Promise.all([
         axiosInstance.get(`/${pluginId}/flat-pages`),
         axiosInstance.get(`/${pluginId}/flat-items`),
       ]);
-      console.log({ pages: pages.data, items: items.data });
       setItems(buildTree(items.data));
       setPages(pages.data);
     } catch (ex) {
@@ -54,7 +49,6 @@ export const EditViewContextProvider = ({ children }) => {
 
   const saveData = async () => {
     setGlobalLoading(true);
-    console.log("save state", flattenTree(items));
     try {
       const { data } = await axiosInstance.put(`/${pluginId}/items`, {
         items: flattenTree(items).map((item, index) => ({
@@ -143,7 +137,6 @@ export const EditViewContextProvider = ({ children }) => {
       visibleFrom: null,
       visibleTo: null,
     };
-    console.log("newItem: ", { newItem, type, itemsNames });
     switch (type) {
       case ITEM_TYPE.PAGE: {
         const newPageId = generateId();
@@ -279,7 +272,6 @@ export const EditViewContextProvider = ({ children }) => {
 
   const handleFormModalClose = (updateValue) => {
     if (updateValue) {
-      console.log({ pages, items });
       setItems((prev) => {
         const flatTree = flattenTree(prev);
         const { id } = updateValue;
