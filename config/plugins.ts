@@ -17,4 +17,8 @@ export default {
     enabled: true,
     resolve: "./src/plugins/page-hierarchy",
   },
+  "cloudinary-field": {
+    enabled: true,
+    resolve: "./src/plugins/cloudinary-field",
+  },
 };

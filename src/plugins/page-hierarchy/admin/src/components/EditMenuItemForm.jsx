@@ -32,7 +32,7 @@ const CheckboxLabel = styled(Typography)`
   display: flex;
   flex-direction: column;
   cursor: pointer;
-  width: fit-content;
+  width: inherit;
 `;
 
 const RequiredStar = styled.span`
