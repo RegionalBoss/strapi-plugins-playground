@@ -1,0 +1,6 @@
+{
+  "json.label": "Cloudinary",
+  "json.description": "Cloudinary příloha",
+  "jsonForm.error.invalidJsonFormat": "Nevalidní JSON formát",
+  "jsonForm.error.fieldIsRequired": "Pole je povinné"
+}

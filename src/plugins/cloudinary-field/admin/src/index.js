@@ -4,6 +4,8 @@ import pluginPkg from "../../package.json";
 import pluginId from "./pluginId";
 import Initializer from "./components/Initializer";
 import PluginIcon from "./components/PluginIcon";
+import Attachment from "@strapi/icons/Attachment";
+import { CloudinaryIcon } from "./components/CloudinaryIcon";
 
 const name = pluginPkg.strapi.name;
 
@@ -37,6 +39,24 @@ export default {
     };
 
     app.registerPlugin(plugin);
+
+    app.customFields.register({
+      type: "json",
+      name: "cloudinary",
+      pluginId: pluginId,
+      intlLabel: {
+        id: `${pluginId}.json.label`,
+        defaultMessage: "Cloudinary",
+      },
+      intlDescription: {
+        id: `${pluginId}.json.description`,
+        defaultMessage: "Cloudinary příloha",
+      },
+      icon: CloudinaryIcon,
+      components: {
+        Input: async () => import("./components/CloudinaryInput"),
+      },
+    });
   },
 
   bootstrap(app) {},

@@ -1,10 +1,4 @@
-export default [
-  {
-    method: 'GET',
-    path: '/',
-    handler: 'myController.index',
-    config: {
-      policies: [],
-    },
-  },
-];
+import cloudinary from "./cloudinary";
+export default {
+  cloudinary,
+};

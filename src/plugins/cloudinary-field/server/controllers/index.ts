@@ -1,5 +1,5 @@
-import myController from './my-controller';
+import cloudinary from "./cloudinary";
 
 export default {
-  myController,
+  cloudinary,
 };

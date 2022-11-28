@@ -1,1 +1,6 @@
-{}
+{
+  "json.label": "Cloudinary",
+  "json.description": "Cloudinary attachment",
+  "jsonForm.error.invalidJsonFormat": "Invalid JSON format",
+  "jsonForm.error.fieldIsRequired": "Field is required"
+}
