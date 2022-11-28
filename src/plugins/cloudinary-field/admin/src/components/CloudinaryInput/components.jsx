@@ -1,17 +1,22 @@
 import styled from "styled-components";
-import { Button } from "@strapi/design-system";
+import { Button, Typography, Card } from "@strapi/design-system";
+
+export const PREVIEW_FORMATS = ["jpg", "png", "svg"];
 
 const renderFileByType = (format, url) => {
-  switch (format) {
-    case "jpg":
-    case "png":
-    case "svg":
-      return url.length > 0 ? `url(${url})` : "none";
-    case "pdf":
-    default:
-      return "none";
-  }
+  if (PREVIEW_FORMATS.includes(format))
+    return url.length > 0 ? `url(${url})` : "none";
+  return "none";
 };
+
+export const FieldLabel = styled(Typography)`
+  font-size: 1rem;
+  font-weight: 500;
+`;
+
+export const FieldDescription = styled(Typography)`
+  color: ${({ theme }) => theme.colors.neutral600};
+`;
 
 export const File = styled.div`
   display: block;
@@ -32,7 +37,8 @@ export const File = styled.div`
   }
 
   &::after {
-    content: "${(props) => props.format ? props.format.toString().toUpperCase() : ""}";
+    content: ${(props) =>
+      props.format ? props.format.toString().toUpperCase() : ""};
     font-size: 28px;
     position: absolute;
     left: 50%;
@@ -46,7 +52,7 @@ export const File = styled.div`
 
 export const FileLink = styled.a`
   position: relative;
-  display: block;
+  width: 100%;
 
   &:hover {
     &::before {
@@ -98,13 +104,10 @@ export const ActionButton = styled(Button)`
   margin-top: 5px;
 `;
 
-export const FileWrapper = styled.div`
-  flex: 0 1 25%;
-  min-height: 50px;
-  padding: 5px;
-
-  @media (max-width: 768px) {
-    flex: 0 1 50%;
-    min-height: 30px;
-  }
+export const FileWrapper = styled(Card)`
+  /* width: 32%; */
+  flex: 1;
+  min-width: 250px;
+  margin-right: 0.5rem;
+  margin-bottom: 1rem;
 `;

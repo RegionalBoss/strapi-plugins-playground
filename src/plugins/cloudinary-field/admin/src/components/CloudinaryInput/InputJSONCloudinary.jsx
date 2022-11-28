@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button, Flex } from "@strapi/design-system";
 import { Wrapper } from "./components";
 import { FileCard } from "./FileCard";
+import { set } from "lodash";
 
 let outerExternalScriptLoaded = false;
 
@@ -142,7 +143,7 @@ export const InputJSONCloudinary = (props) => {
 
   return (
     <Wrapper>
-      <Flex>
+      <Flex style={{ marginBottom: "1rem" }}>
         <Button
           variant="primary"
           onClick={handleCloudinaryInsert}
@@ -156,7 +157,7 @@ export const InputJSONCloudinary = (props) => {
             : "Načítám Cloudinary"}
         </Button>
         {files.length > 0 && (
-          <Button variant="primary" onClick={handleRemoveAllFiles}>
+          <Button variant="secondary" onClick={handleRemoveAllFiles}>
             Odstranit vše
           </Button>
         )}
@@ -177,6 +178,7 @@ export const InputJSONCloudinary = (props) => {
               resource_type,
               type,
               format,
+              created_at,
               context: { custom: { alt = "", caption = "" } = {} } = {},
             } = image;
             return (
@@ -201,6 +203,7 @@ export const InputJSONCloudinary = (props) => {
                 {...{
                   url,
                   format,
+                  created_at,
                   public_id,
                   handleInputChange,
                   alt,

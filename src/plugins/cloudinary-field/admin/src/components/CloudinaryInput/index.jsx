@@ -1,10 +1,17 @@
 import React from "react";
 import { axiosInstance } from "../../utils/axiosInstance";
 import { pluginId } from "../../pluginId";
-import { Stack, Typography, Button } from "@strapi/design-system";
+import {
+  Stack,
+  Flex,
+  Typography,
+  Button,
+  ToggleInput,
+} from "@strapi/design-system";
 import { JSONForm } from "./JSONForm";
 import { InputJSONCloudinary } from "./InputJSONCloudinary";
 import { useTranslation } from "../../hooks/useTranslation";
+import { FieldDescription, FieldLabel } from "./components";
 
 const isEmpty = (obj) => {
   return obj && Object.keys(obj).length === 0 && obj.constructor === Object;
@@ -53,31 +60,37 @@ export const CloudinaryInput = (props) => {
 
   return (
     <div>
-      <div style={{ marginBottom: "2rem" }}>
-        <div>
-          <Typography as="label">{props.label || props.name}</Typography>
-        </div>
-
-        <Typography>{props.description}</Typography>
-      </div>
-      <Button
-        variant="secondary"
-        type="button"
-        onClick={() => setShowJson((prev) => !prev)}
+      <Flex
+        justifyContent="space-between"
+        alignItems="start"
+        wrap="wrap"
         style={{ marginBottom: "1rem" }}
       >
-        Change view to {showJson ? "Image" : "Json"}
-      </Button>
-      <Stack>
-        {showJson ? (
-          <JSONForm {...props} />
-        ) : (
-          <InputJSONCloudinary
-            {...props}
-            cloudinarySettings={cloudinarySettings}
-          />
-        )}
-      </Stack>
+        <div style={{ marginRight: "0.5rem" }}>
+          <FieldLabel as="label">
+            {props.intlLabel?.defaultMessage || props.name}
+          </FieldLabel>
+          <FieldDescription as="p">
+            {props.description?.defaultMessage}
+          </FieldDescription>
+        </div>
+        <ToggleInput
+          hint="Change view to"
+          onLabel="JSON"
+          offLabel="Image"
+          size="S"
+          checked={showJson}
+          onChange={() => setShowJson((prev) => !prev)}
+        />
+      </Flex>
+      {showJson ? (
+        <JSONForm {...props} />
+      ) : (
+        <InputJSONCloudinary
+          {...props}
+          cloudinarySettings={cloudinarySettings}
+        />
+      )}
       {props.error && <div style={{ color: "red" }}>{props.error}</div>}
 
       {isRequired && (isEmptyObject || isArrWith0Length) && (
