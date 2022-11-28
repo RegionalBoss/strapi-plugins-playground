@@ -161,10 +161,10 @@ export default {
         },
       });
       // TODO: just for testing, imitate BE responses that manipulates with strapi DB
-      strapi
-        .plugin(pluginId)
-        .service("deploy")
-        .generateRandomDeployStatuses(createDeploy.id, random(2, 7), userData);
+      // strapi
+      //   .plugin(pluginId)
+      //   .service("deploy")
+      //   .generateRandomDeployStatuses(createDeploy.id, random(2, 7), userData);
       // TODO: delete when TEST BE is provided
     } catch (error) {
       if (error.response) {
