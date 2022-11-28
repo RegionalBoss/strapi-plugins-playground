@@ -2,6 +2,41 @@ import React, { useState, useEffect } from "react";
 import { Button, Flex } from "@strapi/design-system";
 import { Wrapper } from "./components";
 import { FileCard } from "./FileCard";
+import { createPortal } from "react-dom";
+
+import {
+  Active,
+  Announcements,
+  closestCenter,
+  CollisionDetection,
+  DragOverlay,
+  DndContext,
+  DropAnimation,
+  KeyboardSensor,
+  KeyboardCoordinateGetter,
+  Modifiers,
+  MouseSensor,
+  MeasuringConfiguration,
+  PointerActivationConstraint,
+  ScreenReaderInstructions,
+  TouchSensor,
+  UniqueIdentifier,
+  useSensor,
+  useSensors,
+  PointerSensor,
+  defaultDropAnimationSideEffects,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  useSortable,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  SortingStrategy,
+  rectSortingStrategy,
+  AnimateLayoutChanges,
+  NewIndexGetter,
+} from "@dnd-kit/sortable";
+
 import { set } from "lodash";
 
 let outerExternalScriptLoaded = false;
@@ -33,6 +68,19 @@ export const InputJSONCloudinary = (props) => {
   const [externalScriptLoaded, setExternalScriptLoaded] = useState(
     outerExternalScriptLoaded
   );
+
+  const [activeId, setActiveId] = (useState < UniqueIdentifier) | (null > null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const getIndex = (id) => files.findIndex((file) => file.public_id === id);
+  const getPosition = (id) => getIndex(id) + 1;
+  const activeIndex = activeId ? getIndex(activeId) : -1;
 
   const cloudinaryConfig = {
     // TODO: add key mapper or prop types
@@ -145,7 +193,6 @@ export const InputJSONCloudinary = (props) => {
     <Wrapper>
       <Flex style={{ marginBottom: "1rem" }}>
         <Button
-          variant="primary"
           onClick={handleCloudinaryInsert}
           style={{ marginRight: "1rem" }}
           disabled={
@@ -162,58 +209,85 @@ export const InputJSONCloudinary = (props) => {
           </Button>
         )}
       </Flex>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={({ active }) => {
+          if (!active) {
+            return;
+          }
 
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          justifyContent: "flex-start",
+          setActiveId(active.id);
         }}
+        onDragEnd={({ over }) => {
+          setActiveId(null);
+
+          if (over) {
+            const overIndex = getIndex(over.id);
+            if (activeIndex !== overIndex) {
+              setFiles((prev) => arrayMove(prev, activeIndex, overIndex));
+            }
+          }
+        }}
+        onDragCancel={() => setActiveId(null)}
       >
-        {Array.isArray(files) &&
-          files.map((image, index) => {
-            const {
-              secure_url: url,
-              public_id,
-              resource_type,
-              type,
-              format,
-              created_at,
-              context: { custom: { alt = "", caption = "" } = {} } = {},
-            } = image;
-            return (
-              // <span
-              //   key={`${index}-${public_id}`}
-              // >{`${index}-${public_id}`}</span>
-              <FileCard
-                key={`${index}-${public_id}`}
-                removeItem={(e) => {
-                  e.preventDefault();
-                  handleFileRemove(index);
-                }}
-                moveItem={handleFileMove}
-                clickItem={(e) => {
-                  e.preventDefault();
-                  handleFileClick({
-                    asset: {
-                      resource_id: `${resource_type}/${type}/${public_id}`,
-                    },
-                  });
-                }}
-                {...{
-                  url,
-                  format,
-                  created_at,
-                  public_id,
-                  handleInputChange,
-                  alt,
-                  caption,
-                  index,
-                }}
-              />
-            );
-          })}
-      </div>
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            justifyContent: "flex-start",
+          }}
+        >
+          <SortableContext
+            items={files.map((file) => file.public_id)}
+            strategy={rectSortingStrategy}
+          >
+            {Array.isArray(files) &&
+              files.map(
+                (
+                  {
+                    secure_url: url,
+                    public_id,
+                    resource_type,
+                    type,
+                    format,
+                    created_at,
+                    context: { custom: { alt = "", caption = "" } = {} } = {},
+                  },
+                  index
+                ) => (
+                  <FileCard
+                    key={`${index}-${public_id}`}
+                    removeItem={(e) => {
+                      e.preventDefault();
+                      handleFileRemove(index);
+                    }}
+                    moveItem={handleFileMove}
+                    clickItem={(e) => {
+                      e.preventDefault();
+                      handleFileClick({
+                        asset: {
+                          resource_id: `${resource_type}/${type}/${public_id}`,
+                        },
+                      });
+                    }}
+                    {...{
+                      url,
+                      format,
+                      created_at,
+                      resource_type,
+                      public_id,
+                      handleInputChange,
+                      alt,
+                      caption,
+                      index,
+                    }}
+                  />
+                )
+              )}
+          </SortableContext>
+        </div>
+      </DndContext>
     </Wrapper>
   );
 };

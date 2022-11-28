@@ -108,6 +108,7 @@ export const FileWrapper = styled(Card)`
   /* width: 32%; */
   flex: 1;
   min-width: 250px;
+  max-width: 49%;
   margin-right: 0.5rem;
   margin-bottom: 1rem;
 `;
