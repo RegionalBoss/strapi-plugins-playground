@@ -20,7 +20,8 @@ import { useTranslation } from "../../hooks/useTranslation";
 import { ITEM_TYPE } from "../../lib/constants";
 import { useConfirmDialog } from "../../lib/contexts/ConfirmDialogContext";
 import { EditViewContext } from "../../lib/contexts/EditViewContext";
-import styled from "styled-components";
+import { Illo } from "../../components/Illo";
+import { EmptyStateLayout } from "@strapi/design-system/EmptyStateLayout";
 
 const CREATE_NEW_BUTTONS = [
   {
@@ -53,6 +54,7 @@ const HomePage = () => {
     saveData,
     refreshData,
     globalLoading,
+    items,
   } = React.useContext(EditViewContext);
   const { showConfirmDialog } = useConfirmDialog();
   const { t } = useTranslation();
@@ -127,7 +129,14 @@ const HomePage = () => {
         />
         <ContentLayout>
           <EditNewButtons />
-          <SortableMenu />
+          {items.length === 0 ? (
+            <EmptyStateLayout
+              icon={<Illo />}
+              content="Zatím nemate žádné stránky"
+            />
+          ) : (
+            <SortableMenu />
+          )}
         </ContentLayout>
       </Layout>
     </>
