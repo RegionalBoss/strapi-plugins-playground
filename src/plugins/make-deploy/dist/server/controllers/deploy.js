@@ -3,8 +3,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+/**
+ *  controller
+ */
+const utils_1 = require("@strapi/utils");
 const pluginId_1 = __importDefault(require("../pluginId"));
 const deploy_1 = require("../validators/deploy");
+const utils_2 = require("@strapi/utils");
 const SERVICE = "deploy";
 exports.default = {
     /**
@@ -57,5 +62,30 @@ exports.default = {
             .plugin(pluginId_1.default)
             .service(SERVICE)
             .startNewDeploy(createDeployBody, ctx.state.user);
+    },
+    /**
+     * Update a record.
+     *
+     * @return {Object}
+     */
+    async update(ctx) {
+        const { id } = ctx.params;
+        let entity;
+        if (ctx.is("multipart")) {
+            const { data, files } = (0, utils_1.parseMultipartData)(ctx);
+            entity = await strapi
+                .plugin(pluginId_1.default)
+                .service(SERVICE)
+                .update({ id }, data, {
+                files,
+            });
+        }
+        else {
+            entity = await strapi
+                .plugin(pluginId_1.default)
+                .service(SERVICE)
+                .update({ id }, ctx.request.body);
+        }
+        return utils_2.sanitize.contentAPI.output(entity, strapi.getModel(`plugin::${pluginId_1.default}.deploy`));
     },
 };

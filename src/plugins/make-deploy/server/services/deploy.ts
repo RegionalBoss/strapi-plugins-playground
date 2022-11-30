@@ -197,6 +197,53 @@ export default {
     return createDeploy;
   },
 
+  update: async (params, data, { files }: { files?: unknown } = {}) => {
+    const existingEntry = await strapi
+      .query(`plugin::${pluginId}.deploy`)
+      .findOne({ where: params });
+
+    console.log("existingEntry", existingEntry, params);
+
+    const validData = await strapi.entityValidator.validateEntityUpdate(
+      strapi.getModel(`plugin::${pluginId}.deploy`),
+      data
+    );
+
+    console.log("validData", validData);
+    const deployStatus_validData =
+      await strapi.entityValidator.validateEntityCreation(
+        strapi.getModel(`plugin::${pluginId}.deploy-status`),
+        {
+          message: data.message,
+          status: data.status,
+          stage: data.stage,
+          deploy: { id: params.id },
+        }
+      );
+    console.log("deployStatus_validData", deployStatus_validData);
+
+    await strapi
+      .query(`plugin::${pluginId}.deploy-status`)
+      .create({ data: deployStatus_validData });
+
+    const entry = await strapi
+      .query(`plugin::${pluginId}.deploy`)
+      .update({ where: params, data: validData });
+    console.log("entry", entry);
+    if (files) {
+      // automatically uploads the files based on the entry and the model
+      await strapi.entityService.uploadFiles(entry, files, {
+        model: "deploy",
+        source: pluginId,
+      });
+      return strapi
+        .query(`plugin::${pluginId}.${MODEL_NAME}`)
+        .findOne({ id: entry.id });
+    }
+
+    return entry;
+  },
+
   // TODO: delete function when TEST BE is provided
   generateRandomDeployStatuses: async (
     id: number,

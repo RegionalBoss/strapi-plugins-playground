@@ -10,6 +10,7 @@ import { validateCreateDeploy } from "../validators/deploy";
 import { ICreateDeployDTO, IDeploy } from "../content-types/deploy";
 import { factories } from "@strapi/strapi";
 import { Context } from "koa";
+import { sanitize } from "@strapi/utils";
 
 const SERVICE = "deploy";
 
@@ -71,5 +72,35 @@ export default {
       .plugin(pluginId)
       .service(SERVICE)
       .startNewDeploy(createDeployBody, ctx.state.user);
+  },
+
+  /**
+   * Update a record.
+   *
+   * @return {Object}
+   */
+  async update(ctx: Context) {
+    const { id } = ctx.params;
+
+    let entity;
+    if (ctx.is("multipart")) {
+      const { data, files } = parseMultipartData(ctx);
+      entity = await strapi
+        .plugin(pluginId)
+        .service(SERVICE)
+        .update({ id }, data, {
+          files,
+        });
+    } else {
+      entity = await strapi
+        .plugin(pluginId)
+        .service(SERVICE)
+        .update({ id }, ctx.request.body);
+    }
+
+    return sanitize.contentAPI.output(
+      entity,
+      strapi.getModel(`plugin::${pluginId}.deploy`)
+    );
   },
 };

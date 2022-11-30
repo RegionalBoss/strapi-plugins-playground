@@ -28,5 +28,13 @@ exports.default = {
             handler: "deploy.startNewDeploy",
             config: {},
         },
+        {
+            method: "PUT",
+            path: "/deploy/:id",
+            handler: "deploy.update",
+            config: {
+                auth: false,
+            },
+        },
     ],
 };
