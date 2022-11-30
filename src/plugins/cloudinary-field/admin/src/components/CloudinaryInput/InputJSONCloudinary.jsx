@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Button, Flex } from "@strapi/design-system";
+import { Button, Flex, EmptyStateLayout } from "@strapi/design-system";
+import { Plus, Trash } from "@strapi/icons";
 import { Wrapper } from "./components";
 import { FileCard } from "./FileCard";
+import { Illo } from "../Illo";
 import { set } from "lodash";
 
 import {
@@ -160,6 +162,24 @@ export const InputJSONCloudinary = (props) => {
     );
   };
 
+  if (!files?.length)
+    return (
+      <EmptyStateLayout
+        icon={<Illo />}
+        content="Zatím nemate žádné soubory"
+        action={
+          <Button
+            variant="secondary"
+            startIcon={<Plus />}
+            onClick={handleCloudinaryInsert}
+          >
+            Přidat soubor
+          </Button>
+        }
+        style={{ height: "5rem" }}
+      />
+    );
+
   return (
     <Wrapper>
       <Flex style={{ marginBottom: "1rem" }}>
@@ -167,6 +187,7 @@ export const InputJSONCloudinary = (props) => {
           variant="primary"
           onClick={handleCloudinaryInsert}
           style={{ marginRight: "1rem" }}
+          startIcon={<Plus />}
           disabled={
             !externalScriptLoaded && cloudinaryConfig && !props.disabled
           }
@@ -176,7 +197,11 @@ export const InputJSONCloudinary = (props) => {
             : "Načítám Cloudinary"}
         </Button>
         {files.length > 0 && (
-          <Button variant="secondary" onClick={handleRemoveAllFiles}>
+          <Button
+            variant="secondary"
+            onClick={handleRemoveAllFiles}
+            startIcon={<Trash />}
+          >
             Odstranit vše
           </Button>
         )}
@@ -252,7 +277,7 @@ export const InputJSONCloudinary = (props) => {
                     id={activeItem.public_id}
                     {...activeItem}
                     url={activeItem.secure_url}
-                    {...activeItem.context.custom}
+                    {...activeItem.context?.custom}
                   />
                 ) : null}
               </DragOverlay>,
@@ -269,20 +294,20 @@ export const InputJSONCloudinary = (props) => {
       return;
     }
 
-    setActiveItem(files.find((file) => file.public_id === active.id));
+    setActiveItem(files.find((file) => file.public_id === active?.id));
   }
 
   function handleDragEnd(event) {
     setActiveItem(null);
     const { active, over } = event;
 
-    if (active.id !== over.id) {
+    if (active?.id !== over?.id) {
       setFiles((prevFiles) => {
         const oldIndex = prevFiles.findIndex(
-          (file) => file.public_id === active.id
+          (file) => file.public_id === active?.id
         );
         const newIndex = prevFiles.findIndex(
-          (file) => file.public_id === over.id
+          (file) => file.public_id === over?.id
         );
 
         return arrayMove(prevFiles, oldIndex, newIndex);

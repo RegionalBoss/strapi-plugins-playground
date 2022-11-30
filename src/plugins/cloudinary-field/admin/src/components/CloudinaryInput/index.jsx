@@ -18,30 +18,31 @@ const isEmpty = (obj) => {
 };
 
 export const CloudinaryInput = (props) => {
-  const [loading, setLoading] = React.useState(true);
+  const [loading, setLoading] = React.useState(false);
   const [cloudinarySettings, setCloudinarySettings] = React.useState(null);
   const [showJson, setShowJson] = React.useState(false);
   const { t } = useTranslation();
 
   React.useEffect(async () => {
-    console.log("CloudinaryInput", props);
+    loadCloudinarySettings();
+  }, []);
+
+  async function loadCloudinarySettings() {
     try {
+      setLoading(true);
       const { data } = await axiosInstance.get(`${pluginId}/config`);
       console.log("response", data);
       setCloudinarySettings(data.body.cloudinary);
     } catch (ex) {
       console.error(ex);
+    } finally {
+      setLoading(false);
     }
-  }, []);
-
-  if (!cloudinarySettings) {
-    return <div>you have to setup cloudinary settings </div>;
   }
 
-  const textareaValue =
-    typeof props.value === "string"
-      ? props.value
-      : JSON.stringify(props.value, null, 2);
+  if (!cloudinarySettings && !loading) {
+    return <div>you have to setup cloudinary settings </div>;
+  }
 
   let parsedValue = null;
 

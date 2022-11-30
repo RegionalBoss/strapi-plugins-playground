@@ -57,7 +57,6 @@ export const FileCard = React.forwardRef(
       useSortable({ id });
 
     const style = {
-      cursor: clone ? "grabbing" : "grab",
       opacity: ghost ? 0.2 : 1,
       boxShadow: clone ? "0px 15px 15px 0px black" : "none",
       transform: clone ? "scale(1.01)" : undefined,
@@ -80,9 +79,11 @@ export const FileCard = React.forwardRef(
               <CardAsset
                 src={PREVIEW_FORMATS.includes(format) ? url : undefined}
               />
-              <CardTimer>
-                {formatDate(new Date(created_at), "dd.MM.yyyy HH:mm:ss")}
-              </CardTimer>
+              {created_at ? (
+                <CardTimer>
+                  {formatDate(new Date(created_at), "dd.MM.yyyy HH:mm:ss")}
+                </CardTimer>
+              ) : null}
             </FileLink>
             <CardAction position="end">
               <div {...attributes} {...listeners}>
