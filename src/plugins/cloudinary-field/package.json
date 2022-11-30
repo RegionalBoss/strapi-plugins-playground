@@ -8,6 +8,7 @@
     "kind": "plugin"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.0.5",
     "@dnd-kit/sortable": "^7.0.1",
     "@dnd-kit/utilities": "^3.2.0",
     "date-fns": "^2.29.3"

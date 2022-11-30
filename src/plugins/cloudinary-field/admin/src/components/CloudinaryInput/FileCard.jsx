@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPencilAlt, faTrash } from "@fortawesome/free-solid-svg-icons";
+import {
+  faPencilAlt,
+  faTrash,
+  faGripVertical,
+} from "@fortawesome/free-solid-svg-icons";
 import {
   FileLink,
   ActionButton,
@@ -26,96 +30,51 @@ import {
   CardSubtitle,
 } from "@strapi/design-system";
 
-export const SortableItem = ({
-  disabled,
-  animateLayoutChanges,
-  getNewIndex,
-  handle,
-  id,
-  index,
-  onRemove,
-  style,
-  renderItem,
-  useDragOverlay,
-  wrapperStyle,
-  ...props
-}) => {
-  const {
-    active,
-    attributes,
-    isDragging,
-    isSorting,
-    listeners,
-    overIndex,
-    setNodeRef,
-    setActivatorNodeRef,
-    transform,
-    transition,
-  } = useSortable({
-    id,
-    animateLayoutChanges,
-    disabled,
-    getNewIndex,
-  });
+import { useSortable } from "@dnd-kit/sortable";
 
-  return (
-    <FileCard
-      ref={setNodeRef}
-      value={id}
-      disabled={disabled}
-      dragging={isDragging}
-      sorting={isSorting}
-      handle={handle}
-      handleProps={
-        handle
-          ? {
-              ref: setActivatorNodeRef,
-            }
-          : undefined
-      }
-      renderItem={renderItem}
-      index={index}
-      style={style({
-        index,
-        id,
-        isDragging,
-        isSorting,
-        overIndex,
-      })}
-      onRemove={onRemove ? () => onRemove(id) : undefined}
-      transform={transform}
-      transition={transition}
-      wrapperStyle={wrapperStyle?.({ index, isDragging, active, id })}
-      listeners={listeners}
-      data-index={index}
-      data-id={id}
-      dragOverlay={!useDragOverlay && isDragging}
-      {...attributes}
-    />
-  );
-};
+export const FileCard = React.forwardRef(
+  (
+    {
+      id,
+      public_id,
+      url,
+      format,
+      created_at,
+      removeItem,
+      clickItem,
+      alt,
+      caption,
+      handleInputChange,
+      index,
+      clone,
+      ghost,
+    },
+    ref
+  ) => {
+    const elementRef = useRef(null);
 
-export const FileCard = React.memo(
-  React.forwardRef(
-    (
-      {
-        public_id,
-        url,
-        format,
-        resource_type,
-        created_at,
-        removeItem,
-        clickItem,
-        alt,
-        caption,
-        handleInputChange,
-        index,
-        ...props
-      },
-      ref
-    ) => {
-      return (
-        <FileWrapper>
+    const { attributes, listeners, setNodeRef, transform, transition } =
+      useSortable({ id });
+
+    const style = {
+      cursor: clone ? "grabbing" : "grab",
+      opacity: ghost ? 0.2 : 1,
+      boxShadow: clone ? "0px 15px 15px 0px black" : "none",
+      transform: clone ? "scale(1.01)" : undefined,
+    };
+
+    const isDragging = React.useMemo(() => ghost || clone, [ghost, clone]);
+
+    return (
+      <FileWrapper
+        ref={setNodeRef}
+        style={style}
+        ghost
+        clone
+        transform={transform}
+        transition={transition}
+      >
+        <Card ref={elementRef} style={{ height: "100%" }}>
           <CardHeader>
             <FileLink href={url} target="_blank" rel="noopener noreferrer">
               <CardAsset
@@ -125,6 +84,14 @@ export const FileCard = React.memo(
                 {formatDate(new Date(created_at), "dd.MM.yyyy HH:mm:ss")}
               </CardTimer>
             </FileLink>
+            <CardAction position="end">
+              <div {...attributes} {...listeners}>
+                <IconButton
+                  style={{ cursor: clone ? "grabbing" : "grab" }}
+                  icon={<FontAwesomeIcon icon={faGripVertical} />}
+                />
+              </div>
+            </CardAction>
           </CardHeader>
           {/* <FileLink href={url} target="_blank" rel="noopener noreferrer">
           <File {...{ format, url }} />
@@ -140,6 +107,7 @@ export const FileCard = React.memo(
                   id="caption"
                   name="caption"
                   label="caption"
+                  disabled={isDragging}
                   onChange={(e) =>
                     handleInputChange(e, index, "context.custom.caption")
                   }
@@ -149,6 +117,7 @@ export const FileCard = React.memo(
                   id="alt"
                   name="alt"
                   label="alt"
+                  disabled={isDragging}
                   onChange={(e) =>
                     handleInputChange(e, index, "context.custom.alt")
                   }
@@ -157,19 +126,21 @@ export const FileCard = React.memo(
                   <IconButton
                     label="Editovat"
                     onClick={clickItem}
+                    disabled={isDragging}
                     icon={<FontAwesomeIcon icon={faPencilAlt} />}
                     style={{ marginRight: "1rem" }}
                   />
 
                   <IconButton
                     label="Odstranit"
+                    disabled={isDragging}
                     onClick={removeItem}
                     icon={<FontAwesomeIcon icon={faTrash} />}
                   />
                 </Flex>
               </CardSubtitle>
             </CardContent>
-            <CardBadge>{format || resource_type}</CardBadge>
+            <CardBadge>{format}</CardBadge>
           </CardBody>
           {/* <div
           style={{
@@ -181,8 +152,8 @@ export const FileCard = React.memo(
         >
           {public_id}
         </div> */}
-        </FileWrapper>
-      );
-    }
-  )
+        </Card>
+      </FileWrapper>
+    );
+  }
 );

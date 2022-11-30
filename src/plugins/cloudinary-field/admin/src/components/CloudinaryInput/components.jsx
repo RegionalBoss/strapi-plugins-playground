@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import { Button, Typography, Card } from "@strapi/design-system";
+import { CSS } from "@dnd-kit/utilities";
 
 export const PREVIEW_FORMATS = ["jpg", "png", "svg"];
 
@@ -104,11 +105,11 @@ export const ActionButton = styled(Button)`
   margin-top: 5px;
 `;
 
-export const FileWrapper = styled(Card)`
-  /* width: 32%; */
-  flex: 1;
-  min-width: 250px;
-  max-width: 49%;
+export const FileWrapper = styled.div`
+  width: 20rem;
   margin-right: 0.5rem;
   margin-bottom: 1rem;
+  opacity: ${({ ghost }) => (ghost ? 0.2 : 1)};
+  box-shadow: ${({ clone, theme }) =>
+    clone ? theme.shadows.filterShadow : "none"};
 `;

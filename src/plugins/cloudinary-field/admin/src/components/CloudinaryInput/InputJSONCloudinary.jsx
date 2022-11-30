@@ -2,42 +2,25 @@ import React, { useState, useEffect } from "react";
 import { Button, Flex } from "@strapi/design-system";
 import { Wrapper } from "./components";
 import { FileCard } from "./FileCard";
-import { createPortal } from "react-dom";
+import { set } from "lodash";
 
 import {
-  Active,
-  Announcements,
-  closestCenter,
-  CollisionDetection,
-  DragOverlay,
   DndContext,
-  DropAnimation,
+  closestCenter,
   KeyboardSensor,
-  KeyboardCoordinateGetter,
-  Modifiers,
-  MouseSensor,
-  MeasuringConfiguration,
-  PointerActivationConstraint,
-  ScreenReaderInstructions,
-  TouchSensor,
-  UniqueIdentifier,
+  PointerSensor,
   useSensor,
   useSensors,
-  PointerSensor,
-  defaultDropAnimationSideEffects,
+  DragOverlay,
 } from "@dnd-kit/core";
 import {
   arrayMove,
-  useSortable,
   SortableContext,
   sortableKeyboardCoordinates,
-  SortingStrategy,
-  rectSortingStrategy,
-  AnimateLayoutChanges,
-  NewIndexGetter,
+  verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 
-import { set } from "lodash";
+import { createPortal } from "react-dom";
 
 let outerExternalScriptLoaded = false;
 
@@ -69,7 +52,7 @@ export const InputJSONCloudinary = (props) => {
     outerExternalScriptLoaded
   );
 
-  const [activeId, setActiveId] = (useState < UniqueIdentifier) | (null > null);
+  const [activeItem, setActiveItem] = useState(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -77,10 +60,6 @@ export const InputJSONCloudinary = (props) => {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
-
-  const getIndex = (id) => files.findIndex((file) => file.public_id === id);
-  const getPosition = (id) => getIndex(id) + 1;
-  const activeIndex = activeId ? getIndex(activeId) : -1;
 
   const cloudinaryConfig = {
     // TODO: add key mapper or prop types
@@ -175,14 +154,6 @@ export const InputJSONCloudinary = (props) => {
     });
   };
 
-  const handleFileMove = (dragIndex, dropIndex) => {
-    setFiles((prevState) => {
-      const removedItem = prevState.splice(dragIndex, 1);
-      prevState.splice(dropIndex, 0, removedItem[0]);
-      return [...prevState];
-    });
-  };
-
   const handleFileRemove = (removeIndex) => {
     setFiles((prevState) =>
       prevState.filter((item, index) => index !== removeIndex)
@@ -193,6 +164,7 @@ export const InputJSONCloudinary = (props) => {
     <Wrapper>
       <Flex style={{ marginBottom: "1rem" }}>
         <Button
+          variant="primary"
           onClick={handleCloudinaryInsert}
           style={{ marginRight: "1rem" }}
           disabled={
@@ -209,27 +181,13 @@ export const InputJSONCloudinary = (props) => {
           </Button>
         )}
       </Flex>
+
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
-        onDragStart={({ active }) => {
-          if (!active) {
-            return;
-          }
-
-          setActiveId(active.id);
-        }}
-        onDragEnd={({ over }) => {
-          setActiveId(null);
-
-          if (over) {
-            const overIndex = getIndex(over.id);
-            if (activeIndex !== overIndex) {
-              setFiles((prev) => arrayMove(prev, activeIndex, overIndex));
-            }
-          }
-        }}
-        onDragCancel={() => setActiveId(null)}
+        onDragStart={handleDragState}
+        onDragEnd={handleDragEnd}
+        onDragCancel={() => setActiveItem(null)}
       >
         <div
           style={{
@@ -239,30 +197,32 @@ export const InputJSONCloudinary = (props) => {
           }}
         >
           <SortableContext
-            items={files.map((file) => file.public_id)}
-            strategy={rectSortingStrategy}
+            items={Array.isArray(files) ? files : []}
+            strategy={verticalListSortingStrategy}
           >
             {Array.isArray(files) &&
-              files.map(
-                (
-                  {
-                    secure_url: url,
-                    public_id,
-                    resource_type,
-                    type,
-                    format,
-                    created_at,
-                    context: { custom: { alt = "", caption = "" } = {} } = {},
-                  },
-                  index
-                ) => (
+              files.map((image, index) => {
+                const {
+                  secure_url: url,
+                  public_id,
+                  resource_type,
+                  type,
+                  format,
+                  created_at,
+                  context: { custom: { alt = "", caption = "" } = {} } = {},
+                } = image;
+                return (
+                  // <span
+                  //   key={`${index}-${public_id}`}
+                  // >{`${index}-${public_id}`}</span>
                   <FileCard
                     key={`${index}-${public_id}`}
+                    id={public_id}
+                    ghost={activeItem?.public_id === public_id}
                     removeItem={(e) => {
                       e.preventDefault();
                       handleFileRemove(index);
                     }}
-                    moveItem={handleFileMove}
                     clickItem={(e) => {
                       e.preventDefault();
                       handleFileClick({
@@ -275,7 +235,6 @@ export const InputJSONCloudinary = (props) => {
                       url,
                       format,
                       created_at,
-                      resource_type,
                       public_id,
                       handleInputChange,
                       alt,
@@ -283,11 +242,51 @@ export const InputJSONCloudinary = (props) => {
                       index,
                     }}
                   />
-                )
-              )}
+                );
+              })}
+            {createPortal(
+              <DragOverlay>
+                {activeItem ? (
+                  <FileCard
+                    clone
+                    id={activeItem.public_id}
+                    {...activeItem}
+                    url={activeItem.secure_url}
+                    {...activeItem.context.custom}
+                  />
+                ) : null}
+              </DragOverlay>,
+              document.body
+            )}
           </SortableContext>
         </div>
       </DndContext>
     </Wrapper>
   );
+
+  function handleDragState({ active }) {
+    if (!active) {
+      return;
+    }
+
+    setActiveItem(files.find((file) => file.public_id === active.id));
+  }
+
+  function handleDragEnd(event) {
+    setActiveItem(null);
+    const { active, over } = event;
+
+    if (active.id !== over.id) {
+      setFiles((prevFiles) => {
+        const oldIndex = prevFiles.findIndex(
+          (file) => file.public_id === active.id
+        );
+        const newIndex = prevFiles.findIndex(
+          (file) => file.public_id === over.id
+        );
+
+        return arrayMove(prevFiles, oldIndex, newIndex);
+      });
+    }
+  }
 };
