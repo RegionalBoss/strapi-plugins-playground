@@ -11,7 +11,14 @@ exports.default = {
             path: "/deploy",
             handler: "deploy.find",
             config: {
-            // policies: [["admin::hasPermissions", ["plugins::make-deploy.read"]]],
+                policies: [
+                    {
+                        name: "admin::hasPermissions",
+                        config: {
+                            actions: ["plugin::make-deploy.read"],
+                        },
+                    },
+                ],
             },
         },
         {
@@ -19,21 +26,59 @@ exports.default = {
             path: "/deploy/:id",
             handler: "deploy.findOne",
             config: {
-            // policies: [["admin::hasPermissions", ["plugins::make-deploy.read"]]],
+                policies: [
+                    {
+                        name: "admin::hasPermissions",
+                        config: {
+                            actions: ["plugin::make-deploy.read"],
+                        },
+                    },
+                ],
+            },
+        },
+        {
+            method: "GET",
+            path: "/deploy/count",
+            handler: "deploy.count",
+            config: {
+                policies: [
+                    {
+                        name: "admin::hasPermissions",
+                        config: {
+                            actions: ["plugin::make-deploy.read"],
+                        },
+                    },
+                ],
             },
         },
         {
             method: "POST",
             path: "/deploy",
             handler: "deploy.startNewDeploy",
-            config: {},
+            config: {
+                policies: [
+                    {
+                        name: "admin::hasPermissions",
+                        config: {
+                            actions: ["plugin::make-deploy.create"],
+                        },
+                    },
+                ],
+            },
         },
         {
             method: "PUT",
             path: "/deploy/:id",
             handler: "deploy.update",
             config: {
-                auth: false,
+                policies: [
+                    {
+                        name: "admin::hasPermissions",
+                        config: {
+                            actions: ["plugin::make-deploy.update"],
+                        },
+                    },
+                ],
             },
         },
     ],

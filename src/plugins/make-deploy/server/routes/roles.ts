@@ -6,6 +6,14 @@ export default {
       path: "/roles/:id",
       handler: "userspermissions.getRole",
       config: {
+        policies: [
+          {
+            name: "admin::hasPermissions",
+            config: {
+              actions: ["plugin::users-permissions.roles.read"],
+            },
+          },
+        ],
         description: "Retrieve a role depending on its id",
         tag: {
           plugin: "users-permissions",
@@ -19,6 +27,14 @@ export default {
       path: "/roles",
       handler: "userspermissions.getRoles",
       config: {
+        policies: [
+          {
+            name: "admin::hasPermissions",
+            config: {
+              actions: ["plugin::users-permissions.roles.read"],
+            },
+          },
+        ],
         description: "Retrieve all role documents",
         tag: {
           plugin: "users-permissions",
