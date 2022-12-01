@@ -15,10 +15,7 @@
     "react-dnd-html5-backend": "10.0.2"
   },
   "dependencies": {
-    "@buffetjs/core": "^3.3.8",
-    "@buffetjs/custom": "^3.3.8",
-    "@buffetjs/hooks": "^3.3.8",
-    "@buffetjs/styles": "^3.3.8",
+    "@regionalboss/strapi-plugin-make-deploy": "link:./src/plugins/make-deploy",
     "@strapi/plugin-graphql": "4.4.6",
     "@strapi/plugin-i18n": "4.4.6",
     "@strapi/plugin-users-permissions": "4.4.6",

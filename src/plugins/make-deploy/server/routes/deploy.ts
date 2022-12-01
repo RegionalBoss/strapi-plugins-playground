@@ -70,14 +70,7 @@ export default {
       path: "/deploy/:id",
       handler: "deploy.update",
       config: {
-        policies: [
-          {
-            name: "admin::hasPermissions",
-            config: {
-              actions: ["plugin::make-deploy.update"],
-            },
-          },
-        ],
+        auth: false,
       },
     },
   ],

@@ -105,7 +105,13 @@ export function StageContainer({ deploySetting, refetchTimer }) {
     setDeploys(await getDeploys({ name: deploySetting.name }));
 
   return (
-    <Box padding={4} hasRadius background="neutral0" shadow="tableShadow">
+    <Box
+      padding={4}
+      hasRadius
+      background="neutral0"
+      shadow="tableShadow"
+      style={{ maxWidth: "35rem" }}
+    >
       <Flex style={{ marginBottom: "1rem" }}>
         <ErrorBoundary>
           <Link

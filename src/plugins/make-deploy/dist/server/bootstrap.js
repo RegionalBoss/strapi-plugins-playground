@@ -12,4 +12,31 @@ exports.default = async ({ strapi }) => {
         key: "settings",
     });
     await pluginStore.get();
+    const actions = [
+        {
+            section: "plugins",
+            displayName: "Read",
+            uid: "read",
+            pluginName: "make-deploy",
+        },
+        {
+            section: "plugins",
+            displayName: "Update",
+            uid: "update",
+            pluginName: "make-deploy",
+        },
+        {
+            section: "plugins",
+            displayName: "Create",
+            uid: "create",
+            pluginName: "make-deploy",
+        },
+        {
+            section: "plugins",
+            displayName: "Delete",
+            uid: "delete",
+            pluginName: "make-deploy",
+        },
+    ];
+    await strapi.admin.services.permission.actionProvider.registerMany(actions);
 };

@@ -9,10 +9,10 @@ export default {
   //   enabled: true,
   //   resolve: "./src/plugins/todo",
   // },
-  "make-deploy": {
-    enabled: true,
-    resolve: "./src/plugins/make-deploy",
-  },
+  // "make-deploy": {
+  //   enabled: true,
+  //   resolve: "./src/plugins/make-deploy",
+  // },
   "page-hierarchy": {
     enabled: true,
     resolve: "./src/plugins/page-hierarchy",
