@@ -5,61 +5,25 @@ export default {
       method: "GET",
       path: "/settings",
       handler: "settings.find",
-      config: {
-        policies: [
-          {
-            name: "admin::hasPermissions",
-            config: {
-              actions: ["plugin::make-deploy.read"],
-            },
-          },
-        ],
-      },
+      config: {},
     },
     {
       method: "POST",
       path: "/settings",
       handler: "settings.create",
-      config: {
-        policies: [
-          {
-            name: "admin::hasPermissions",
-            config: {
-              actions: ["plugin::make-deploy.create"],
-            },
-          },
-        ],
-      },
+      config: {},
     },
     {
       method: "PUT",
       path: "/settings/:id",
       handler: "settings.updateOne",
-      config: {
-        policies: [
-          {
-            name: "admin::hasPermissions",
-            config: {
-              actions: ["plugin::make-deploy.update"],
-            },
-          },
-        ],
-      },
+      config: {},
     },
     {
       method: "DELETE",
       path: "/settings/:id",
       handler: "settings.deleteOne",
-      config: {
-        policies: [
-          {
-            name: "admin::hasPermissions",
-            config: {
-              actions: ["plugin::make-deploy.delete"],
-            },
-          },
-        ],
-      },
+      config: {},
     },
   ],
 };
