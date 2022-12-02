@@ -1,11 +1,15 @@
 {
-  "name": "cloudinary-field",
-  "version": "0.0.0",
+  "name": "@regionalboss/strapi-plugin-cloudinary-field",
+  "version": "1.0.0",
   "description": "This is the description of the plugin.",
   "strapi": {
     "name": "cloudinary-field",
     "description": "Description of cloudinary-field plugin",
     "kind": "plugin"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RegionalBoss/strapi-plugins-playground"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.0.5",
@@ -16,13 +20,9 @@
   "devDependencies": {
     "typescript": "4.6.3"
   },
-  "author": {
-    "name": "A Strapi developer"
-  },
+  "author": "RegionalBoss <eduard.karbovanec@gmail.com>",
   "maintainers": [
-    {
-      "name": "A Strapi developer"
-    }
+    "RegionalBoss <eduard.karbovanec@gmail.com>"
   ],
   "engines": {
     "node": ">=14.19.1 <=18.x.x",
@@ -32,5 +32,10 @@
     "develop": "tsc -w",
     "build": "tsc"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/RegionalBoss/strapi-plugin-todo/issues"
+  },
+  "homepage": "https://github.com/RegionalBoss/strapi-plugin-todo#readme",
+  "main": "strapi-admin.js"
 }
