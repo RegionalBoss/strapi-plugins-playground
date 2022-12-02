@@ -8,7 +8,7 @@ exports.default = {
             path: "/config",
             handler: "cloudinary.config",
             config: {
-                policies: [],
+                auth: false,
             },
         },
     ],

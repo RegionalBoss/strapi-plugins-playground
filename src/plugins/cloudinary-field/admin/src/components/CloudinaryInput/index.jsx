@@ -30,7 +30,7 @@ export const CloudinaryInput = (props) => {
   async function loadCloudinarySettings() {
     try {
       setLoading(true);
-      const { data } = await axiosInstance.get(`${pluginId}/config`);
+      const { data } = await axiosInstance.get(`/${pluginId}/config`);
       console.log("response", data);
       setCloudinarySettings(data.body.cloudinary);
     } catch (ex) {
