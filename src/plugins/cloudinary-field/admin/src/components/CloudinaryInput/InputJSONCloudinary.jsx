@@ -29,12 +29,13 @@ let outerExternalScriptLoaded = false;
 const externalScriptLoadedEvent = new window.Event("loadExternalScript");
 const head = document.getElementsByTagName("head")[0];
 
-metaTag.setAttribute("http-equiv", "Content-Security-Policy");
-metaTag.setAttribute(
-  "content",
-  "script-src 'self' https://media-library.cloudinary.com 'unsafe-inline' 'unsafe-eval';"
-);
-head.appendChild(metaTag);
+// let metaTag = document.createElement("meta");
+// metaTag.setAttribute("http-equiv", "Content-Security-Policy");
+// metaTag.setAttribute(
+//   "content",
+//   "script-src 'self' https://media-library.cloudinary.com 'unsafe-inline' 'unsafe-eval';"
+// );
+// head.appendChild(metaTag);
 
 let script = document.createElement("script");
 script.type = "text/javascript";
@@ -42,7 +43,6 @@ script.src = "https://media-library.cloudinary.com/global/all.js";
 script.onload = () => {
   document.dispatchEvent(externalScriptLoadedEvent);
 };
-let metaTag = document.createElement("meta");
 head.appendChild(script);
 
 document.addEventListener(
