@@ -6,6 +6,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const items_1 = __importDefault(require("./items"));
 const page_1 = __importDefault(require("./page"));
 exports.default = {
-    items: items_1.default,
-    page: page_1.default,
+    "items-admin": items_1.default.admin,
+    "items-content-api": items_1.default.contentApi,
+    "page-content-api": page_1.default.contentApi,
+    "page-admin": page_1.default.admin,
 };

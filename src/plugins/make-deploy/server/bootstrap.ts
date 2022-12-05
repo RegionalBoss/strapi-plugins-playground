@@ -20,6 +20,24 @@ export default async ({ strapi }: { strapi: Strapi }) => {
     },
     {
       section: "plugins",
+      displayName: "Count",
+      uid: "count",
+      pluginName: "make-deploy",
+    },
+    {
+      section: "plugins",
+      displayName: "findOne",
+      uid: "find-one",
+      pluginName: "make-deploy",
+    },
+    {
+      section: "plugins",
+      displayName: "find",
+      uid: "find",
+      pluginName: "make-deploy",
+    },
+    {
+      section: "plugins",
       displayName: "Update",
       uid: "update",
       pluginName: "make-deploy",

@@ -1,37 +1,37 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.default = {
+exports.contentApi = exports.admin = void 0;
+exports.admin = {
     type: "admin",
     routes: [
         {
             method: "GET",
-            path: "/items",
-            handler: "item.find",
-            config: {
-                auth: false,
-            },
-        },
-        {
-            method: "GET",
-            path: "/items/:id",
-            handler: "item.findOne",
-            config: {},
-        },
-        {
-            method: "GET",
             path: "/flat-items",
             handler: "item.flatFind",
-            config: {
-                auth: false,
-            },
         },
         {
             method: "PUT",
             path: "/items",
             handler: "item.updateItems",
-            config: {
-                auth: false,
-            },
         },
     ],
+};
+exports.contentApi = {
+    type: "content-api",
+    routes: [
+        {
+            method: "GET",
+            path: "/items",
+            handler: "item.find",
+        },
+        {
+            method: "GET",
+            path: "/items/:id",
+            handler: "item.findOne",
+        },
+    ],
+};
+exports.default = {
+    admin: exports.admin,
+    contentApi: exports.contentApi,
 };
