@@ -7,9 +7,7 @@ exports.default = {
             method: "GET",
             path: "/config",
             handler: "cloudinary.config",
-            config: {
-                auth: false,
-            },
+            config: {},
         },
     ],
 };

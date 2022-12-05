@@ -21,6 +21,12 @@
     "attachment": {
       "type": "customField",
       "customField": "plugin::cloudinary-field.cloudinary"
+    },
+    "category": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::category.category",
+      "inversedBy": "movies"
     }
   }
 }
