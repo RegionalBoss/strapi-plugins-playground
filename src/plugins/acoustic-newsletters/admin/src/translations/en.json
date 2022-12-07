@@ -5,5 +5,9 @@
   "homepage.list.item.confirm.message": "Are you sure you wanna send newsletter?",
   "homepage.edit.button": "Edit",
   "homepage.newsletter.send.button": "Send",
-  "homepage.newsletter.showPreview.button": "Preview"
+  "homepage.newsletter.showPreview.button": "Preview",
+  "confirm": "Confirm",
+  "cancel": "Cancel",
+  "subject": "Subject",
+  "updatedAt": "Updated"
 }

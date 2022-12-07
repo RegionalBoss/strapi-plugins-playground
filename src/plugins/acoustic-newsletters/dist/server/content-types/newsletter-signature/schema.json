@@ -34,9 +34,9 @@
         },
         "newsletters": {
             "type": "relation",
-            "relation": "manyToOne",
+            "relation": "oneToMany",
             "target": "plugin::acoustic-newsletters.newsletter",
-            "inversedBy": "signature"
+            "mappedBy": "signature"
         }
     }
 }

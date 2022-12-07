@@ -60,9 +60,9 @@
         },
         "signature": {
             "type": "relation",
-            "relation": "oneToMany",
+            "relation": "manyToOne",
             "target": "plugin::acoustic-newsletters.newsletter-signature",
-            "mappedBy": "newsletters"
+            "inversedBy": "newsletters"
         }
     }
 }

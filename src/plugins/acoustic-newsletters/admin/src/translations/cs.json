@@ -5,5 +5,9 @@
   "homepage.list.item.confirm.message": "Opravdu chcete poslat newsletter?",
   "homepage.edit.button": "Upravit",
   "homepage.newsletter.send.button": "Poslat",
-  "homepage.newsletter.showPreview.button": "Náhled"
+  "homepage.newsletter.showPreview.button": "Náhled",
+  "confirm": "Potvrdit",
+  "cancel": "Zrušit",
+  "subject": "předmět",
+  "updatedAt": "Změněno"
 }
