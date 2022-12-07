@@ -1,0 +1,9 @@
+{
+  "plugin.name": "Acoustic newsletters",
+  "homepage.title": "Newsletters",
+  "homepage.list.item.confirm.title": "Sending newsletter",
+  "homepage.list.item.confirm.message": "Are you sure you wanna send newsletter?",
+  "homepage.edit.button": "Edit",
+  "homepage.newsletter.send.button": "Send",
+  "homepage.newsletter.showPreview.button": "Preview"
+}

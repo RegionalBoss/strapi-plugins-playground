@@ -1,0 +1,16 @@
+{
+  "collectionName": "components_newsletter_newsletter_free_messages",
+  "info": {
+    "displayName": "newsletterFreeMessages",
+    "icon": "server"
+  },
+  "options": {},
+  "attributes": {
+    "subject": {
+      "type": "string"
+    },
+    "text": {
+      "type": "text"
+    }
+  }
+}

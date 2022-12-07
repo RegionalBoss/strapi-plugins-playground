@@ -1,0 +1,25 @@
+{
+  "collectionName": "components_newsletter_newsletter_daily_messages",
+  "info": {
+    "displayName": "newsletterDailyMessages",
+    "icon": "bars"
+  },
+  "options": {},
+  "attributes": {
+    "country": {
+      "type": "string"
+    },
+    "estimated": {
+      "type": "string"
+    },
+    "previous": {
+      "type": "string"
+    },
+    "subject": {
+      "type": "string"
+    },
+    "time": {
+      "type": "time"
+    }
+  }
+}

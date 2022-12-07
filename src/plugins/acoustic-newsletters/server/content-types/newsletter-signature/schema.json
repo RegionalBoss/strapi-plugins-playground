@@ -1,0 +1,42 @@
+{
+  "kind": "collectionType",
+  "collectionName": "newsletter-signatures",
+  "info": {
+    "singularName": "newsletter-signature",
+    "pluralName": "newsletter-signatures",
+    "displayName": "NewsletterSignature"
+  },
+  "options": {
+    "increments": true,
+    "timestamps": true
+  },
+  "attributes": {
+    "address": {
+      "type": "string"
+    },
+    "email": {
+      "type": "email"
+    },
+    "name": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "photo": {
+      "type": "json"
+    },
+    "position": {
+      "type": "string"
+    },
+    "url": {
+      "type": "string"
+    },
+    "newsletters": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::acoustic-newsletters.newsletter",
+      "inversedBy": "signature"
+    }
+  }
+}
