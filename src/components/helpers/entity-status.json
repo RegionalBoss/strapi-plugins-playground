@@ -1,0 +1,25 @@
+{
+  "collectionName": "components_helpers_entity_statuses",
+  "info": {
+    "displayName": "entityStatus"
+  },
+  "options": {},
+  "attributes": {
+    "publishingState": {
+      "type": "enumeration",
+      "enum": [
+        "test",
+        "test2",
+        "test3"
+      ]
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": [
+        "test",
+        "test2",
+        "test3"
+      ]
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "collectionName": "components_page_components_collapse_faqs",
+  "info": {
+    "displayName": "Collapse Faq",
+    "icon": "address-card",
+    "description": ""
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "faqs": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::faq.faq"
+    }
+  }
+}

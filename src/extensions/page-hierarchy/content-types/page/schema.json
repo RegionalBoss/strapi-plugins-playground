@@ -1,0 +1,43 @@
+{
+  "kind": "collectionType",
+  "collectionName": "pages",
+  "info": {
+    "singularName": "page",
+    "pluralName": "pages",
+    "displayName": "Page",
+    "name": "page",
+    "description": ""
+  },
+  "options": {
+    "timestamps": true,
+    "increments": true,
+    "comment": "",
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "slug": {
+      "type": "string"
+    },
+    "visible_from": {
+      "type": "date"
+    },
+    "visible_to": {
+      "type": "date"
+    },
+    "publication_state": {
+      "type": "enumeration",
+      "enum": [
+        "draft",
+        "published"
+      ]
+    },
+    "Faql": {
+      "type": "component",
+      "repeatable": true,
+      "component": "page-components.collapse-faq"
+    }
+  }
+}
