@@ -4,6 +4,7 @@ import pluginId from "../pluginId";
 export default {
   setIsSended: async (ctx: Context) => {
     const body: any = ctx.request.body;
+    console.log("set is sended", body);
 
     try {
       const res = await strapi.entityService.update(

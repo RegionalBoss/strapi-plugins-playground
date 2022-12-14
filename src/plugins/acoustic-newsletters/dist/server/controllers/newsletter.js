@@ -7,6 +7,7 @@ const pluginId_1 = __importDefault(require("../pluginId"));
 exports.default = {
     setIsSended: async (ctx) => {
         const body = ctx.request.body;
+        console.log("set is sended", body);
         try {
             const res = await strapi.entityService.update(`plugin::${pluginId_1.default}.newsletter`, body.id, {
                 data: {

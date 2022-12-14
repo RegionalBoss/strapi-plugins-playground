@@ -33,9 +33,7 @@ import Eye from "@strapi/icons/Eye";
 // service layer
 const setNewsletterSended = async (newsletterId) =>
   axiosInstance.post(`/${pluginId}/setIsSended`, {
-    body: {
-      id: newsletterId,
-    },
+    id: newsletterId,
   });
 
 const normalizeStrapiNewsletterToTheAcousticShape = (strapiNewsletter) => {
