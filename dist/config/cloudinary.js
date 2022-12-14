@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.default = {
-    cloudName: "sazkamobil",
-    username: "sazkamobil.cms@cleverlance.com",
-    apiKey: "345276388795827",
-    apiSecret: "Na3YVnYGaDkDtA90_Qkmnl-VV6M",
-};
+exports.default = ({ env }) => ({
+    cloudName: env("STRAPI_CLOUDINARY_CLOUDNAME", ""),
+    username: env("STRAPI_CLOUDINARY_USERNAME", ""),
+    apiKey: env("STRAPI_CLOUDINARY_APIKEY", ""),
+    apiSecret: env("STRAPI_CLOUDINARY_APISECRET", ""),
+});

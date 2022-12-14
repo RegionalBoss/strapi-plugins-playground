@@ -6,13 +6,15 @@ export default {
     const body: any = ctx.request.body;
 
     try {
-      const res = await strapi
-        .entityService(`plugin::${pluginId}.newsletter`)
-        .update(body.id, {
+      const res = await strapi.entityService.update(
+        `plugin::${pluginId}.newsletter`,
+        body.id,
+        {
           data: {
             isSended: true,
           },
-        });
+        }
+      );
       return res;
     } catch (err) {
       console.log(err);
