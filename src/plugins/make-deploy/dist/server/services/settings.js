@@ -21,7 +21,7 @@ const populateId = (value) => ({
     id: (0, uuid_1.v4)(),
 });
 exports.default = ({ strapi }) => ({
-    find: async () => getPluginStore().get({ key: STORE_KEY }),
+    find: async () => { var _a, _b; return (_b = (await ((_a = getPluginStore()) === null || _a === void 0 ? void 0 : _a.get({ key: STORE_KEY })))) !== null && _b !== void 0 ? _b : []; },
     create: async (value) => {
         const store = getPluginStore();
         const prev = (await store.get({ key: STORE_KEY })) || [];

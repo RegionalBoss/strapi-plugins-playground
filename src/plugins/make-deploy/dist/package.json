@@ -1,6 +1,6 @@
 {
     "name": "@regionalboss/strapi-plugin-make-deploy",
-    "version": "1.0.19",
+    "version": "1.0.21",
     "description": "This is the description of the plugin.",
     "strapi": {
         "name": "make-deploy",

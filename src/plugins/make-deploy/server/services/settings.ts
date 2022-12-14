@@ -21,7 +21,7 @@ const populateId = (value: Record<string, unknown>) => ({
 });
 
 export default ({ strapi }: { strapi: Strapi }) => ({
-  find: async () => getPluginStore().get({ key: STORE_KEY }),
+  find: async () => (await getPluginStore()?.get({ key: STORE_KEY })) ?? [],
 
   create: async (value: Record<string, unknown>) => {
     const store = getPluginStore();
