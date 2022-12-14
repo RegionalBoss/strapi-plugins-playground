@@ -15,11 +15,10 @@
     "react-dnd-html5-backend": "10.0.2"
   },
   "dependencies": {
-    "@regionalboss/strapi-plugin-make-deploy": "link:./src/plugins/make-deploy",
-    "@strapi/plugin-graphql": "4.4.6",
-    "@strapi/plugin-i18n": "4.4.6",
-    "@strapi/plugin-users-permissions": "4.4.6",
-    "@strapi/strapi": "4.4.6",
+    "@strapi/plugin-graphql": "4.5.3",
+    "@strapi/plugin-i18n": "4.5.3",
+    "@strapi/plugin-users-permissions": "4.5.3",
+    "@strapi/strapi": "4.5.3",
     "better-sqlite3": "7.6.2",
     "pg": "^8.8.0"
   },

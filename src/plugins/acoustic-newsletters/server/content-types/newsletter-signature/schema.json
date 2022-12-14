@@ -24,7 +24,8 @@
       "type": "string"
     },
     "photo": {
-      "type": "json"
+      "type": "customField",
+      "customField": "plugin::cloudinary-field.cloudinary"
     },
     "position": {
       "type": "string"

@@ -23,7 +23,7 @@ const App = () => {
     const fetchConfig = async () => {
       setLoading(true);
       try {
-        const data = await axiosInstance.get(
+        const { data } = await axiosInstance.get(
           `/${pluginId}/getAcousticNewsletterConfig`
         );
         setNewsletterUrl(data.url);
