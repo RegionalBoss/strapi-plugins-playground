@@ -85,7 +85,7 @@ export const CloudinaryInput = (props) => {
         />
       </Flex>
       {showJson ? (
-        <JSONForm {...props} />
+        <JSONForm {...props} value={parsedValue} />
       ) : (
         <InputJSONCloudinary
           {...props}

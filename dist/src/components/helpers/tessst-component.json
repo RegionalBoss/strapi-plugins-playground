@@ -1,0 +1,16 @@
+{
+    "collectionName": "components_helpers_tessst_components",
+    "info": {
+        "displayName": "tessstComponent"
+    },
+    "options": {},
+    "attributes": {
+        "title": {
+            "type": "string"
+        },
+        "attachemnt": {
+            "type": "customField",
+            "customField": "plugin::cloudinary-field.cloudinary"
+        }
+    }
+}

@@ -1,7 +1,8 @@
 {
     "collectionName": "components_helpers_entity_statuses",
     "info": {
-        "displayName": "entityStatus"
+        "displayName": "EntityStatus",
+        "description": ""
     },
     "options": {},
     "attributes": {
@@ -20,6 +21,10 @@
                 "test2",
                 "test3"
             ]
+        },
+        "attachments": {
+            "type": "customField",
+            "customField": "plugin::cloudinary-field.cloudinary"
         }
     }
 }

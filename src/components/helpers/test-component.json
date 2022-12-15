@@ -1,0 +1,18 @@
+{
+  "collectionName": "components_helpers_test_components",
+  "info": {
+    "displayName": "test-component",
+    "description": ""
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "tesssstttt": {
+      "type": "component",
+      "repeatable": true,
+      "component": "helpers.entity-status"
+    }
+  }
+}

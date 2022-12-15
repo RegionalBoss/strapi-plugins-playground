@@ -38,6 +38,11 @@
       "type": "component",
       "repeatable": true,
       "component": "page-components.collapse-faq"
+    },
+    "asdasdasdasd": {
+      "type": "component",
+      "repeatable": true,
+      "component": "helpers.test-component"
     }
   }
 }

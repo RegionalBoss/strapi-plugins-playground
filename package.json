@@ -15,12 +15,13 @@
     "react-dnd-html5-backend": "10.0.2"
   },
   "dependencies": {
-    "@strapi/plugin-graphql": "4.5.3",
-    "@strapi/plugin-i18n": "4.5.3",
-    "@strapi/plugin-users-permissions": "4.5.3",
-    "@strapi/strapi": "4.5.3",
+    "@strapi/plugin-graphql": "4.5.4",
+    "@strapi/plugin-i18n": "4.5.4",
+    "@strapi/plugin-users-permissions": "4.5.4",
+    "@strapi/strapi": "4.5.4",
     "better-sqlite3": "7.6.2",
-    "pg": "^8.8.0"
+    "pg": "^8.8.0",
+    "strapi-plugin-comments": "^2.2.1"
   },
   "author": {
     "name": "A Strapi developer"
