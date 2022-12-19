@@ -1,5 +1,4 @@
-import { yup, formatYupErrors } from "@strapi/utils";
-import { ICreateDeployDTO, IDeploy } from "../content-types/deploy";
+import { yup } from "@strapi/utils";
 import { IDeployStatus } from "../content-types/deploy-status";
 import { IValidationResult } from "./deploy";
 

@@ -3,7 +3,7 @@
  */
 
 import * as https from "https";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import pluginId from "../pluginId";
 import { errors } from "@strapi/utils";
 import { ICreateDeployDTO, IDeploy } from "../content-types/deploy";
@@ -15,54 +15,54 @@ import {
 import { validateDeployStatus } from "../validators/deploy-status";
 import random from "lodash/random";
 import intersection from "lodash/intersection";
+import {
+  IStrapi,
+  OnlyStrings,
+  StrapiDBQueryArgs,
+  WhereClause,
+} from "strapi-typed";
+import { Strapi } from "@strapi/strapi";
+import { IUser } from "../content-types/user";
 
 const { ApplicationError, ValidationError } = errors;
 
 const MODEL_NAME = "deploy";
 
-export default {
+export default ({ strapi }: { strapi: IStrapi }) => ({
   /**
    * Promise to fetch all records
-   *
-   * @return {Promise}
    */
-  find(params, populate): Promise<IDeploy[]> {
-    return strapi.query(`plugin::${pluginId}.${MODEL_NAME}`).findMany(params);
+  find(params: any) {
+    return strapi
+      .query<IDeploy>(`plugin::${pluginId}.${MODEL_NAME}`)
+      .findMany(params);
   },
 
   /**
    * Promise to fetch record
-   *
-   * @return {Promise}
    */
-  findOne(params, populate): Promise<any> {
-    return strapi
-      .query(`plugin::${pluginId}.${MODEL_NAME}`)
-      .findOne(params, populate);
-  },
+  findOne: (params: StrapiDBQueryArgs<keyof IDeploy>) =>
+    strapi.query<IDeploy>(`plugin::${pluginId}.${MODEL_NAME}`).findOne(params),
 
   /**
    * Promise to count record
-   *
-   * @return {Promise}
    */
-  count(params) {
-    return strapi.query(`plugin::${pluginId}.${MODEL_NAME}`).count(params);
+  count(params?: StrapiDBQueryArgs<keyof IDeploy>) {
+    return strapi
+      .query<IDeploy>(`plugin::${pluginId}.${MODEL_NAME}`)
+      .count(params);
   },
 
   /**
    * Promise to search records
-   *
-   * @return {Promise}
    */
-  search(params) {
-    return strapi.query(`plugin::${pluginId}.${MODEL_NAME}`).search(params);
+  search(params?: StrapiDBQueryArgs<keyof IDeploy>) {
+    return strapi
+      .query<IDeploy>(`plugin::${pluginId}.${MODEL_NAME}`)
+      .findMany(params);
   },
 
-  startNewDeploy: async (
-    data: ICreateDeployDTO,
-    user?: { username: string; roles: [{ id: number }] }
-  ) => {
+  startNewDeploy: async (data: ICreateDeployDTO, user?: IUser) => {
     console.log(
       `STRAPI: plugin::${pluginId}.${MODEL_NAME} -`,
       strapi.query(`plugin::${pluginId}.${MODEL_NAME}`)
@@ -76,8 +76,8 @@ export default {
       throw new ApplicationError("Odpovídající nastaveni nebylo nalezeno");
     if (
       intersection(
-        ((currentSetting && currentSetting.roles) || []).map((role) => role.id),
-        (user.roles || []).map((role) => role.id)
+        ((currentSetting && currentSetting.roles) ?? []).map((role) => role.id),
+        (user?.roles ?? []).map((role) => role.id)
       ).length === 0
     ) {
       throw new ApplicationError("Account is not authorized to run this build");
@@ -94,8 +94,8 @@ export default {
 
     console.log("CREATE DEPLOY: ", data);
 
-    const createDeploy: IDeploy = await strapi
-      .query(`plugin::${pluginId}.${MODEL_NAME}`)
+    const createDeploy = await strapi
+      .query<IDeploy>(`plugin::${pluginId}.${MODEL_NAME}`)
       .create({
         data: {
           name: data.name,
@@ -126,8 +126,8 @@ export default {
     const { error } = await validateDeployStatus(createStatusMessageBody_init);
     if (error) throw new ValidationError(error);
 
-    const createStatusMessage_init: IDeployStatus = await strapi
-      .query(`plugin::${pluginId}.deploy-status`)
+    const createStatusMessage_init = await strapi
+      .query<IDeployStatus>(`plugin::${pluginId}.deploy-status`)
       .create({ data: createStatusMessageBody_init });
     console.log(
       "CREATE DEPLOY STATUS MESSAGE INIT RESPONSE: ",
@@ -145,7 +145,7 @@ export default {
             rejectUnauthorized: false,
           }),
           headers: {
-            "x-user": user?.username,
+            "x-user": user?.username ?? "",
             authorization: process.env.DEPLOY_AUTHORIZATION || "",
           },
         }
@@ -167,19 +167,20 @@ export default {
       //   .generateRandomDeployStatuses(createDeploy.id, random(2, 7), userData);
       // TODO: delete when TEST BE is provided
     } catch (error) {
-      if (error.response) {
+      const err = error as AxiosError;
+      if (err.response) {
         // Request made and server responded
-        console.warn("error.response", error.response);
-        console.warn("error.request.headers:::", error.request);
-      } else if (error.request)
+        console.warn("error.response", err.response);
+        console.warn("error.request.headers:::", err.request);
+      } else if (err.request)
         // The request was made but no response was received
-        console.warn("error.request", error.request);
+        console.warn("error.request", err.request);
       // Something happened in setting up the request that triggered an Error
-      else console.warn("error.message", error.message);
+      else console.warn("error.message", err.message);
 
       await strapi.query(`plugin::${pluginId}.deploy-status`).create({
         data: {
-          message: `Nebylo možné spustit sestavení aplikace: ${error.message}`,
+          message: `Nebylo možné spustit sestavení aplikace: ${err.message}`,
           stage: "BE Strapi",
           status: "error",
           deploy: { id: createDeploy.id },
@@ -190,36 +191,43 @@ export default {
         isFinal: true,
       };
       return await strapi
-        .query(`plugin::${pluginId}.${MODEL_NAME}`)
+        .query<IDeploy>(`plugin::${pluginId}.${MODEL_NAME}`)
         .update({ where: { id: createDeploy.id }, data: updatedBody });
     }
 
     return createDeploy;
   },
 
-  update: async (params, data, { files }: { files?: unknown } = {}) => {
+  update: async (
+    params: WhereClause<OnlyStrings<keyof IDeploy>>,
+    data: Partial<IDeployStatus>,
+    { files }: { files?: unknown } = {}
+  ) => {
     const existingEntry = await strapi
-      .query(`plugin::${pluginId}.deploy`)
+      .query<IDeploy>(`plugin::${pluginId}.deploy`)
       .findOne({ where: params });
 
     console.log("existingEntry", existingEntry, params);
 
-    const validData = await strapi.entityValidator.validateEntityUpdate(
+    const validData = await (
+      strapi as unknown as Strapi
+    ).entityValidator.validateEntityUpdate(
       strapi.getModel(`plugin::${pluginId}.deploy`),
       data
     );
 
     console.log("validData", validData);
-    const deployStatus_validData =
-      await strapi.entityValidator.validateEntityCreation(
-        strapi.getModel(`plugin::${pluginId}.deploy-status`),
-        {
-          message: data.message,
-          status: data.status,
-          stage: data.stage,
-          deploy: { id: params.id },
-        }
-      );
+    const deployStatus_validData = await (
+      strapi as unknown as Strapi
+    ).entityValidator.validateEntityCreation(
+      strapi.getModel(`plugin::${pluginId}.deploy-status`),
+      {
+        message: data.message,
+        status: data.status,
+        stage: data.stage,
+        deploy: { id: params.id },
+      }
+    );
     console.log("deployStatus_validData", deployStatus_validData);
 
     await strapi
@@ -227,18 +235,22 @@ export default {
       .create({ data: deployStatus_validData });
 
     const entry = await strapi
-      .query(`plugin::${pluginId}.deploy`)
+      .query<IDeploy>(`plugin::${pluginId}.deploy`)
       .update({ where: params, data: validData });
     console.log("entry", entry);
     if (files) {
       // automatically uploads the files based on the entry and the model
-      await strapi.entityService.uploadFiles(entry, files, {
-        model: "deploy",
-        source: pluginId,
-      });
+      await (strapi as unknown as Strapi).entityService.uploadFiles(
+        entry,
+        files,
+        {
+          model: "deploy",
+          source: pluginId,
+        }
+      );
       return strapi
-        .query(`plugin::${pluginId}.${MODEL_NAME}`)
-        .findOne({ id: entry.id });
+        .query<IDeploy>(`plugin::${pluginId}.${MODEL_NAME}`)
+        .findOne({ where: { id: entry.id } });
     }
 
     return entry;
@@ -271,8 +283,8 @@ export default {
       const { error } = await validateDeployStatus(createStatusMessageBody);
       if (error) return new ValidationError(error);
 
-      const createStatusMessage: IDeployStatus = await strapi
-        .query(`plugin::${pluginId}.deploy-status`)
+      const createStatusMessage = await strapi
+        .query<IDeployStatus>(`plugin::${pluginId}.deploy-status`)
         .create({ data: createStatusMessageBody });
       console.log(
         "CREATE DEPLOY STATUS MESSAGE RESPONSE: ",
@@ -284,7 +296,7 @@ export default {
       isFinal: true,
     };
     return await strapi
-      .query(`plugin::${pluginId}.${MODEL_NAME}`)
+      .query<IDeploy>(`plugin::${pluginId}.${MODEL_NAME}`)
       .update({ where: { id }, data: updatedBody });
   },
-};
+});
