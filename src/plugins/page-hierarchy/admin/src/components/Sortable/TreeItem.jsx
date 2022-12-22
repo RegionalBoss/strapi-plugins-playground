@@ -115,12 +115,10 @@ export const TreeItem = React.forwardRef(
       disableInteraction,
       ghost,
       handleProps,
-      indentationWidth,
+      indentationWidth = 50,
       indicator,
-      onRemove,
       style,
       value,
-      wrapperRef,
       ...props
     },
     ref
@@ -248,23 +246,21 @@ export const TreeItem = React.forwardRef(
 
     return (
       <Container
-        ref={wrapperRef}
         style={{ "--spacing": `${depth * indentationWidth}px` }}
         clone={clone}
         ghost={ghost}
+        ref={ref}
       >
         <TreeItemBox
           padding={4}
           hasRadius
           background="neutral0"
           shadow="tableShadow"
-          ref={ref}
           style={style}
           {...props}
         >
           <LeftItemDiv>
             <Handle
-              {...handleProps}
               style={{
                 opacity: isEditMode ? 1 : 0.2,
                 cursor: isEditMode ? "grab" : "default",
