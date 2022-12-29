@@ -20,7 +20,7 @@ export const EditViewContext = React.createContext({
 });
 
 export const EditViewContextProvider = ({ children }) => {
-  const [globalLoading, setGlobalLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [items, setItems] = useState([]);
   const [pages, setPages] = useState([]);
   const [itemToUpdate, setItemToUpdate] = useState();
@@ -35,6 +35,7 @@ export const EditViewContextProvider = ({ children }) => {
   }, []);
 
   const loadInitData = async () => {
+    setIsLoading(true);
     try {
       const [pages, items] = await Promise.all([
         axiosInstance.get(`/${pluginId}/flat-pages`),
@@ -44,11 +45,12 @@ export const EditViewContextProvider = ({ children }) => {
       setPages(pages.data);
     } catch (ex) {
       console.error(ex);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const saveData = async () => {
-    setGlobalLoading(true);
     try {
       const { data } = await axiosInstance.put(`/${pluginId}/items`, {
         items: flattenTree(items).map((item, index) => ({
@@ -70,7 +72,7 @@ export const EditViewContextProvider = ({ children }) => {
       console.error(e);
     } finally {
       toggleEditMode();
-      setGlobalLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -304,7 +306,7 @@ export const EditViewContextProvider = ({ children }) => {
         saveData,
         saveDataAndPickById,
         duplicateItem,
-        globalLoading,
+        isLoading,
       }}
     >
       {itemToUpdate ? (

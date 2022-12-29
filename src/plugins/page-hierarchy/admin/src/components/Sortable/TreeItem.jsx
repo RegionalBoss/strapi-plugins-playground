@@ -6,43 +6,39 @@ import {
   faEye,
   faEyeSlash,
   faFile,
-  faGripVertical,
   faLink,
   faPen,
   faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useHistory, Link } from "react-router-dom";
+import { useTheme } from "@strapi/design-system";
+import { Link, useHistory } from "react-router-dom";
 
-import { Box, IconButton, Typography, Flex } from "@strapi/design-system";
+import { Box, Flex, IconButton, Typography } from "@strapi/design-system";
 import React from "react";
 import styled from "styled-components";
-import { EditViewContext } from "../../lib/contexts/EditViewContext";
 import { ITEM_TYPE } from "../../lib/constants";
+import { EditViewContext } from "../../lib/contexts/EditViewContext";
 
 import Pencil from "@strapi/icons/Pencil";
-import { useConfirmDialog } from "../../lib/contexts/ConfirmDialogContext";
 import { useTranslation } from "../../hooks/useTranslation";
+import { useConfirmDialog } from "../../lib/contexts/ConfirmDialogContext";
 import pluginId from "../../pluginId";
 
 const DETAIL_PATH = `/content-manager/collectionType/plugin::${pluginId}.page`;
 const LOCATION_PATH = `/plugins/${pluginId}`;
 
+const StyledIconButton = styled(IconButton)`
+  background: none;
+  :hover {
+    cursor: pointer;
+  }
+`;
+
 const LeftItemDiv = styled.div`
   display: flex;
   justify-content: flex-start;
   align-items: center;
-`;
-
-const Container = styled.div`
-  position: relative;
-  margin-bottom: 0.5rem;
-  padding-left: ${({ clone }) => (clone ? "0.5rem" : "var(--spacing)")};
-  padding-top: ${({ clone }) => (clone ? "0.3rem" : "0")};
-  max-width: ${({ clone }) => (clone ? "30%" : "100%")};
-  max-height: ${({ clone }) => (clone ? "1.2rem" : "100%")};
-  opacity: ${({ ghost }) => (ghost ? 0.5 : 1)};
-  margin-left: ${({ clone }) => (clone ? "0.2rem" : 0)};
 `;
 
 const Count = styled.span`
@@ -61,7 +57,7 @@ const Count = styled.span`
   color: #fff;
 `;
 
-const UpdateIconButton = styled(IconButton)`
+const UpdateIconButton = styled(StyledIconButton)`
   opacity: 0.6;
 
   &:hover {
@@ -106,6 +102,7 @@ const IconWrapper = styled.div`
 `;
 
 export const TreeItem = ({ value }) => {
+  const { colors, shadows, spaces } = useTheme();
   const {
     isEditMode,
     setItemToUpdate,
@@ -182,7 +179,7 @@ export const TreeItem = ({ value }) => {
     if (!havePage) return null;
     if (!page)
       return (
-        <IconButton
+        <StyledIconButton
           noBorder
           label={t("PageHierarchyEditor.pageDoesNotExists.warning")}
           icon={<FontAwesomeIcon icon={faExclamationTriangle} />}
@@ -226,7 +223,17 @@ export const TreeItem = ({ value }) => {
   };
 
   return (
-    <Flex justifyContent="space-between">
+    <Flex
+      justifyContent="space-between"
+      style={{
+        backgroundColor: colors.neutral100,
+        color: "white",
+        boxShadow: shadows.tableShadow,
+        // boxShadow: "box-shadow: 15px 15px 15px 0px rgba(3, 3, 5, 0.2);",
+        padding: spaces[2],
+        marginBottom: spaces[2],
+      }}
+    >
       <LeftItemDiv>
         <div style={{ marginLeft: "1rem" }}>
           <Typography as="h3">
@@ -241,51 +248,51 @@ export const TreeItem = ({ value }) => {
         <UpdatePageButton />
         <IconWrapper>
           {value.isVisible ? (
-            <IconButton
+            <StyledIconButton
               noBorder
               label="Viditelné"
               icon={<FontAwesomeIcon icon={faEye} />}
             />
           ) : (
-            <IconButton
+            <StyledIconButton
               noBorder
               label="Neviditelné"
               icon={<FontAwesomeIcon icon={faEyeSlash} />}
-            ></IconButton>
+            ></StyledIconButton>
           )}
           {(value.visibleFrom || value.visibleTo) && (
-            <IconButton
+            <StyledIconButton
               noBorder
               label="Časové omezeni"
               icon={<FontAwesomeIcon icon={faClock} />}
-            ></IconButton>
+            ></StyledIconButton>
           )}
           {value.type === ITEM_TYPE.PAGE && (
-            <IconButton
+            <StyledIconButton
               noBorder
               label="Interní stránka"
               icon={<FontAwesomeIcon icon={faFile} />}
-            ></IconButton>
+            ></StyledIconButton>
           )}
           {(value.type === ITEM_TYPE.SYMBOLIC_LINK ||
             value.type === ITEM_TYPE.URL) && (
-            <IconButton
+            <StyledIconButton
               noBorder
               label="Externí odkaz"
               icon={<FontAwesomeIcon icon={faLink} />}
-            ></IconButton>
+            ></StyledIconButton>
           )}
           {value.type === ITEM_TYPE.LABEL && (
-            <IconButton
+            <StyledIconButton
               noBorder
               label="Označení"
               icon={<FontAwesomeIcon icon={faBookmark} />}
-            ></IconButton>
+            ></StyledIconButton>
           )}
         </IconWrapper>
         {isEditMode ? (
           <>
-            <IconButton
+            <StyledIconButton
               disabled={havePage && !page}
               onClick={handleDuplicateItem}
               label={t(
@@ -299,14 +306,14 @@ export const TreeItem = ({ value }) => {
               noBorder
               icon={<FontAwesomeIcon icon={faCopy} />}
             />
-            <IconButton
+            <StyledIconButton
               onClick={() => setItemToUpdate(value)}
               label="Upravit"
               style={{ marginRight: "0.5rem" }}
               noBorder
               icon={<Pencil />}
             />
-            <IconButton
+            <StyledIconButton
               onClick={handleRemove}
               label={
                 havePage

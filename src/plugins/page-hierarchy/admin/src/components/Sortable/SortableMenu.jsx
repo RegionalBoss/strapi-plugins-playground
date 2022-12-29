@@ -1,93 +1,112 @@
 import React from "react";
 import { Tree } from "antd";
+import { DownOutlined } from "@ant-design/icons";
 import { EditViewContext } from "../../lib/contexts/EditViewContext";
 import styled from "styled-components";
 import { TreeItem } from "./TreeItem";
 import { useTheme } from "@strapi/design-system";
 
+const StyledTree = styled(Tree)`
+  .ant-tree-treenode-draggable {
+    align-items: center;
+  }
+  .ant-tree-treenode-draggable.dragging::after {
+    content: none;
+  }
+  .ant-tree-node-selected {
+    background: none !important;
+  }
+  .ant-tree-draggable-icon {
+    opacity: 0.6 !important;
+    &:hover {
+      cursor: grab;
+    }
+  }
+`;
+
 export const SortableMenu = () => {
   const { items, setItems, isEditMode } = React.useContext(EditViewContext);
-  const { colors, shadows, spaces } = useTheme();
+  const { colors } = useTheme();
 
-  const onDragEnter = (info) => {
-    console.log(info);
-  };
+  const onDrop = (info) =>
+    setItems((prevData) => {
+      const dropKey = info.node.id;
+      const dragKey = info.dragNode.id;
+      const dropPos = info.node.pos.split("-");
+      const dropPosition =
+        info.dropPosition - Number(dropPos[dropPos.length - 1]);
 
-  const onDrop = (info) => {
-    console.log(info);
-    return;
-    const dropKey = info.node.key;
-    const dragKey = info.dragNode.key;
-    const dropPos = info.node.pos.split("-");
-    const dropPosition =
-      info.dropPosition - Number(dropPos[dropPos.length - 1]);
-
-    const loop = (data, key, callback) => {
-      for (let i = 0; i < data.length; i++) {
-        if (data[i].key === key) {
-          return callback(data[i], i, data);
+      const loop = (data, id, callback) => {
+        for (let i = 0; i < data.length; i++) {
+          if (data[i].id === id) {
+            return callback(data[i], i, data);
+          }
+          if (data[i].children) {
+            loop(data[i].children, id, callback);
+          }
         }
-        if (data[i].children) {
-          loop(data[i].children, key, callback);
+      };
+      const data = [...prevData];
+
+      let dragObj;
+      loop(data, dragKey, (item, index, arr) => {
+        arr.splice(index, 1);
+        dragObj = item;
+      });
+
+      if (!info.dropToGap) {
+        loop(data, dropKey, (item) => {
+          item.children = item.children || [];
+          item.children.unshift(dragObj);
+        });
+      } else if (
+        (info.node.props.data.children || []).length > 0 &&
+        info.node.props.expanded &&
+        dropPosition === 1
+      ) {
+        loop(data, dropKey, (item) => {
+          item.children = item.children || [];
+          item.children.unshift(dragObj);
+        });
+      } else {
+        let ar = [];
+        let i;
+        loop(data, dropKey, (_item, index, arr) => {
+          ar = arr;
+          i = index;
+        });
+        if (dropPosition === -1) {
+          ar.splice(i, 0, dragObj);
+        } else {
+          ar.splice(i + 1, 0, dragObj);
         }
       }
-    };
-    const data = [...gData];
-
-    // Find dragObject
-    let dragObj;
-    loop(data, dragKey, (item, index, arr) => {
-      arr.splice(index, 1);
-      dragObj = item;
+      return data;
     });
 
-    if (!info.dropToGap) {
-      // Drop on the content
-      loop(data, dropKey, (item) => {
-        item.children = item.children || [];
-        // where to insert 示例添加到头部，可以是随意位置
-        item.children.unshift(dragObj);
-      });
-    } else if (
-      (info.node.props.children || []).length > 0 && // Has children
-      info.node.props.expanded && // Is expanded
-      dropPosition === 1 // On the bottom gap
-    ) {
-      loop(data, dropKey, (item) => {
-        item.children = item.children || [];
-        // where to insert 示例添加到头部，可以是随意位置
-        item.children.unshift(dragObj);
-        // in previous version, we use item.children.push(dragObj) to insert the
-        // item to the tail of the children
-      });
-    } else {
-      let ar = [];
-      let i;
-      loop(data, dropKey, (_item, index, arr) => {
-        ar = arr;
-        i = index;
-      });
-      if (dropPosition === -1) {
-        ar.splice(i, 0, dragObj);
-      } else {
-        ar.splice(i + 1, 0, dragObj);
-      }
-    }
-    setGData(data);
-  };
-
   return (
-    <Tree
+    <StyledTree
       className="draggable-tree"
-      draggable
+      draggable={isEditMode}
       blockNode
+      selectable={false}
+      autoExpandParent
+      switcherIcon={
+        <span
+          style={{
+            display: "flex",
+            alignItems: "center",
+            height: "100%",
+            padding: "0 0.5rem",
+          }}
+        >
+          <DownOutlined />
+        </span>
+      }
       rootStyle={{
         backgroundColor: colors.neutral100,
-        color: "white",
-        boxShadow: shadows.tableShadow,
-        marginBottom: spaces[3],
+        color: colors.neutral1000,
       }}
-      onDragEnter={onDragEnter}
       onDrop={onDrop}
       fieldNames={{
         title: "name",
@@ -95,11 +114,6 @@ export const SortableMenu = () => {
       }}
       treeData={items}
       titleRender={(nodeData) => <TreeItem value={nodeData} />}
-      // treeData={items.map((item) => ({
-      //   ...item,
-      //   key: item.id,
-      //   title: item.name,
-      // }))}
       defaultExpandAll
     />
   );
