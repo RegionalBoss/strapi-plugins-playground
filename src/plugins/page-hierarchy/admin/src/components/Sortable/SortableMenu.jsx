@@ -1,201 +1,120 @@
-import {
-  closestCenter,
-  defaultDropAnimation,
-  DndContext,
-  DragOverlay,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import React from "react";
-import { createPortal } from "react-dom";
+import { Tree } from "antd";
+import { DownOutlined } from "@ant-design/icons";
 import { EditViewContext } from "../../lib/contexts/EditViewContext";
-import {
-  buildTree,
-  flattenTree,
-  getChildCount,
-  getProjection,
-  removeChildrenOf,
-} from "../../utils/sortableTree";
-import { SortableMenuItem } from "./SortableMenuItem";
+import styled from "styled-components";
+import { TreeItem } from "./TreeItem";
+import { useTheme } from "@strapi/design-system";
 
-const indentationWidth = 50;
-
-const dropAnimationConfig = {
-  keyframes({ transform }) {
-    return [
-      { opacity: 1, transform: CSS.Transform?.toString(transform.initial) },
-      {
-        opacity: 0,
-        transform: CSS.Transform?.toString({
-          ...transform.final,
-          x: transform.final.x + 5,
-          y: transform.final.y + 5,
-        }),
-      },
-    ];
-  },
-  easing: "ease-out",
-  sideEffects({ active }) {
-    active.node.animate([{ opacity: 0 }, { opacity: 1 }], {
-      duration: defaultDropAnimation.duration,
-      easing: defaultDropAnimation.easing,
-    });
-  },
-};
-
-export const SortableMenu = React.memo(() => {
-  const { items, setItems, isEditMode } = React.useContext(EditViewContext);
-  const [activeId, setActiveId] = React.useState(null);
-  const overId = React.useRef(null);
-  // const [overId, setOverId] = React.useState(null);
-  // const offsetLeft = React.useRef(0);
-  const [offsetLeft, setOffsetLeft] = React.useState(0);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
-  const flattenedItems = React.useMemo(() => {
-    const flattenedTree = flattenTree(items);
-    const collapsedItems = flattenedTree.reduce(
-      (acc, { children, collapsed, id }) =>
-        collapsed && children.length ? [...acc, id] : acc,
-      []
-    );
-
-    return removeChildrenOf(
-      flattenedTree,
-      activeId ? [activeId, ...collapsedItems] : collapsedItems
-    );
-  }, [activeId, items]);
-
-  const projected =
-    activeId && overId.current
-      ? getProjection(
-          flattenedItems,
-          activeId,
-          overId.current,
-          offsetLeft,
-          // offsetLeft.current,
-          indentationWidth
-        )
-      : null;
-
-  const sortedIds = React.useMemo(
-    () => flattenedItems.map(({ id }) => id),
-    [flattenedItems]
-  );
-
-  const activeItem = React.useMemo(
-    () => (activeId ? flattenedItems.find(({ id }) => id === activeId) : null),
-    [activeId]
-  );
-
-  return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragEnd={handleDragEnd}
-      onDragStart={handleDragStart}
-      onDragMove={handleDragMove}
-      onDragOver={handleDragOver}
-      onDragCancel={handleDragCancel}
-    >
-      <SortableContext
-        items={sortedIds}
-        strategy={verticalListSortingStrategy}
-        disabled={!isEditMode}
-      >
-        {flattenedItems.map((item) => {
-          const { id, depth } = item;
-          return (
-            <SortableMenuItem
-              key={id}
-              id={id}
-              value={item}
-              depth={id === activeId && projected ? projected.depth : depth}
-              indentationWidth={indentationWidth}
-              onRemove={() => handleRemove(id)}
-            />
-          );
-        })}
-        {createPortal(
-          <DragOverlay dropAnimation={dropAnimationConfig}>
-            {activeId && activeItem ? (
-              <SortableMenuItem
-                id={activeId}
-                depth={activeItem.depth}
-                clone
-                childCount={getChildCount(items, activeId) + 1}
-                value={activeItem}
-                indentationWidth={indentationWidth}
-              />
-            ) : null}
-          </DragOverlay>,
-          document.body
-        )}
-      </SortableContext>
-    </DndContext>
-  );
-
-  function handleDragStart({ active: { id: activeId } }) {
-    setActiveId(activeId);
-    overId.current = activeId;
-    // setOverId(activeId);
-
-    document.body.style.setProperty("cursor", "grabbing");
+const StyledTree = styled(Tree)`
+  .ant-tree-treenode-draggable {
+    align-items: center;
   }
-
-  function handleDragMove({ delta }) {
-    // offsetLeft.current = delta.x;
-    setOffsetLeft(delta.x);
+  .ant-tree-treenode-draggable.dragging::after {
+    content: none;
   }
-
-  function handleDragOver({ over }) {
-    overId.current = over?.id ?? null;
-    // setOverId(over?.id ?? null);
+  .ant-tree-node-selected {
+    background: none !important;
   }
-
-  function handleDragEnd({ active, over }) {
-    resetState();
-
-    if (projected && over) {
-      const { depth, parentId } = projected;
-      const clonedItems = JSON.parse(JSON.stringify(flattenTree(items)));
-      const overIndex = clonedItems.findIndex(({ id }) => id === over.id);
-      const activeIndex = clonedItems.findIndex(({ id }) => id === active.id);
-      const activeTreeItem = clonedItems[activeIndex];
-      clonedItems[activeIndex] = { ...activeTreeItem, depth, parentId };
-
-      const sortedItems = arrayMove(clonedItems, activeIndex, overIndex);
-      const newItems = buildTree(sortedItems);
-      setItems(newItems);
+  .ant-tree-draggable-icon {
+    opacity: 0.6 !important;
+    &:hover {
+      cursor: grab;
     }
   }
+`;
 
-  function handleDragCancel() {
-    resetState();
-  }
+export const SortableMenu = () => {
+  const { items, setItems, isEditMode } = React.useContext(EditViewContext);
+  const { colors } = useTheme();
 
-  function resetState() {
-    overId.current = null;
-    // setOverId(null);
-    setActiveId(null);
-    // offsetLeft.current = 0;
-    setOffsetLeft(0);
+  const onDrop = (info) =>
+    setItems((prevData) => {
+      const dropKey = info.node.id;
+      const dragKey = info.dragNode.id;
+      const dropPos = info.node.pos.split("-");
+      const dropPosition =
+        info.dropPosition - Number(dropPos[dropPos.length - 1]);
 
-    document.body.style.setProperty("cursor", "");
-  }
-});
+      const loop = (data, id, callback) => {
+        for (let i = 0; i < data.length; i++) {
+          if (data[i].id === id) {
+            return callback(data[i], i, data);
+          }
+          if (data[i].children) {
+            loop(data[i].children, id, callback);
+          }
+        }
+      };
+      const data = [...prevData];
+
+      let dragObj;
+      loop(data, dragKey, (item, index, arr) => {
+        arr.splice(index, 1);
+        dragObj = item;
+      });
+
+      if (!info.dropToGap) {
+        loop(data, dropKey, (item) => {
+          item.children = item.children || [];
+          item.children.unshift(dragObj);
+        });
+      } else if (
+        (info.node.props.data.children || []).length > 0 &&
+        info.node.props.expanded &&
+        dropPosition === 1
+      ) {
+        loop(data, dropKey, (item) => {
+          item.children = item.children || [];
+          item.children.unshift(dragObj);
+        });
+      } else {
+        let ar = [];
+        let i;
+        loop(data, dropKey, (_item, index, arr) => {
+          ar = arr;
+          i = index;
+        });
+        if (dropPosition === -1) {
+          ar.splice(i, 0, dragObj);
+        } else {
+          ar.splice(i + 1, 0, dragObj);
+        }
+      }
+      return data;
+    });
+
+  return (
+    <StyledTree
+      className="draggable-tree"
+      draggable={isEditMode}
+      blockNode
+      selectable={false}
+      autoExpandParent
+      switcherIcon={
+        <span
+          style={{
+            display: "flex",
+            alignItems: "center",
+            height: "100%",
+            padding: "0 0.5rem",
+          }}
+        >
+          <DownOutlined />
+        </span>
+      }
+      rootStyle={{
+        backgroundColor: colors.neutral100,
+        color: colors.neutral1000,
+      }}
+      onDrop={onDrop}
+      fieldNames={{
+        title: "name",
+        key: "id",
+      }}
+      treeData={items}
+      titleRender={(nodeData) => <TreeItem value={nodeData} />}
+      defaultExpandAll
+    />
+  );
+};

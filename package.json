@@ -10,10 +10,6 @@
     "build": "strapi build",
     "strapi": "strapi"
   },
-  "devDependencies": {
-    "react-dnd": "10.0.2",
-    "react-dnd-html5-backend": "10.0.2"
-  },
   "dependencies": {
     "@strapi/plugin-graphql": "4.5.4",
     "@strapi/plugin-i18n": "4.5.4",

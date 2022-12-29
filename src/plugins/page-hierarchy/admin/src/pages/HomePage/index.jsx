@@ -15,6 +15,7 @@ import Check from "@strapi/icons/Check";
 import Cross from "@strapi/icons/Cross";
 import Pencil from "@strapi/icons/Pencil";
 import React from "react";
+import { LoadingIndicatorPage } from "@strapi/helper-plugin";
 import { SortableMenu } from "../../components/Sortable/SortableMenu";
 import { useTranslation } from "../../hooks/useTranslation";
 import { ITEM_TYPE } from "../../lib/constants";
@@ -55,6 +56,7 @@ const HomePage = () => {
     refreshData,
     globalLoading,
     items,
+    isLoading,
   } = React.useContext(EditViewContext);
   const { showConfirmDialog } = useConfirmDialog();
   const { t } = useTranslation();
@@ -117,6 +119,8 @@ const HomePage = () => {
       </Flex>
     );
   }, [isEditMode]);
+
+  if (isLoading) return <LoadingIndicatorPage />;
 
   return (
     <>
