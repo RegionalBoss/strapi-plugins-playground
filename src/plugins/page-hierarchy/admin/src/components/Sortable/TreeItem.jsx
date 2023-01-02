@@ -6,34 +6,29 @@ import {
   faEye,
   faEyeSlash,
   faFile,
+  faGripVertical,
   faLink,
   faPen,
   faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useTheme } from "@strapi/design-system";
-import { Link, useHistory } from "react-router-dom";
+import { useHistory, Link } from "react-router-dom";
 
-import { Box, Flex, IconButton, Typography } from "@strapi/design-system";
+import { Box, IconButton, Typography, Flex } from "@strapi/design-system";
 import React from "react";
 import styled from "styled-components";
-import { ITEM_TYPE } from "../../lib/constants";
 import { EditViewContext } from "../../lib/contexts/EditViewContext";
+import { ITEM_TYPE } from "../../lib/constants";
 
 import Pencil from "@strapi/icons/Pencil";
-import { useTranslation } from "../../hooks/useTranslation";
 import { useConfirmDialog } from "../../lib/contexts/ConfirmDialogContext";
+import { useTranslation } from "../../hooks/useTranslation";
 import pluginId from "../../pluginId";
+
+import { useDrag, useDrop } from "@regionalboss/react-sortly";
 
 const DETAIL_PATH = `/content-manager/collectionType/plugin::${pluginId}.page`;
 const LOCATION_PATH = `/plugins/${pluginId}`;
-
-const StyledIconButton = styled(IconButton)`
-  background: none;
-  :hover {
-    cursor: pointer;
-  }
-`;
 
 const LeftItemDiv = styled.div`
   display: flex;
@@ -41,23 +36,14 @@ const LeftItemDiv = styled.div`
   align-items: center;
 `;
 
-const Count = styled.span`
-  position: absolute;
-  top: -10px;
-  right: -10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background-color: ${({ theme }) => theme.colors.primary600};
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #fff;
+const Container = styled.div`
+  position: relative;
+  margin-bottom: 0.5rem;
+  margin-left: ${({ depth }) => `${depth * 30}px`};
+  opacity: ${({ isDragging }) => (isDragging ? 0.5 : 1)};
 `;
 
-const UpdateIconButton = styled(StyledIconButton)`
+const UpdateIconButton = styled(IconButton)`
   opacity: 0.6;
 
   &:hover {
@@ -101,8 +87,9 @@ const IconWrapper = styled.div`
   }
 `;
 
-export const TreeItem = ({ value }) => {
-  const { colors, shadows, spaces } = useTheme();
+export const TreeItem = React.memo((props) => {
+  const { depth } = props;
+
   const {
     isEditMode,
     setItemToUpdate,
@@ -116,12 +103,12 @@ export const TreeItem = ({ value }) => {
   const { showConfirmDialog } = useConfirmDialog();
 
   const havePage = React.useMemo(
-    () => value.type === ITEM_TYPE.PAGE,
-    [value.type]
+    () => props.type === ITEM_TYPE.PAGE,
+    [props.type]
   );
   const page = React.useMemo(
-    () => (havePage ? pages.find((page) => page.id === value.pageId) : null),
-    [havePage, value.pageId, pages]
+    () => (havePage ? pages.find((page) => page.id === props.pageId) : null),
+    [havePage, props.pageId, pages]
   );
 
   const handleRemove = async () => {
@@ -131,7 +118,7 @@ export const TreeItem = ({ value }) => {
         t("EditMenuItemForm.delete.warning.confirm.message")
       )
     )
-      deleteItem(value);
+      deleteItem(props);
   };
 
   const handleEditPageClick = async (e) => {
@@ -179,7 +166,7 @@ export const TreeItem = ({ value }) => {
     if (!havePage) return null;
     if (!page)
       return (
-        <StyledIconButton
+        <IconButton
           noBorder
           label={t("PageHierarchyEditor.pageDoesNotExists.warning")}
           icon={<FontAwesomeIcon icon={faExclamationTriangle} />}
@@ -197,13 +184,13 @@ export const TreeItem = ({ value }) => {
         />
       </Link>
     );
-  }, [havePage, page, isEditMode, value, handleEditPageClick]);
+  }, [havePage, page, isEditMode, handleEditPageClick]);
 
   const handleDuplicateItem = async (e) => {
     e.preventDefault();
     e.stopPropagation();
 
-    let itemIdToDuplicate = value.id;
+    let itemIdToDuplicate = props.id;
 
     // special FE-x-BE case where we have to sync data with database
     if (havePage && page._feGenerated) {
@@ -222,110 +209,147 @@ export const TreeItem = ({ value }) => {
     duplicateItem(itemIdToDuplicate);
   };
 
+  // DnD for Sortly
+  const [{ isDragging }, drag, preview] = useDrag({
+    collect: (monitor) => ({ isDragging: monitor.isDragging() }),
+  });
+  const [, drop] = useDrop();
+
   return (
-    <Flex
-      justifyContent="space-between"
-      style={{
-        backgroundColor: colors.neutral100,
-        color: "white",
-        boxShadow: shadows.tableShadow,
-        // boxShadow: "box-shadow: 15px 15px 15px 0px rgba(3, 3, 5, 0.2);",
-        padding: spaces[2],
-        marginBottom: spaces[2],
-      }}
+    <Container
+      ref={(ref) => drop(preview(ref))}
+      depth={depth}
+      isDragging={isDragging}
     >
-      <LeftItemDiv>
-        <div style={{ marginLeft: "1rem" }}>
-          <Typography as="h3">
-            <div>{value.name}</div>
-          </Typography>
-          <Typography as="small" style={{ fontSize: "0.7rem", opacity: 0.8 }}>
-            {havePage && page?.slug}
-          </Typography>
-        </div>
-      </LeftItemDiv>
-      <Flex>
-        <UpdatePageButton />
-        <IconWrapper>
-          {value.isVisible ? (
-            <StyledIconButton
-              noBorder
-              label="Viditelné"
-              icon={<FontAwesomeIcon icon={faEye} />}
-            />
-          ) : (
-            <StyledIconButton
-              noBorder
-              label="Neviditelné"
-              icon={<FontAwesomeIcon icon={faEyeSlash} />}
-            ></StyledIconButton>
-          )}
-          {(value.visibleFrom || value.visibleTo) && (
-            <StyledIconButton
-              noBorder
-              label="Časové omezeni"
-              icon={<FontAwesomeIcon icon={faClock} />}
-            ></StyledIconButton>
-          )}
-          {value.type === ITEM_TYPE.PAGE && (
-            <StyledIconButton
-              noBorder
-              label="Interní stránka"
-              icon={<FontAwesomeIcon icon={faFile} />}
-            ></StyledIconButton>
-          )}
-          {(value.type === ITEM_TYPE.SYMBOLIC_LINK ||
-            value.type === ITEM_TYPE.URL) && (
-            <StyledIconButton
-              noBorder
-              label="Externí odkaz"
-              icon={<FontAwesomeIcon icon={faLink} />}
-            ></StyledIconButton>
-          )}
-          {value.type === ITEM_TYPE.LABEL && (
-            <StyledIconButton
-              noBorder
-              label="Označení"
-              icon={<FontAwesomeIcon icon={faBookmark} />}
-            ></StyledIconButton>
-          )}
-        </IconWrapper>
-        {isEditMode ? (
-          <>
-            <StyledIconButton
-              disabled={havePage && !page}
-              onClick={handleDuplicateItem}
-              label={t(
-                havePage
-                  ? page
-                    ? "PageHierarchyEditor.update.duplicatePageItem.button"
-                    : "PageHierarchyEditor.update.duplicate.pendingSave.warning.button"
-                  : "PageHierarchyEditor.update.duplicateNonPageItem.button"
-              )}
-              style={{ marginRight: "0.5rem" }}
-              noBorder
-              icon={<FontAwesomeIcon icon={faCopy} />}
-            />
-            <StyledIconButton
-              onClick={() => setItemToUpdate(value)}
-              label="Upravit"
-              style={{ marginRight: "0.5rem" }}
-              noBorder
-              icon={<Pencil />}
-            />
-            <StyledIconButton
-              onClick={handleRemove}
-              label={
-                havePage
-                  ? t("EditMenuItemForm.delete.itemAndPage")
-                  : t("EditMenuItemForm.delete.item")
-              }
-              noBorder
-              icon={<FontAwesomeIcon icon={faTrash} />}
-            />
-          </>
-        ) : null}
-      </Flex>
-    </Flex>
+      <TreeItemBox
+        padding={4}
+        hasRadius
+        background="neutral0"
+        shadow="tableShadow"
+        {...props}
+      >
+        <LeftItemDiv>
+          <Handle
+            style={{
+              opacity: isEditMode ? 1 : 0.2,
+              cursor: isEditMode ? "grab" : "default",
+            }}
+            disabled={!isEditMode}
+            ref={drag}
+          />
+          <div style={{ marginLeft: "1rem" }}>
+            <Typography as="h3">
+              <div>{props.name}</div>
+            </Typography>
+            <Typography as="small" style={{ fontSize: "0.7rem", opacity: 0.8 }}>
+              {havePage && page?.slug}
+            </Typography>
+          </div>
+        </LeftItemDiv>
+        <Flex>
+          <UpdatePageButton />
+          <IconWrapper>
+            {props.isVisible ? (
+              <IconButton
+                noBorder
+                label="Viditelné"
+                icon={<FontAwesomeIcon icon={faEye} />}
+              />
+            ) : (
+              <IconButton
+                noBorder
+                label="Neviditelné"
+                icon={<FontAwesomeIcon icon={faEyeSlash} />}
+              ></IconButton>
+            )}
+            {(props.visibleFrom || props.visibleTo) && (
+              <IconButton
+                noBorder
+                label="Časové omezeni"
+                icon={<FontAwesomeIcon icon={faClock} />}
+              ></IconButton>
+            )}
+            {props.type === ITEM_TYPE.PAGE && (
+              <IconButton
+                noBorder
+                label="Interní stránka"
+                icon={<FontAwesomeIcon icon={faFile} />}
+              ></IconButton>
+            )}
+            {(props.type === ITEM_TYPE.SYMBOLIC_LINK ||
+              props.type === ITEM_TYPE.URL) && (
+              <IconButton
+                noBorder
+                label="Externí odkaz"
+                icon={<FontAwesomeIcon icon={faLink} />}
+              ></IconButton>
+            )}
+            {props.type === ITEM_TYPE.LABEL && (
+              <IconButton
+                noBorder
+                label="Označení"
+                icon={<FontAwesomeIcon icon={faBookmark} />}
+              ></IconButton>
+            )}
+          </IconWrapper>
+          {isEditMode ? (
+            <>
+              <IconButton
+                disabled={havePage && !page}
+                onClick={handleDuplicateItem}
+                label={t(
+                  havePage
+                    ? page
+                      ? "PageHierarchyEditor.update.duplicatePageItem.button"
+                      : "PageHierarchyEditor.update.duplicate.pendingSave.warning.button"
+                    : "PageHierarchyEditor.update.duplicateNonPageItem.button"
+                )}
+                style={{ marginRight: "0.5rem" }}
+                noBorder
+                icon={<FontAwesomeIcon icon={faCopy} />}
+              />
+              <IconButton
+                onClick={() => setItemToUpdate(props)}
+                label="Upravit"
+                style={{ marginRight: "0.5rem" }}
+                noBorder
+                icon={<Pencil />}
+              />
+              <IconButton
+                onClick={handleRemove}
+                label={
+                  havePage
+                    ? t("EditMenuItemForm.delete.itemAndPage")
+                    : t("EditMenuItemForm.delete.item")
+                }
+                noBorder
+                icon={<FontAwesomeIcon icon={faTrash} />}
+              />
+            </>
+          ) : null}
+        </Flex>
+      </TreeItemBox>
+    </Container>
   );
-};
+});
+
+const Handle = React.forwardRef((props, ref) => {
+  return (
+    <button
+      ref={ref}
+      style={{ ...props.style, cursor: "grab" }}
+      data-cypress="draggable-handle"
+      {...props}
+    >
+      <Typography
+        as="span"
+        style={{
+          fontSize: "0.8rem",
+          padding: "0 0.5rem",
+        }}
+      >
+        <FontAwesomeIcon icon={faGripVertical} />
+      </Typography>
+    </button>
+  );
+});
