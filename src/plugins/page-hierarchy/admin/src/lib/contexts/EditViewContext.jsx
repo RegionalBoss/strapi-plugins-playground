@@ -1,5 +1,8 @@
 import React, { useState } from "react";
 import pluginId from "../../pluginId";
+
+import { Prompt } from "react-router";
+
 import {
   generateId,
   getNextNameInTheSequence,
@@ -32,6 +35,18 @@ export const EditViewContextProvider = ({ children }) => {
   React.useEffect(() => {
     loadInitData();
   }, []);
+
+  React.useEffect(() => {
+    window.onbeforeunload = (event) => {
+      event.preventDefault();
+      if (isEditMode) {
+        return (event.returnValue = t("onUnsavedChanges.alert"));
+      }
+    };
+    return () => {
+      window.onbeforeunload = null;
+    };
+  }, [isEditMode, t]);
 
   const loadInitData = async () => {
     setIsLoading(true);
@@ -310,6 +325,7 @@ export const EditViewContextProvider = ({ children }) => {
         isLoading,
       }}
     >
+      <Prompt when={isEditMode} message={t("onUnsavedChanges.alert")} />
       {itemToUpdate ? (
         <EditMenuItemForm onClose={handleFormModalClose} />
       ) : null}
