@@ -25,6 +25,8 @@ import { useConfirmDialog } from "../../lib/contexts/ConfirmDialogContext";
 import { useTranslation } from "../../hooks/useTranslation";
 import pluginId from "../../pluginId";
 
+import { useDrag, useDrop } from "@regionalboss/react-sortly";
+
 const DETAIL_PATH = `/content-manager/collectionType/plugin::${pluginId}.page`;
 const LOCATION_PATH = `/plugins/${pluginId}`;
 
@@ -37,28 +39,8 @@ const LeftItemDiv = styled.div`
 const Container = styled.div`
   position: relative;
   margin-bottom: 0.5rem;
-  padding-left: ${({ clone }) => (clone ? "0.5rem" : "var(--spacing)")};
-  padding-top: ${({ clone }) => (clone ? "0.3rem" : "0")};
-  max-width: ${({ clone }) => (clone ? "30%" : "100%")};
-  max-height: ${({ clone }) => (clone ? "1.2rem" : "100%")};
-  opacity: ${({ ghost }) => (ghost ? 0.5 : 1)};
-  margin-left: ${({ clone }) => (clone ? "0.2rem" : 0)};
-`;
-
-const Count = styled.span`
-  position: absolute;
-  top: -10px;
-  right: -10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background-color: ${({ theme }) => theme.colors.primary600};
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #fff;
+  margin-left: ${({ depth }) => `${depth * 30}px`};
+  opacity: ${({ isDragging }) => (isDragging ? 0.5 : 1)};
 `;
 
 const UpdateIconButton = styled(IconButton)`
@@ -105,276 +87,252 @@ const IconWrapper = styled.div`
   }
 `;
 
-export const TreeItem = React.forwardRef(
-  (
-    {
-      childCount,
-      clone,
-      depth,
-      disableSelection,
-      disableInteraction,
-      ghost,
-      handleProps,
-      indentationWidth,
-      indicator,
-      onRemove,
-      style,
-      value,
-      wrapperRef,
-      ...props
-    },
-    ref
-  ) => {
-    const {
-      isEditMode,
-      setItemToUpdate,
-      deleteItem,
-      pages,
-      saveDataAndPickById,
-      duplicateItem,
-    } = React.useContext(EditViewContext);
-    const { t } = useTranslation();
-    const history = useHistory();
-    const { showConfirmDialog } = useConfirmDialog();
+export const TreeItem = React.memo((props) => {
+  const { depth } = props;
 
-    const havePage = React.useMemo(
-      () => value.type === ITEM_TYPE.PAGE,
-      [value.type]
-    );
-    const page = React.useMemo(
-      () => (havePage ? pages.find((page) => page.id === value.pageId) : null),
-      [havePage, value.pageId, pages]
-    );
+  const {
+    isEditMode,
+    setItemToUpdate,
+    deleteItem,
+    pages,
+    saveDataAndPickById,
+    duplicateItem,
+  } = React.useContext(EditViewContext);
+  const { t } = useTranslation();
+  const history = useHistory();
+  const { showConfirmDialog } = useConfirmDialog();
 
-    const handleRemove = async () => {
-      if (
-        await showConfirmDialog(
-          t("EditMenuItemForm.delete.warning.confirm.title"),
-          t("EditMenuItemForm.delete.warning.confirm.message")
-        )
+  const havePage = React.useMemo(
+    () => props.type === ITEM_TYPE.PAGE,
+    [props.type]
+  );
+  const page = React.useMemo(
+    () => (havePage ? pages.find((page) => page.id === props.pageId) : null),
+    [havePage, props.pageId, pages]
+  );
+
+  const handleRemove = async () => {
+    if (
+      await showConfirmDialog(
+        t("EditMenuItemForm.delete.warning.confirm.title"),
+        t("EditMenuItemForm.delete.warning.confirm.message")
       )
-        deleteItem(value);
-    };
+    )
+      deleteItem(props);
+  };
 
-    const handleEditPageClick = async (e) => {
-      // magic complicated function
-      // tricky validate link that can handle logic if redirect is valid
-      // validate if link can be used
+  const handleEditPageClick = async (e) => {
+    // magic complicated function
+    // tricky validate link that can handle logic if redirect is valid
+    // validate if link can be used
 
-      if (page._feGenerated) {
-        e.preventDefault();
-        e.stopPropagation();
-
-        const saveDataAndRedirect = await showConfirmDialog(
-          t("PageHierarchyEditor.update.button.confirm.haveToSave.header"),
-          t("PageHierarchyEditor.update.button.confirm.haveToSave.body")
-        );
-
-        if (!saveDataAndRedirect) {
-          return;
-        }
-
-        // ID does not exist so we have to redirect by our own
-        const dbPageId = await saveDataAndPickById(page.id, "page");
-        history.push(`${DETAIL_PATH}/${dbPageId}?redirectUrl=${LOCATION_PATH}`);
-        return;
-      }
-
-      if (!isEditMode) {
-        return;
-      }
-
+    if (page._feGenerated) {
       e.preventDefault();
       e.stopPropagation();
 
-      const shouldContinue = await showConfirmDialog(
-        t(
-          "PageHierarchyEditor.update.button.confirm.willDiscardChanges.header"
-        ),
-        t("PageHierarchyEditor.update.button.confirm.willDiscardChanges.body")
+      const saveDataAndRedirect = await showConfirmDialog(
+        t("PageHierarchyEditor.update.button.confirm.haveToSave.header"),
+        t("PageHierarchyEditor.update.button.confirm.haveToSave.body")
       );
-      if (shouldContinue) {
-        const redirectUrl = `${DETAIL_PATH}/${page.id}?redirectUrl=${LOCATION_PATH}`;
-        history.push(redirectUrl);
-      }
-    };
 
-    const UpdatePageButton = React.useCallback(() => {
-      if (!havePage) return null;
-      if (!page)
-        return (
-          <IconButton
-            noBorder
-            label={t("PageHierarchyEditor.pageDoesNotExists.warning")}
-            icon={<FontAwesomeIcon icon={faExclamationTriangle} />}
-          />
-        );
-      return (
-        <Link
-          to={`${DETAIL_PATH}/${page.id}?redirectUrl=${LOCATION_PATH}`}
-          onClick={handleEditPageClick}
-        >
-          <UpdateIconButton
-            noBorder
-            label={t("PageHierarchyEditor.update.button.page")}
-            icon={<FontAwesomeIcon icon={faPen} />}
-          />
-        </Link>
-      );
-    }, [havePage, page, isEditMode, value, handleEditPageClick]);
-
-    const handleDuplicateItem = async (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      let itemIdToDuplicate = value.id;
-
-      // special FE-x-BE case where we have to sync data with database
-      if (havePage && page._feGenerated) {
-        const saveDataAndDuplicate = await showConfirmDialog(
-          t(
-            "PageHierarchyEditor.update.duplicatePageItem.button.haveToSave.confirm.title"
-          ),
-          t(
-            "PageHierarchyEditor.update.duplicatePageItem.button.haveToSave.confirm.message"
-          )
-        );
-        if (!saveDataAndDuplicate) return;
-        itemIdToDuplicate = await saveDataAndPickById(item.id);
+      if (!saveDataAndRedirect) {
+        return;
       }
 
-      duplicateItem(itemIdToDuplicate);
-    };
+      // ID does not exist so we have to redirect by our own
+      const dbPageId = await saveDataAndPickById(page.id, "page");
+      history.push(`${DETAIL_PATH}/${dbPageId}?redirectUrl=${LOCATION_PATH}`);
+      return;
+    }
 
-    return (
-      <Container
-        ref={wrapperRef}
-        style={{ "--spacing": `${depth * indentationWidth}px` }}
-        clone={clone}
-        ghost={ghost}
-      >
-        <TreeItemBox
-          padding={4}
-          hasRadius
-          background="neutral0"
-          shadow="tableShadow"
-          ref={ref}
-          style={style}
-          {...props}
-        >
-          <LeftItemDiv>
-            <Handle
-              {...handleProps}
-              style={{
-                opacity: isEditMode ? 1 : 0.2,
-                cursor: isEditMode ? "grab" : "default",
-              }}
-              disabled={!isEditMode}
-            />
-            <div style={{ marginLeft: "1rem" }}>
-              <Typography as="h3">
-                <div>{value.name}</div>
-              </Typography>
-              <Typography
-                as="small"
-                style={{ fontSize: "0.7rem", opacity: 0.8 }}
-              >
-                {havePage && page?.slug}
-              </Typography>
-            </div>
-          </LeftItemDiv>
-          {!clone && !ghost ? (
-            <Flex>
-              <UpdatePageButton />
-              <IconWrapper>
-                {value.isVisible ? (
-                  <IconButton
-                    noBorder
-                    label="Viditelné"
-                    icon={<FontAwesomeIcon icon={faEye} />}
-                  />
-                ) : (
-                  <IconButton
-                    noBorder
-                    label="Neviditelné"
-                    icon={<FontAwesomeIcon icon={faEyeSlash} />}
-                  ></IconButton>
-                )}
-                {(value.visibleFrom || value.visibleTo) && (
-                  <IconButton
-                    noBorder
-                    label="Časové omezeni"
-                    icon={<FontAwesomeIcon icon={faClock} />}
-                  ></IconButton>
-                )}
-                {value.type === ITEM_TYPE.PAGE && (
-                  <IconButton
-                    noBorder
-                    label="Interní stránka"
-                    icon={<FontAwesomeIcon icon={faFile} />}
-                  ></IconButton>
-                )}
-                {(value.type === ITEM_TYPE.SYMBOLIC_LINK ||
-                  value.type === ITEM_TYPE.URL) && (
-                  <IconButton
-                    noBorder
-                    label="Externí odkaz"
-                    icon={<FontAwesomeIcon icon={faLink} />}
-                  ></IconButton>
-                )}
-                {value.type === ITEM_TYPE.LABEL && (
-                  <IconButton
-                    noBorder
-                    label="Označení"
-                    icon={<FontAwesomeIcon icon={faBookmark} />}
-                  ></IconButton>
-                )}
-              </IconWrapper>
-              {isEditMode ? (
-                <>
-                  <IconButton
-                    disabled={havePage && !page}
-                    onClick={handleDuplicateItem}
-                    label={t(
-                      havePage
-                        ? page
-                          ? "PageHierarchyEditor.update.duplicatePageItem.button"
-                          : "PageHierarchyEditor.update.duplicate.pendingSave.warning.button"
-                        : "PageHierarchyEditor.update.duplicateNonPageItem.button"
-                    )}
-                    style={{ marginRight: "0.5rem" }}
-                    noBorder
-                    icon={<FontAwesomeIcon icon={faCopy} />}
-                  />
-                  <IconButton
-                    onClick={() => setItemToUpdate(value)}
-                    label="Upravit"
-                    style={{ marginRight: "0.5rem" }}
-                    noBorder
-                    icon={<Pencil />}
-                  />
-                  <IconButton
-                    onClick={handleRemove}
-                    label={
-                      havePage
-                        ? t("EditMenuItemForm.delete.itemAndPage")
-                        : t("EditMenuItemForm.delete.item")
-                    }
-                    noBorder
-                    icon={<FontAwesomeIcon icon={faTrash} />}
-                  />
-                </>
-              ) : null}
-            </Flex>
-          ) : null}
-          {clone && childCount && childCount > 1 ? (
-            <Count>{childCount}</Count>
-          ) : null}
-        </TreeItemBox>
-      </Container>
+    if (!isEditMode) {
+      return;
+    }
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    const shouldContinue = await showConfirmDialog(
+      t("PageHierarchyEditor.update.button.confirm.willDiscardChanges.header"),
+      t("PageHierarchyEditor.update.button.confirm.willDiscardChanges.body")
     );
-  }
-);
+    if (shouldContinue) {
+      const redirectUrl = `${DETAIL_PATH}/${page.id}?redirectUrl=${LOCATION_PATH}`;
+      history.push(redirectUrl);
+    }
+  };
+
+  const UpdatePageButton = React.useCallback(() => {
+    if (!havePage) return null;
+    if (!page)
+      return (
+        <IconButton
+          noBorder
+          label={t("PageHierarchyEditor.pageDoesNotExists.warning")}
+          icon={<FontAwesomeIcon icon={faExclamationTriangle} />}
+        />
+      );
+    return (
+      <Link
+        to={`${DETAIL_PATH}/${page.id}?redirectUrl=${LOCATION_PATH}`}
+        onClick={handleEditPageClick}
+      >
+        <UpdateIconButton
+          noBorder
+          label={t("PageHierarchyEditor.update.button.page")}
+          icon={<FontAwesomeIcon icon={faPen} />}
+        />
+      </Link>
+    );
+  }, [havePage, page, isEditMode, handleEditPageClick]);
+
+  const handleDuplicateItem = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    let itemIdToDuplicate = props.id;
+
+    // special FE-x-BE case where we have to sync data with database
+    if (havePage && page._feGenerated) {
+      const saveDataAndDuplicate = await showConfirmDialog(
+        t(
+          "PageHierarchyEditor.update.duplicatePageItem.button.haveToSave.confirm.title"
+        ),
+        t(
+          "PageHierarchyEditor.update.duplicatePageItem.button.haveToSave.confirm.message"
+        )
+      );
+      if (!saveDataAndDuplicate) return;
+      itemIdToDuplicate = await saveDataAndPickById(item.id);
+    }
+
+    duplicateItem(itemIdToDuplicate);
+  };
+
+  // DnD for Sortly
+  const [{ isDragging }, drag, preview] = useDrag({
+    collect: (monitor) => ({ isDragging: monitor.isDragging() }),
+  });
+  const [, drop] = useDrop();
+
+  return (
+    <Container
+      ref={(ref) => drop(preview(ref))}
+      depth={depth}
+      isDragging={isDragging}
+    >
+      <TreeItemBox
+        padding={4}
+        hasRadius
+        background="neutral0"
+        shadow="tableShadow"
+        {...props}
+      >
+        <LeftItemDiv>
+          <Handle
+            style={{
+              opacity: isEditMode ? 1 : 0.2,
+              cursor: isEditMode ? "grab" : "default",
+            }}
+            disabled={!isEditMode}
+            ref={drag}
+          />
+          <div style={{ marginLeft: "1rem" }}>
+            <Typography as="h3">
+              <div>{props.name}</div>
+            </Typography>
+            <Typography as="small" style={{ fontSize: "0.7rem", opacity: 0.8 }}>
+              {havePage && page?.slug}
+            </Typography>
+          </div>
+        </LeftItemDiv>
+        <Flex>
+          <UpdatePageButton />
+          <IconWrapper>
+            {props.isVisible ? (
+              <IconButton
+                noBorder
+                label="Viditelné"
+                icon={<FontAwesomeIcon icon={faEye} />}
+              />
+            ) : (
+              <IconButton
+                noBorder
+                label="Neviditelné"
+                icon={<FontAwesomeIcon icon={faEyeSlash} />}
+              ></IconButton>
+            )}
+            {(props.visibleFrom || props.visibleTo) && (
+              <IconButton
+                noBorder
+                label="Časové omezeni"
+                icon={<FontAwesomeIcon icon={faClock} />}
+              ></IconButton>
+            )}
+            {props.type === ITEM_TYPE.PAGE && (
+              <IconButton
+                noBorder
+                label="Interní stránka"
+                icon={<FontAwesomeIcon icon={faFile} />}
+              ></IconButton>
+            )}
+            {(props.type === ITEM_TYPE.SYMBOLIC_LINK ||
+              props.type === ITEM_TYPE.URL) && (
+              <IconButton
+                noBorder
+                label="Externí odkaz"
+                icon={<FontAwesomeIcon icon={faLink} />}
+              ></IconButton>
+            )}
+            {props.type === ITEM_TYPE.LABEL && (
+              <IconButton
+                noBorder
+                label="Označení"
+                icon={<FontAwesomeIcon icon={faBookmark} />}
+              ></IconButton>
+            )}
+          </IconWrapper>
+          {isEditMode ? (
+            <>
+              <IconButton
+                disabled={havePage && !page}
+                onClick={handleDuplicateItem}
+                label={t(
+                  havePage
+                    ? page
+                      ? "PageHierarchyEditor.update.duplicatePageItem.button"
+                      : "PageHierarchyEditor.update.duplicate.pendingSave.warning.button"
+                    : "PageHierarchyEditor.update.duplicateNonPageItem.button"
+                )}
+                style={{ marginRight: "0.5rem" }}
+                noBorder
+                icon={<FontAwesomeIcon icon={faCopy} />}
+              />
+              <IconButton
+                onClick={() => setItemToUpdate(props)}
+                label="Upravit"
+                style={{ marginRight: "0.5rem" }}
+                noBorder
+                icon={<Pencil />}
+              />
+              <IconButton
+                onClick={handleRemove}
+                label={
+                  havePage
+                    ? t("EditMenuItemForm.delete.itemAndPage")
+                    : t("EditMenuItemForm.delete.item")
+                }
+                noBorder
+                icon={<FontAwesomeIcon icon={faTrash} />}
+              />
+            </>
+          ) : null}
+        </Flex>
+      </TreeItemBox>
+    </Container>
+  );
+});
+
 const Handle = React.forwardRef((props, ref) => {
   return (
     <button

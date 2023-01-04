@@ -1,5 +1,6 @@
-import { v4 as uuid4 } from "uuid";
+import { Strapi } from "@strapi/strapi";
 import pluginId from "../pluginId";
+import { v4 as uuid4 } from "uuid";
 /**
  * settings service
  */
@@ -19,7 +20,7 @@ const populateId = (value: Record<string, unknown>) => ({
   id: uuid4(),
 });
 
-export default () => ({
+export default ({ strapi }: { strapi: Strapi }) => ({
   find: async () => (await getPluginStore()?.get({ key: STORE_KEY })) ?? [],
 
   create: async (value: Record<string, unknown>) => {

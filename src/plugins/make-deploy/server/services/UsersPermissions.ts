@@ -70,8 +70,7 @@ const DEFAULT_PERMISSIONS = [
   { action: "autoreload", controller: null, type: null, roleType: null },
 ];
 
-// @ts-ignore
-const isPermissionEnabled = (permission: any, role: any) =>
+const isPermissionEnabled = (permission, role) =>
   DEFAULT_PERMISSIONS.some(
     (defaultPerm) =>
       (defaultPerm.action === null ||
@@ -84,10 +83,10 @@ const isPermissionEnabled = (permission: any, role: any) =>
 
 export default {
   getActions() {
-    const generateActions = (data: any) =>
-      Object.keys(data).reduce((acc: any, key) => {
+    const generateActions = (data) =>
+      Object.keys(data).reduce((acc, key) => {
         if (_.isFunction(data[key])) {
-          acc[key as keyof typeof acc] = { enabled: false, policy: "" };
+          acc[key] = { enabled: false, policy: "" };
         }
 
         return acc;
@@ -96,7 +95,7 @@ export default {
     const appControllers = Object.keys(strapi.api || {})
       .filter((key) => !!strapi.api[key].controllers)
       .reduce(
-        (acc: any, key) => {
+        (acc, key) => {
           Object.keys(strapi.api[key].controllers).forEach((controller) => {
             acc.controllers[controller] = generateActions(
               strapi.api[key].controllers[controller]
@@ -109,13 +108,13 @@ export default {
       );
 
     const pluginsPermissions = Object.keys(strapi.plugins).reduce(
-      (acc: any, key) => {
+      (acc, key) => {
         const initialState = {
           controllers: {},
         };
 
         acc[key] = Object.keys(strapi.plugins[key].controllers).reduce(
-          (obj: any, k) => {
+          (obj, k) => {
             obj.controllers[k] = generateActions(
               strapi.plugins[key].controllers[k]
             );
@@ -139,7 +138,7 @@ export default {
     return _.merge(permissions, pluginsPermissions);
   },
 
-  async getRole(roleID: string, plugins: any) {
+  async getRole(roleID, plugins) {
     const role = await strapi
       .query("plugin::users-permissions.role")
       .findOne({ id: roleID }, ["permissions"]);
@@ -149,7 +148,7 @@ export default {
     }
 
     // Group by `type`.
-    const permissions = role.permissions.reduce((acc: any, permission: any) => {
+    const permissions = role.permissions.reduce((acc, permission) => {
       _.set(
         acc,
         `${permission.type}.controllers.${permission.controller}.${permission.action}`,
@@ -164,7 +163,7 @@ export default {
         !acc[permission.type].information
       ) {
         acc[permission.type].information =
-          plugins.find((plugin: any) => plugin.id === permission.type) || {};
+          plugins.find((plugin) => plugin.id === permission.type) || {};
       }
 
       return acc;
@@ -196,12 +195,12 @@ export default {
     }, []);
     const clonedPlugins = _.cloneDeep(strapi.plugins);
     const pluginsRoutes = Object.keys(clonedPlugins || {}).reduce(
-      (acc: any, current) => {
+      (acc, current) => {
         const routes = _.get(
           clonedPlugins,
           [current, "config", "routes"],
           []
-        ).reduce((acc: any, curr: any) => {
+        ).reduce((acc, curr) => {
           const prefix = curr.config.prefix;
           const path =
             prefix !== undefined
@@ -241,16 +240,16 @@ export default {
       });
     }
 
-    return (this as any).updatePermissions();
+    return this.updatePermissions();
   },
 
-  async updateUserRole(user: any, role: any) {
+  async updateUserRole(user, role) {
     return strapi
       .query("plugin::users-permissions.user")
       .update({ id: user.id }, { role });
   },
 
-  template(layout: any, data: any) {
+  template(layout, data) {
     const compiledObject = _.template(layout);
     return compiledObject(data);
   },

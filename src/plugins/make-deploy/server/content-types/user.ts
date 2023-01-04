@@ -1,18 +1,14 @@
-import { StrapiUser } from "strapi-typed";
-
-export interface IUserRole {
+export interface IUser {
   id: number;
-  [x: string]: unknown;
-}
-
-export interface IUser extends StrapiUser {
   firstname: string;
   lastname: string;
+  username: null;
+  email: string;
   isActive: boolean;
   blocked: boolean;
   createdAt: string;
   updatedAt: string;
   preferedLanguage: string;
-  roles?: IUserRole[];
+  roles?: { [x: string]: unknown }[];
   [x: string]: unknown;
 }

@@ -10,7 +10,7 @@ exports.default = ({ env }) => ({
         connection: {
             filename: path_1.default.join(__dirname, "..", "..", env("DATABASE_FILENAME", ".tmp/data.db")),
         },
-        // useNullAsDefault: true,
+        useNullAsDefault: true,
         // client: "postgres",
         // connection: {
         //   host: env("DATABASE_HOST", "localhost"),

@@ -1,0 +1,28 @@
+{
+    "kind": "collectionType",
+    "collectionName": "deploys",
+    "info": {
+        "singularName": "deploy",
+        "pluralName": "deploys",
+        "displayName": "Deploy"
+    },
+    "options": {
+        "draftAndPublish": false,
+        "populateCreatorFields": true,
+        "comment": ""
+    },
+    "attributes": {
+        "name": {
+            "type": "string"
+        },
+        "isFinal": {
+            "type": "boolean"
+        },
+        "deployStatuses": {
+            "type": "relation",
+            "relation": "oneToMany",
+            "target": "plugin::make-deploy.deploy-status",
+            "mappedBy": "deploy"
+        }
+    }
+}

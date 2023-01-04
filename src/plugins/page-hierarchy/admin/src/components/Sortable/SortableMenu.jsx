@@ -1,201 +1,68 @@
-import {
-  closestCenter,
-  defaultDropAnimation,
-  DndContext,
-  DragOverlay,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import React from "react";
-import { createPortal } from "react-dom";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
+import Sortly, {
+  ContextProvider,
+  convert,
+  flatten,
+} from "@regionalboss/react-sortly";
+import styled from "styled-components";
 import { EditViewContext } from "../../lib/contexts/EditViewContext";
-import {
-  buildTree,
-  flattenTree,
-  getChildCount,
-  getProjection,
-  removeChildrenOf,
-} from "../../utils/sortableTree";
-import { SortableMenuItem } from "./SortableMenuItem";
+import { TreeItem } from "./TreeItem";
 
-const indentationWidth = 50;
-
-const dropAnimationConfig = {
-  keyframes({ transform }) {
-    return [
-      { opacity: 1, transform: CSS.Transform?.toString(transform.initial) },
-      {
-        opacity: 0,
-        transform: CSS.Transform?.toString({
-          ...transform.final,
-          x: transform.final.x + 5,
-          y: transform.final.y + 5,
-        }),
-      },
-    ];
-  },
-  easing: "ease-out",
-  sideEffects({ active }) {
-    active.node.animate([{ opacity: 0 }, { opacity: 1 }], {
-      duration: defaultDropAnimation.duration,
-      easing: defaultDropAnimation.easing,
-    });
-  },
-};
-
-export const SortableMenu = React.memo(() => {
-  const { items, setItems, isEditMode } = React.useContext(EditViewContext);
-  const [activeId, setActiveId] = React.useState(null);
-  const overId = React.useRef(null);
-  // const [overId, setOverId] = React.useState(null);
-  // const offsetLeft = React.useRef(0);
-  const [offsetLeft, setOffsetLeft] = React.useState(0);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
-  const flattenedItems = React.useMemo(() => {
-    const flattenedTree = flattenTree(items);
-    const collapsedItems = flattenedTree.reduce(
-      (acc, { children, collapsed, id }) =>
-        collapsed && children.length ? [...acc, id] : acc,
-      []
-    );
-
-    return removeChildrenOf(
-      flattenedTree,
-      activeId ? [activeId, ...collapsedItems] : collapsedItems
-    );
-  }, [activeId, items]);
-
-  const projected =
-    activeId && overId.current
-      ? getProjection(
-          flattenedItems,
-          activeId,
-          overId.current,
-          offsetLeft,
-          // offsetLeft.current,
-          indentationWidth
-        )
-      : null;
-
-  const sortedIds = React.useMemo(
-    () => flattenedItems.map(({ id }) => id),
-    [flattenedItems]
-  );
-
-  const activeItem = React.useMemo(
-    () => (activeId ? flattenedItems.find(({ id }) => id === activeId) : null),
-    [activeId]
-  );
+export const SortableMenu = () => {
+  const { items, setItems } = React.useContext(EditViewContext);
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragEnd={handleDragEnd}
-      onDragStart={handleDragStart}
-      onDragMove={handleDragMove}
-      onDragOver={handleDragOver}
-      onDragCancel={handleDragCancel}
-    >
-      <SortableContext
-        items={sortedIds}
-        strategy={verticalListSortingStrategy}
-        disabled={!isEditMode}
-      >
-        {flattenedItems.map((item) => {
-          const { id, depth } = item;
-          return (
-            <SortableMenuItem
-              key={id}
-              id={id}
-              value={item}
-              depth={id === activeId && projected ? projected.depth : depth}
-              indentationWidth={indentationWidth}
-              onRemove={() => handleRemove(id)}
-            />
-          );
-        })}
-        {createPortal(
-          <DragOverlay dropAnimation={dropAnimationConfig}>
-            {activeId && activeItem ? (
-              <SortableMenuItem
-                id={activeId}
-                depth={activeItem.depth}
-                clone
-                childCount={getChildCount(items, activeId) + 1}
-                value={activeItem}
-                indentationWidth={indentationWidth}
-              />
-            ) : null}
-          </DragOverlay>,
-          document.body
-        )}
-      </SortableContext>
-    </DndContext>
+    <Wrapper>
+      <DndProvider backend={HTML5Backend}>
+        <ContextProvider>
+          <SortableMenuWrapper items={items} onChange={setItems} />
+        </ContextProvider>
+      </DndProvider>
+    </Wrapper>
   );
+};
 
-  function handleDragStart({ active: { id: activeId } }) {
-    setActiveId(activeId);
-    overId.current = activeId;
-    // setOverId(activeId);
+const SortableMenuWrapper = React.memo(({ items, onChange }) => {
+  const _onChange = (modifiedData) => {
+    const transformedData = flatten(modifiedData).map((item) => {
+      const i = {
+        ...item,
+        childOrder: item.index,
+      };
+      delete i.index;
+      return i;
+    });
+    onChange(transformedData);
+  };
 
-    document.body.style.setProperty("cursor", "grabbing");
-  }
+  const sortlyItems = items.map((item) => {
+    const i = {
+      ...item,
+      index: item.childOrder,
+    };
+    delete i.childOrder;
+    return i;
+  });
 
-  function handleDragMove({ delta }) {
-    // offsetLeft.current = delta.x;
-    setOffsetLeft(delta.x);
-  }
-
-  function handleDragOver({ over }) {
-    overId.current = over?.id ?? null;
-    // setOverId(over?.id ?? null);
-  }
-
-  function handleDragEnd({ active, over }) {
-    resetState();
-
-    if (projected && over) {
-      const { depth, parentId } = projected;
-      const clonedItems = JSON.parse(JSON.stringify(flattenTree(items)));
-      const overIndex = clonedItems.findIndex(({ id }) => id === over.id);
-      const activeIndex = clonedItems.findIndex(({ id }) => id === active.id);
-      const activeTreeItem = clonedItems[activeIndex];
-      clonedItems[activeIndex] = { ...activeTreeItem, depth, parentId };
-
-      const sortedItems = arrayMove(clonedItems, activeIndex, overIndex);
-      const newItems = buildTree(sortedItems);
-      setItems(newItems);
-    }
-  }
-
-  function handleDragCancel() {
-    resetState();
-  }
-
-  function resetState() {
-    overId.current = null;
-    // setOverId(null);
-    setActiveId(null);
-    // offsetLeft.current = 0;
-    setOffsetLeft(0);
-
-    document.body.style.setProperty("cursor", "");
-  }
+  return (
+    <SortlyWrapper>
+      <Sortly items={convert(sortlyItems)} onChange={_onChange}>
+        {(props) => <TreeItem {...props.data} key={props.id} />}
+      </Sortly>
+    </SortlyWrapper>
+  );
 });
+
+const SortlyWrapper = styled.div`
+  display: flex;
+  flex-flow: column wrap;
+  flex: 0 1 700px;
+  margin-top: 10px;
+`;
+
+const Wrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+`;

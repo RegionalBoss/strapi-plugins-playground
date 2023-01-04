@@ -1,5 +1,3 @@
-import { arrayMove } from "@dnd-kit/sortable";
-
 // Calculates depth of a dragged item
 const getDragDepth = (offset, indentationWidth) =>
   Math.round(offset / indentationWidth);
@@ -38,57 +36,6 @@ export function removeChildrenOf(items, ids) {
 
     return true;
   });
-}
-
-export function getProjection(
-  items,
-  activeId,
-  overId,
-  dragOffset,
-  indentationWidth
-) {
-  const overItemIndex = items.findIndex(({ id }) => id === overId);
-  const activeItemIndex = items.findIndex(({ id }) => id === activeId);
-  const activeItem = items[activeItemIndex];
-  const newItems = arrayMove(items, activeItemIndex, overItemIndex);
-  const previousItem = newItems[overItemIndex - 1];
-  const nextItem = newItems[overItemIndex + 1];
-  const dragDepth = getDragDepth(dragOffset, indentationWidth);
-  const projectedDepth = activeItem.depth + dragDepth;
-  const maxDepth = getMaxDepth({
-    previousItem,
-  });
-  const minDepth = getMinDepth({ nextItem });
-  let depth = projectedDepth;
-
-  if (projectedDepth >= maxDepth) {
-    depth = maxDepth;
-  } else if (projectedDepth < minDepth) {
-    depth = minDepth;
-  }
-
-  return { depth, maxDepth, minDepth, parentId: getParentId() };
-
-  function getParentId() {
-    if (depth === 0 || !previousItem) {
-      return null;
-    }
-
-    if (depth === previousItem.depth) {
-      return previousItem.parentId;
-    }
-
-    if (depth > previousItem.depth) {
-      return previousItem.id;
-    }
-
-    const newParent = newItems
-      .slice(0, overItemIndex)
-      .reverse()
-      .find((item) => item.depth === depth)?.parentId;
-
-    return newParent ?? null;
-  }
 }
 
 export function setProperty(items, id, property, setter) {

@@ -1,6 +1,6 @@
 "use strict";
 
-import { yup } from "@strapi/utils";
+import { yup, formatYupErrors } from "@strapi/utils";
 
 const settingsSchema = yup
   .object({
@@ -11,7 +11,7 @@ const settingsSchema = yup
   })
   .required();
 
-export const validateSettings = async (data: any) => {
+export const validateSettings = async (data) => {
   try {
     await settingsSchema.validate(data, {
       abortEarly: false,

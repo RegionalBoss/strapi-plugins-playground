@@ -3,7 +3,7 @@
 export default {
   "make-deploy": {
     enabled: true,
-    resolve: "./build/src/plugins/make-deploy",
+    resolve: "./src/plugins/make-deploy",
   },
   "page-hierarchy": {
     enabled: true,

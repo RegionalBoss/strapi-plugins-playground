@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 import pluginId from "../../pluginId";
+
+import { Prompt } from "react-router";
+
 import {
   generateId,
   getNextNameInTheSequence,
   stringToSlug,
 } from "../../utils";
 import { axiosInstance } from "../../utils/axiosInstance";
-import { buildTree, flattenTree } from "../../utils/sortableTree";
 import { EditMenuItemForm } from "../../components/EditMenuItemForm";
 import { useNotification } from "@strapi/helper-plugin";
 
@@ -20,7 +22,7 @@ export const EditViewContext = React.createContext({
 });
 
 export const EditViewContextProvider = ({ children }) => {
-  const [globalLoading, setGlobalLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [items, setItems] = useState([]);
   const [pages, setPages] = useState([]);
   const [itemToUpdate, setItemToUpdate] = useState();
@@ -34,24 +36,38 @@ export const EditViewContextProvider = ({ children }) => {
     loadInitData();
   }, []);
 
+  React.useEffect(() => {
+    window.onbeforeunload = (event) => {
+      event.preventDefault();
+      if (isEditMode) {
+        return (event.returnValue = t("onUnsavedChanges.alert"));
+      }
+    };
+    return () => {
+      window.onbeforeunload = null;
+    };
+  }, [isEditMode, t]);
+
   const loadInitData = async () => {
+    setIsLoading(true);
     try {
       const [pages, items] = await Promise.all([
         axiosInstance.get(`/${pluginId}/flat-pages`),
         axiosInstance.get(`/${pluginId}/flat-items`),
       ]);
-      setItems(buildTree(items.data));
+      setItems(items.data);
       setPages(pages.data);
     } catch (ex) {
       console.error(ex);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const saveData = async () => {
-    setGlobalLoading(true);
     try {
       const { data } = await axiosInstance.put(`/${pluginId}/items`, {
-        items: flattenTree(items).map((item, index) => ({
+        items: items.map((item, index) => ({
           ...item,
           childOrder: index,
         })),
@@ -63,14 +79,14 @@ export const EditViewContextProvider = ({ children }) => {
         message: `${pluginId}.saveData.success`,
       });
 
-      setItems(buildTree(data.items));
+      setItems(data.items);
       setPages(data.pages);
       return data;
     } catch (e) {
       console.error(e);
     } finally {
       toggleEditMode();
-      setGlobalLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -82,35 +98,37 @@ export const EditViewContextProvider = ({ children }) => {
     ];
   };
 
+  const getAllNestedItems = (itemId, currentItems) => {
+    const item = (currentItems ?? items).find((item) => item.id === itemId);
+    if (!item || !itemId) {
+      return [];
+    }
+    return [
+      item,
+      ...(currentItems ?? items)
+        .filter((i) => i.parentId === itemId)
+        .map((i) => getAllNestedItems(i.id, currentItems ?? items))
+        .flat(),
+    ];
+  };
+
   const deleteItem = (itemToDelete) => {
     setItems((prevItems) => {
       let filteredData = [prevItems, pages];
 
-      /**
-       * gets all children from item in a flat list with that item, with pages ids of that items
-       * filters list of items, removing all items that are in the list of items to delete
-       * [[...items], [...pages]] - filtered items and page ids to be deleted thet left after deleting
-       * goes through all items and checks if there is a page relation, to a page id thet must be deleted
-       * if there is a relation, it will do the same thing with that item and its children recursively, reducing the list of items that left, and populating list of pages to delete
-       *
-       */
       const getFilteredDataRecursively = (item) => {
-        const nestedItemsToDelete = [item, ...flattenTree(item.children)];
+        const nestedItemsToDelete = getAllNestedItems(item.id, prevItems);
         const itemsIdsToDelete = nestedItemsToDelete.map((item) => item.id);
         const pagesIdsToDelete = nestedItemsToDelete
           .filter((item) => item.type === ITEM_TYPE.PAGE)
           .map((item) => item.pageId);
 
         filteredData = [
-          buildTree(
-            flattenTree(filteredData[0]).filter(
-              ({ id }) => !itemsIdsToDelete.includes(id)
-            )
-          ),
+          filteredData[0].filter(({ id }) => !itemsIdsToDelete.includes(id)),
           filteredData[1].filter(({ id }) => !pagesIdsToDelete.includes(id)),
         ];
 
-        flattenTree(filteredData[0]).forEach((item) => {
+        filteredData[0].forEach((item) => {
           if (pagesIdsToDelete.includes(item.pageId)) {
             getFilteredDataRecursively(item);
           }
@@ -205,7 +223,7 @@ export const EditViewContextProvider = ({ children }) => {
   };
 
   const duplicateItem = async (sourceItemId) => {
-    const sourceItem = flattenTree(items).find(({ id }) => id === sourceItemId);
+    const sourceItem = items.find(({ id }) => id === sourceItemId);
     const itemsNames = items.map(({ name }) => name);
     const itemName = getNextNameInTheSequence(itemsNames, sourceItem.name);
 
@@ -255,15 +273,15 @@ export const EditViewContextProvider = ({ children }) => {
       newItem.pageId = newPageId;
     }
     setItems((prev) => {
-      const flatItems = flattenTree(prev);
+      const flatItems = prev;
       const sourceItemIndex = flatItems.findIndex(
         ({ id }) => id === sourceItemId
       );
-      return buildTree([
+      return [
         ...flatItems.slice(0, sourceItemIndex + 1),
         newItem,
         ...flatItems.slice(sourceItemIndex + 1),
-      ]);
+      ];
     });
     setItemToUpdate(newItem);
   };
@@ -273,7 +291,7 @@ export const EditViewContextProvider = ({ children }) => {
   const handleFormModalClose = (updateValue) => {
     if (updateValue) {
       setItems((prev) => {
-        const flatTree = flattenTree(prev);
+        const flatTree = prev;
         const { id } = updateValue;
         const itemToUpdateIndex = flatTree.findIndex((item) => item.id === id);
         // replace the item in the array with the updated one by index
@@ -282,7 +300,7 @@ export const EditViewContextProvider = ({ children }) => {
           updateValue,
           ...flatTree.slice(itemToUpdateIndex + 1),
         ];
-        return buildTree(updatedItems);
+        return updatedItems;
       });
     }
     setItemToUpdate(undefined);
@@ -304,9 +322,10 @@ export const EditViewContextProvider = ({ children }) => {
         saveData,
         saveDataAndPickById,
         duplicateItem,
-        globalLoading,
+        isLoading,
       }}
     >
+      <Prompt when={isEditMode} message={t("onUnsavedChanges.alert")} />
       {itemToUpdate ? (
         <EditMenuItemForm onClose={handleFormModalClose} />
       ) : null}
