@@ -1,0 +1,36 @@
+{
+    "kind": "collectionType",
+    "collectionName": "deploy-statuses",
+    "info": {
+        "singularName": "deploy-status",
+        "pluralName": "deploy-statuses",
+        "displayName": "Deploy Statuses"
+    },
+    "options": {
+        "draftAndPublish": false,
+        "populateCreatorFields": true,
+        "comment": ""
+    },
+    "attributes": {
+        "message": {
+            "type": "text"
+        },
+        "status": {
+            "type": "enumeration",
+            "enum": [
+                "info",
+                "warning",
+                "error"
+            ]
+        },
+        "stage": {
+            "type": "string"
+        },
+        "deploy": {
+            "type": "relation",
+            "relation": "manyToOne",
+            "target": "plugin::make-deploy.deploy",
+            "inversedBy": "deployStatuses"
+        }
+    }
+}

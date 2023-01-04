@@ -1,8 +1,7 @@
 import * as _ from "lodash";
-import { Context } from "koa";
 
 export default {
-  async getRole(ctx: Context) {
+  async getRole(ctx) {
     const { id } = ctx.params;
     const { lang } = ctx.query;
     const plugins = await strapi.plugins[
@@ -19,7 +18,7 @@ export default {
     ctx.send({ role });
   },
 
-  async getRoles(ctx: Context) {
+  async getRoles(ctx) {
     try {
       const roles = await strapi.plugins[
         "users-permissions"
@@ -31,7 +30,7 @@ export default {
     }
   },
 
-  async getRoutes(ctx: Context) {
+  async getRoutes(ctx) {
     try {
       const routes = await strapi.plugins[
         "users-permissions"
