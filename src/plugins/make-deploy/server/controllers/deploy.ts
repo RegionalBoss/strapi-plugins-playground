@@ -1,16 +1,11 @@
 /**
  *  controller
  */
-import { parseMultipartData } from "@strapi/utils";
-import intersection from "lodash/intersection";
-import pluginId from "../pluginId";
-import axios from "axios";
-import https from "https";
-import { validateCreateDeploy } from "../validators/deploy";
-import { ICreateDeployDTO, IDeploy } from "../content-types/deploy";
-import { factories } from "@strapi/strapi";
+import { parseMultipartData, sanitize } from "@strapi/utils";
 import { Context } from "koa";
-import { sanitize } from "@strapi/utils";
+import { ICreateDeployDTO, IDeploy } from "../content-types/deploy";
+import pluginId from "../pluginId";
+import { validateCreateDeploy } from "../validators/deploy";
 
 const SERVICE = "deploy";
 

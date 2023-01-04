@@ -6,14 +6,14 @@ import pluginId from "../pluginId";
 import { validateSettings } from "../validators/settings";
 
 export default {
-  find: async (ctx) => {
+  find: async (ctx: any) => {
     try {
       ctx.body = await strapi.plugin(pluginId).service("settings").find();
     } catch (err) {
       ctx.throw(500, err);
     }
   },
-  create: async (ctx) => {
+  create: async (ctx: any) => {
     const { body } = ctx.request;
     const { error } = await validateSettings(body);
     if (error) return ctx.badRequest("ValidationError", { errors: error });
@@ -23,7 +23,7 @@ export default {
       ctx.throw(500, err);
     }
   },
-  updateOne: async (ctx) => {
+  updateOne: async (ctx: any) => {
     const { body } = ctx.request;
     const { error } = await validateSettings(body);
     if (error) return ctx.badRequest("ValidationError", { errors: error });
@@ -36,7 +36,7 @@ export default {
       ctx.throw(500, err);
     }
   },
-  deleteOne: async (ctx) => {
+  deleteOne: async (ctx: any) => {
     try {
       ctx.body = await strapi
         .plugin(pluginId)

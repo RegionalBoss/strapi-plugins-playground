@@ -1,5 +1,5 @@
-import { yup, formatYupErrors } from "@strapi/utils";
-import { ICreateDeployDTO, IDeploy } from "../content-types/deploy";
+import { yup } from "@strapi/utils";
+import { ICreateDeployDTO } from "../content-types/deploy";
 
 export interface IValidationResult {
   error: unknown | null;

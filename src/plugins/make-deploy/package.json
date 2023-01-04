@@ -23,6 +23,7 @@
   },
   "devDependencies": {
     "@types/uuid": "^8.3.4",
+    "nodemon": "^2.0.20",
     "typescript": "4.6.3"
   },
   "author": "RegionalBoss <eduard.karbovanec@gmail.com>",
@@ -34,14 +35,25 @@
     "npm": ">=6.0.0"
   },
   "scripts": {
-    "develop": "tsc -w",
     "dev": "tsc -w",
+    "publish:latest": "cd build && npm publish --tag latest",
+    "prepublish:latest": "npm run clean && npm run build && node build/setup-package.js",
     "build": "tsc",
+    "build:dev": "yarn run build && cp ./package.json ./build",
+    "develop": "nodemon --exec \"yarn build:dev\"",
     "prepublish": "yarn build"
   },
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/RegionalBoss/strapi-plugin-todo/issues"
+  },
+  "nodemonConfig": {
+    "ignore": [
+      "./build/**/*",
+      "./__mocks__/*",
+      "./**/__tests__/*"
+    ],
+    "ext": "js,json,ts,tsx"
   },
   "homepage": "https://github.com/RegionalBoss/strapi-plugin-todo#readme",
   "main": "strapi-admin.js"
