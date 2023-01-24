@@ -1,149 +1,292 @@
-import React, { useState } from "react";
+import React from "react";
+import { injectIntl } from "react-intl";
 import pluginId from "../../pluginId";
+import { useNotification } from "@strapi/helper-plugin";
 
 import { Prompt } from "react-router";
-
 import {
   generateId,
   getNextNameInTheSequence,
   stringToSlug,
 } from "../../utils";
 import { axiosInstance } from "../../utils/axiosInstance";
-import { EditMenuItemForm } from "../../components/EditMenuItemForm";
-import { useNotification } from "@strapi/helper-plugin";
 
 import { ITEM_TYPE } from "../constants";
-import { useTranslation } from "../../hooks/useTranslation";
+
+export const DEBUG_MODE = false;
 
 export const EditViewContext = React.createContext({
-  isEditMode: false,
+  editMode: false,
   items: [],
   pages: [],
 });
 
-export const EditViewContextProvider = ({ children }) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [items, setItems] = useState([]);
-  const [pages, setPages] = useState([]);
-  const [itemToUpdate, setItemToUpdate] = useState();
-  const [isEditMode, setIsEditMode] = useState(false);
+export class _EditViewContextProvider extends React.Component {
+  constructor(props) {
+    super(props);
 
-  const toggleNotification = useNotification();
-
-  const { t } = useTranslation();
-
-  React.useEffect(() => {
-    loadInitData();
-  }, []);
-
-  React.useEffect(() => {
-    window.onbeforeunload = (event) => {
-      event.preventDefault();
-      if (isEditMode) {
-        return (event.returnValue = t("onUnsavedChanges.alert"));
-      }
+    this.state = {
+      initialItems: [],
+      initialPages: [],
+      items: [],
+      pages: [],
+      selectedItemId: null,
+      editMode: DEBUG_MODE,
+      globalLoading: false,
+      itemToUpdate: undefined,
     };
-    return () => {
-      window.onbeforeunload = null;
-    };
-  }, [isEditMode, t]);
+    this.deleteItem = this.deleteItem.bind(this);
+    this.updateItem = this.updateItem.bind(this);
+    this.getAllNestedItems = this.getAllNestedItems.bind(this);
+    this.resetItems = this.resetItems.bind(this);
+    this.duplicateItem = this.duplicateItem.bind(this);
+    this.saveData = this.saveData.bind(this);
+    this.saveDataAndPickById = this.saveDataAndPickById.bind(this);
+    this.addNewItem = this.addNewItem.bind(this);
+    this.setItems = this.setItems.bind(this);
+    this.setEditMode = this.setEditMode.bind(this);
+    this.setItemToUpdate = this.setItemToUpdate.bind(this);
+    this.setSelectedItemId = this.setSelectedItemId.bind(this);
+    this.onBeforeUnload = this.onBeforeUnload.bind(this);
+    this.toggleEditMode = this.toggleEditMode.bind(this);
+    this.handleFormModalClose = this.handleFormModalClose.bind(this);
+  }
 
-  const loadInitData = async () => {
-    setIsLoading(true);
+  onBeforeUnload() {
+    if (this.state.editMode) {
+      return this.props.intl.formatMessage({
+        id: "page-hierarchy.onUnsavedChanges.alert",
+      });
+    }
+  }
+
+  onBeforeUnload() {
+    if (this.state.editMode) {
+      return this.props.intl.formatMessage({
+        id: "page-hierarchy.onUnsavedChanges.alert",
+      });
+    }
+  }
+
+  async componentDidMount() {
+    this.setState({ globalLoading: true });
     try {
-      const [pages, items] = await Promise.all([
+      const [{ data: pages }, { data: items }] = await Promise.all([
+        // clear sended data
         axiosInstance.get(`/${pluginId}/flat-pages`),
+        // clear sended data
         axiosInstance.get(`/${pluginId}/flat-items`),
       ]);
-      setItems(items.data);
-      setPages(pages.data);
-    } catch (ex) {
-      console.error(ex);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
-  const saveData = async () => {
-    try {
-      const { data } = await axiosInstance.put(`/${pluginId}/items`, {
-        items: items.map((item, index) => ({
-          ...item,
-          childOrder: index,
-        })),
+      this.setState({
+        globalLoading: false,
+        selectedItemId: null,
+        initialPages: pages,
+        initialItems: items,
         pages,
+        items,
       });
-
-      toggleNotification({
-        type: "success",
-        message: `${pluginId}.saveData.success`,
-      });
-
-      setItems(data.items);
-      setPages(data.pages);
-      return data;
-    } catch (e) {
-      console.error(e);
-    } finally {
-      toggleEditMode();
-      setIsLoading(false);
+    } catch (err) {
+      console.error(err);
+      // window.strapi.notification.error(err.message);
     }
-  };
+    this.setState({ globalLoading: false });
 
-  const saveDataAndPickById = async (feGeneratedPageId, dataType = "item") => {
-    const response = await saveData();
-    if (!response) return;
-    return response[`${dataType}FrontEndIdDatabaseIdMapper`]?.[
-      feGeneratedPageId
-    ];
-  };
+    if (!DEBUG_MODE) {
+      window.onbeforeunload = this.onBeforeUnload;
+    }
+  }
 
-  const getAllNestedItems = (itemId, currentItems) => {
-    const item = (currentItems ?? items).find((item) => item.id === itemId);
+  deleteItem(itemId) {
+    const nestedItemsToDelete = this.getAllNestedItems(itemId);
+    const nestedItemsIdsToDelete = nestedItemsToDelete.map(({ id }) => id);
+
+    const pagesIdsToDelete = nestedItemsToDelete
+      .filter((item) => item.type === PAGE)
+      .map((item) => item.pageId);
+
+    const itemsIdsToDelete = nestedItemsIdsToDelete;
+    this.setState(
+      (p) => ({
+        items: p.items.filter((item) => !itemsIdsToDelete.includes(item.id)),
+        pages: p.pages.filter((page) => !pagesIdsToDelete.includes(page.id)),
+        selectedItemId: null,
+      }),
+      () => {
+        // remove inconsistent relations
+        // for all symlinks & hard-links connected to some deleted page
+        this.state.items.forEach((item) => {
+          if (pagesIdsToDelete.includes(item.pageId)) {
+            this.deleteItem(item.id);
+          }
+        });
+      }
+    );
+  }
+
+  updateItem(itemId, attrs) {
+    this.setState((p) => ({
+      items: p.items.map((item) =>
+        item.id === itemId ? { ...item, ...attrs } : item
+      ),
+    }));
+  }
+
+  resetItems() {
+    this.setState((p) => ({
+      selectedItemId: null,
+      items: p.initialItems,
+      pages: p.initialPages,
+      editMode: false,
+    }));
+  }
+
+  getAllNestedItems(itemId) {
+    const item = this.state.items.find((item) => item.id === itemId);
     if (!item || !itemId) {
       return [];
     }
     return [
       item,
-      ...(currentItems ?? items)
+      ...this.state.items
         .filter((i) => i.parentId === itemId)
-        .map((i) => getAllNestedItems(i.id, currentItems ?? items))
+        .map((i) => this.getAllNestedItems(i.id))
         .flat(),
     ];
-  };
+  }
 
-  const deleteItem = (itemToDelete) => {
-    setItems((prevItems) => {
-      let filteredData = [prevItems, pages];
+  async saveData() {
+    try {
+      this.setState({
+        globalLoading: true,
+        editMode: false,
+      });
 
-      const getFilteredDataRecursively = (item) => {
-        const nestedItemsToDelete = getAllNestedItems(item.id, prevItems);
-        const itemsIdsToDelete = nestedItemsToDelete.map((item) => item.id);
-        const pagesIdsToDelete = nestedItemsToDelete
-          .filter((item) => item.type === ITEM_TYPE.PAGE)
-          .map((item) => item.pageId);
+      const { data: responseData } = await axiosInstance.put(
+        `/${pluginId}/items`,
+        {
+          // clear sended data
+          items: this.state.items,
+          // clear sended data
+          pages: this.state.pages,
+        }
+      );
 
-        filteredData = [
-          filteredData[0].filter(({ id }) => !itemsIdsToDelete.includes(id)),
-          filteredData[1].filter(({ id }) => !pagesIdsToDelete.includes(id)),
-        ];
+      this.props.toggleNotification({
+        type: "success",
+        message: `${pluginId}.saveData.success`,
+      });
 
-        filteredData[0].forEach((item) => {
-          if (pagesIdsToDelete.includes(item.pageId)) {
-            getFilteredDataRecursively(item);
-          }
-        });
+      // I use class coz i want to have async state settings
+      return new Promise((resolve) => {
+        this.setState(
+          {
+            globalLoading: false,
+            selectedItemId: null,
+            initialPages: responseData.pages,
+            initialItems: responseData.items,
+            pages: responseData.pages,
+            items: responseData.items,
+          },
+          () => resolve(responseData)
+        );
+      });
+    } catch (err) {
+      this.props.toggleNotification({
+        type: "warning",
+        message: err.message,
+      });
+      this.setState({ globalLoading: false });
+    }
+  }
+
+  // TODO: refactor
+  duplicateItem(sourceItemId) {
+    const { items, pages } = this.state;
+
+    const sourceItem = items.find(({ id }) => id === sourceItemId);
+
+    const names = items.map(({ name }) => name);
+
+    const newItem = {
+      ...sourceItem,
+      name: getNextNameInTheSequence(names, sourceItem.name),
+      childOrder: sourceItem.childOrder + 1,
+      id: generateId(),
+    };
+
+    if (newItem.type === ITEM_TYPE.PAGE) {
+      const newPageId = generateId();
+      const prevPage = pages.find(({ id }) => id === newItem.pageId);
+
+      // cant duplicate from page which is not saved in the database
+      // this condition should never become
+      if (prevPage._feGenerated) {
+        if (!prevPage._duplicatedFromPageId) {
+          this.props.toggleNotification({
+            type: "warning",
+            message: `${pluginId}.duplicateItem.warning.message`,
+          });
+          return;
+        }
+        const prevPageDuplicatedFromPage = pages.find(
+          ({ id }) => id === prevPage._duplicatedFromPageId
+        );
+        if (prevPageDuplicatedFromPage._feGenerated) {
+          this.props.toggleNotification({
+            type: "warning",
+            message: `${pluginId}.duplicateItem.warning.extend.message`,
+          });
+          return;
+        }
+      }
+
+      const newPage = {
+        ...prevPage,
+        id: newPageId,
+        _feGenerated: true,
+        // do not support to duplicate duplicated page on the frontend
+        // API support only reference to real exist page (not alias via some duplicity)
+        _duplicatedFromPageId: prevPage._duplicatedFromPageId
+          ? prevPage._duplicatedFromPageId
+          : prevPage.id,
       };
-      getFilteredDataRecursively(itemToDelete);
 
-      setPages(filteredData[1]);
-      return filteredData[0];
-    });
-    setItemToUpdate(undefined);
-  };
+      this.setState((p) => ({
+        pages: [...p.pages, newPage],
+        editMode: true,
+      }));
+      newItem.pageId = newPageId;
+    }
 
-  const addNewItem = (type) => {
-    const itemsNames = items.map(({ name }) => name);
+    this.setState((p) => ({
+      items: [
+        newItem,
+        ...p.items.map((i) => ({
+          ...i,
+          // shift all sibling below new duplicated item
+          childOrder:
+            i.parentId === newItem.parentId &&
+            i.childOrder >= newItem.childOrder
+              ? i.childOrder + 1
+              : i.childOrder,
+        })),
+      ],
+      selectedItemId: newItem.id,
+    }));
+  }
+
+  async saveDataAndPickById(feGeneratedPageId, dataType = "item") {
+    const response = await this.saveData();
+    if (!response) return;
+    return response[`${dataType}FrontEndIdDatabaseIdMapper`]?.[
+      feGeneratedPageId
+    ];
+  }
+
+  addNewItem(type) {
+    const formatMessage = this.props.intl.formatMessage;
+    const itemsNames = this.state.items.map(({ name }) => name);
     const newItemId = generateId();
     const newItem = {
       id: newItemId,
@@ -161,37 +304,45 @@ export const EditViewContextProvider = ({ children }) => {
         newItem.pageId = newPageId;
         newItem.name = getNextNameInTheSequence(
           itemsNames,
-          t("createNew.item.default.PAGE.name")
+          formatMessage({
+            id: "page-hierarchy.createNew.item.default.PAGE.name",
+          })
         );
 
-        setPages((currentPages) => {
-          const pagesNames = currentPages.map(({ title }) => title);
-          const pageName = getNextNameInTheSequence(
-            pagesNames,
-            t("createNew.page.default.name")
-          );
+        const pages = this.state.pages;
+        const pagesNames = pages.map(({ title }) => title);
+        const pageName = getNextNameInTheSequence(
+          pagesNames,
+          formatMessage({ id: "page-hierarchy.createNew.page.default.name" })
+        );
 
-          const newPage = {
-            id: newPageId,
-            title: pageName,
-            slug: stringToSlug(pageName),
-            _feGenerated: true,
-          };
-          return [...currentPages, newPage];
-        });
+        const newPage = {
+          id: newPageId,
+          title: pageName,
+          slug: stringToSlug(pageName),
+          _feGenerated: true,
+        };
+
+        this.setState((p) => ({
+          pages: [...p.pages, newPage],
+        }));
         break;
       }
       case ITEM_TYPE.LABEL:
         newItem.name = getNextNameInTheSequence(
           itemsNames,
-          t("createNew.item.default.LABEL.name")
+          formatMessage({
+            id: "page-hierarchy.createNew.item.default.LABEL.name",
+          })
         );
         break;
 
       case ITEM_TYPE.URL:
         newItem.name = getNextNameInTheSequence(
           itemsNames,
-          t("createNew.item.default.URL.name")
+          formatMessage({
+            id: "page-hierarchy.createNew.item.default.URL.name",
+          })
         );
         newItem.absoluteLinkUrl = "https://strapi.io";
         break;
@@ -199,137 +350,120 @@ export const EditViewContextProvider = ({ children }) => {
       case ITEM_TYPE.SYMBOLIC_LINK:
         newItem.name = getNextNameInTheSequence(
           itemsNames,
-          t("createNew.item.default.SYMBOLIC_LINK.name")
+          formatMessage({
+            id: "page-hierarchy.createNew.item.default.SYMBOLIC_LINK.name",
+          })
         );
-        newItem.pageId = pages[0] ? pages[0].id : null;
+        newItem.pageId = this.state.pages[0] ? this.state.pages[0].id : null;
         break;
 
       case ITEM_TYPE.HARD_LINK:
         newItem.name = getNextNameInTheSequence(
           itemsNames,
-          t("createNew.item.default.HARD_LINK.name")
+          formatMessage({
+            id: "page-hierarchy.createNew.item.default.HARD_LINK.name",
+          })
         );
-        newItem.pageId = pages[0] ? pages[0].id : null;
+        newItem.pageId = this.state.pages[0] ? this.state.pages[0].id : null;
         break;
 
       default:
         break;
     }
-    setItems((prev) => [
-      { ...newItem, childOrder: 0, parentItem: undefined },
-      ...prev,
-    ]);
-    setItemToUpdate(newItem);
+
+    this.setState((p) => ({
+      items: [
+        {
+          ...newItem,
+          childOrder: 0,
+          parentItem: null,
+        },
+        ...p.items.map((item) => ({
+          ...item,
+          // shift all items 1 bellow
+          childOrder: item.parentId ? item.childOrder : item.childOrder + 1,
+        })),
+      ],
+      selectedItemId: newItemId,
+    }));
+  }
+
+  setEditMode(newEditMode) {
+    this.setState({ editMode: newEditMode });
+  }
+
+  toggleEditMode() {
+    this.setState({ editMode: !this.state.editMode });
+  }
+
+  setItemToUpdate(itemToUpdate) {
+    this.setState({ itemToUpdate: itemToUpdate });
+  }
+
+  setItems(newItems) {
+    this.setState({ items: newItems });
+  }
+
+  setSelectedItemId(newSelectedItemId) {
+    this.setState({ selectedItemId: newSelectedItemId });
+  }
+
+  handleFormModalClose(updateValue) {
+    if (updateValue) this.updateItem(updateValue.id, updateValue);
+    this.setItemToUpdate(undefined);
+  }
+
+  render() {
+    return (
+      <EditViewContext.Provider
+        value={{
+          refreshData: this.resetItems,
+          deleteItem: this.deleteItem,
+          setItems: this.setItems,
+          saveData: this.saveData,
+          saveDataAndPickByPageId: this.saveDataAndPickByPageId,
+          saveDataAndPickByItemId: this.saveDataAndPickByItemId,
+          setEditMode: this.setEditMode,
+          setSelectedItemId: this.setSelectedItemId,
+          updateItem: this.updateItem,
+          addNewItem: this.addNewItem,
+          duplicateItem: this.duplicateItem,
+          setItemToUpdate: this.setItemToUpdate,
+          toggleEditMode: this.toggleEditMode,
+          handleFormModalClose: this.handleFormModalClose,
+          // data
+          pages: this.state.pages,
+          items: this.state.items,
+          isEditMode: this.state.editMode,
+          selectedItemId: this.state.selectedItemId,
+          globalLoading: this.state.globalLoading,
+          itemToUpdate: this.state.itemToUpdate,
+          isLoading: this.state.globalLoading,
+        }}
+      >
+        <Prompt
+          when={this.state.editMode}
+          message={this.props.intl.formatMessage({
+            id: "page-hierarchy.onUnsavedChanges.alert",
+          })}
+        />
+        {this.props.children}
+      </EditViewContext.Provider>
+    );
+  }
+}
+
+const withNotification = (WrappedComponent) => {
+  return (props) => {
+    const toggleNotification = useNotification();
+    return (
+      <WrappedComponent {...props} toggleNotification={toggleNotification} />
+    );
   };
-
-  const duplicateItem = async (sourceItemId) => {
-    const sourceItem = items.find(({ id }) => id === sourceItemId);
-    const itemsNames = items.map(({ name }) => name);
-    const itemName = getNextNameInTheSequence(itemsNames, sourceItem.name);
-
-    const newItem = {
-      ...sourceItem,
-      id: generateId(),
-      name: itemName,
-      childOrder: 0,
-    };
-    if (newItem.type === ITEM_TYPE.PAGE) {
-      const newPageId = generateId();
-      const prevPage = pages.find(({ id }) => id === sourceItem.pageId);
-
-      if (prevPage._feGenerated) {
-        if (!prevPage._duplicatedFromPageId) {
-          toggleNotification({
-            type: "warning",
-            message: `${pluginId}.duplicateItem.warning.message`,
-          });
-          return;
-        }
-        const prevPageDuplicateFromPage = pages.find(
-          ({ id }) => id === prevPage._duplicatedFromPageId
-        );
-        if (prevPageDuplicateFromPage._feGenerated) {
-          toggleNotification({
-            type: "warning",
-            message: `${pluginId}.duplicateItem.warning.extend.message`,
-          });
-          return;
-        }
-      }
-
-      const newPage = {
-        ...prevPage,
-        id: newPageId,
-        title: itemName,
-        slug: stringToSlug(itemName),
-        _feGenerated: true,
-        _duplicatedFromPageId: prevPage._duplicatedFromPageId
-          ? prevPage._duplicatedFromPageId
-          : prevPage.id,
-      };
-
-      setPages((currentPages) => [...currentPages, newPage]);
-      setIsEditMode(true);
-      newItem.pageId = newPageId;
-    }
-    setItems((prev) => {
-      const flatItems = prev;
-      const sourceItemIndex = flatItems.findIndex(
-        ({ id }) => id === sourceItemId
-      );
-      return [
-        ...flatItems.slice(0, sourceItemIndex + 1),
-        newItem,
-        ...flatItems.slice(sourceItemIndex + 1),
-      ];
-    });
-    setItemToUpdate(newItem);
-  };
-
-  const toggleEditMode = () => setIsEditMode((prev) => !prev);
-
-  const handleFormModalClose = (updateValue) => {
-    if (updateValue) {
-      setItems((prev) => {
-        const flatTree = prev;
-        const { id } = updateValue;
-        const itemToUpdateIndex = flatTree.findIndex((item) => item.id === id);
-        // replace the item in the array with the updated one by index
-        const updatedItems = [
-          ...flatTree.slice(0, itemToUpdateIndex),
-          updateValue,
-          ...flatTree.slice(itemToUpdateIndex + 1),
-        ];
-        return updatedItems;
-      });
-    }
-    setItemToUpdate(undefined);
-  };
-  return (
-    <EditViewContext.Provider
-      value={{
-        isEditMode,
-        toggleEditMode,
-        items,
-        setItems,
-        pages,
-        setPages,
-        addNewItem,
-        refreshData: loadInitData,
-        setItemToUpdate,
-        itemToUpdate,
-        deleteItem,
-        saveData,
-        saveDataAndPickById,
-        duplicateItem,
-        isLoading,
-      }}
-    >
-      <Prompt when={isEditMode} message={t("onUnsavedChanges.alert")} />
-      {itemToUpdate ? (
-        <EditMenuItemForm onClose={handleFormModalClose} />
-      ) : null}
-      {children}
-    </EditViewContext.Provider>
-  );
 };
+
+export const EditViewContextProvider = injectIntl(
+  withNotification(_EditViewContextProvider)
+);
+
+export default EditViewContext;

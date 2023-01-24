@@ -10,18 +10,19 @@ import {
   ContentLayout,
   Flex,
   Layout,
+  Loader,
 } from "@strapi/design-system";
 import Check from "@strapi/icons/Check";
 import Cross from "@strapi/icons/Cross";
 import Pencil from "@strapi/icons/Pencil";
 import React from "react";
-import { LoadingIndicatorPage } from "@strapi/helper-plugin";
 import { SortableMenu } from "../../components/Sortable/SortableMenu";
 import { useTranslation } from "../../hooks/useTranslation";
 import { ITEM_TYPE } from "../../lib/constants";
 import { useConfirmDialog } from "../../lib/contexts/ConfirmDialogContext";
 import { EditViewContext } from "../../lib/contexts/EditViewContext";
 import { Illo } from "../../components/Illo";
+import { EditMenuItemForm } from "../../components/EditMenuItemForm";
 import { EmptyStateLayout } from "@strapi/design-system/EmptyStateLayout";
 
 const CREATE_NEW_BUTTONS = [
@@ -54,9 +55,10 @@ const HomePage = () => {
     addNewItem,
     saveData,
     refreshData,
-    globalLoading,
     items,
     isLoading,
+    itemToUpdate,
+    handleFormModalClose,
   } = React.useContext(EditViewContext);
   const { showConfirmDialog } = useConfirmDialog();
   const { t } = useTranslation();
@@ -64,8 +66,12 @@ const HomePage = () => {
   const PrimaryActions = React.useCallback(() => {
     if (!isEditMode)
       return (
-        <Button onClick={toggleEditMode} startIcon={<Pencil />}>
-          {t("editMode")}
+        <Button
+          onClick={toggleEditMode}
+          startIcon={<Pencil />}
+          loading={isLoading}
+        >
+          {isLoading ? t("savingChanges") : t("editMode")}
         </Button>
       );
     return (
@@ -74,8 +80,8 @@ const HomePage = () => {
           variant="tertiary"
           startIcon={<Cross />}
           style={{ marginRight: "0.5rem" }}
-          disabled={globalLoading}
-          loading={globalLoading}
+          disabled={isLoading}
+          loading={isLoading}
           onClick={async () => {
             if (
               await showConfirmDialog(
@@ -84,7 +90,6 @@ const HomePage = () => {
               )
             ) {
               refreshData();
-              toggleEditMode();
             }
           }}
         >
@@ -93,14 +98,14 @@ const HomePage = () => {
         <Button
           startIcon={<Check />}
           onClick={saveData}
-          disabled={globalLoading}
-          loading={globalLoading}
+          disabled={isLoading}
+          loading={isLoading}
         >
-          {globalLoading ? t("savingChanges") : t("saveChanges")}
+          {isLoading ? t("savingChanges") : t("saveChanges")}
         </Button>
       </Flex>
     );
-  }, [isEditMode, toggleEditMode, globalLoading]);
+  }, [isEditMode, toggleEditMode, isLoading]);
 
   const EditNewButtons = React.useCallback(() => {
     if (!isEditMode) return null;
@@ -120,10 +125,11 @@ const HomePage = () => {
     );
   }, [isEditMode]);
 
-  if (isLoading) return <LoadingIndicatorPage />;
-
   return (
     <>
+      {itemToUpdate ? (
+        <EditMenuItemForm onClose={handleFormModalClose} />
+      ) : null}
       <Layout>
         <BaseHeaderLayout
           title={t("plugin.name")}
@@ -132,8 +138,13 @@ const HomePage = () => {
           primaryAction={<PrimaryActions />}
         />
         <ContentLayout>
+          {isLoading && (
+            <Flex style={{ justifyContent: "center" }}>
+              <Loader />
+            </Flex>
+          )}
           <EditNewButtons />
-          {items.length === 0 ? (
+          {items.length === 0 && !isLoading ? (
             <EmptyStateLayout
               icon={<Illo />}
               content="Zatím nemate žádné stránky"

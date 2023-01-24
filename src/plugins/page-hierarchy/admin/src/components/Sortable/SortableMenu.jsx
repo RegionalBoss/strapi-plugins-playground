@@ -37,7 +37,7 @@ const SortableMenuWrapper = React.memo(({ items, onChange }) => {
     onChange(transformedData);
   };
 
-  const sortlyItems = items.map((item) => {
+  const sortlyItems = items?.map((item) => {
     const i = {
       ...item,
       index: item.childOrder,
