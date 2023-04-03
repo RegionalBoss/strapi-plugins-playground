@@ -46,6 +46,7 @@ const Container = styled.div`
   border: 1px solid
     ${({ selected, theme }) =>
       selected ? theme.colors.primary600 : "transparent"};
+  border-radius: ${({ theme }) => theme.borderRadius};
   /* opacity: ${({ isDragging }) => (isDragging ? 0.5 : 1)}; */
 `;
 
@@ -62,7 +63,6 @@ const TreeItemBox = styled(Box)`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  transition: box-shadow 0.2s;
   cursor: pointer;
 
   &:hover {
@@ -80,7 +80,6 @@ const IconWrapper = styled.div`
   button {
     cursor: initial;
     opacity: 0.4;
-    transition: opacity 0.2s ease-in-out;
     &:hover {
       opacity: 1;
     }
@@ -245,7 +244,7 @@ export const TreeItem = React.memo((props) => {
       <Container
         depth={depth}
         isDragging={isDragging}
-        selected={selectedItemId?.id === props?.id}
+        selected={selectedItemId === props?.id}
       >
         <TreeItemBox
           padding={4}
@@ -265,7 +264,7 @@ export const TreeItem = React.memo((props) => {
                 cursor: isEditMode ? "grab" : "default",
               }}
               disabled={!isEditMode}
-              ref={drag}
+              ref={isEditMode ? drag : undefined}
             />
             <div style={{ marginLeft: "1rem" }}>
               <Typography as="h3">

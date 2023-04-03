@@ -33,7 +33,7 @@ import { useConfirmDialog } from "../lib/contexts/ConfirmDialogContext";
 
 const HalfInline = styled.div`
   display: inline-block;
-  width: 100%;
+  width: 50%;
 `;
 
 const CheckboxLabel = styled(Typography)`
@@ -67,7 +67,7 @@ const FormHeader = styled.header`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 2rem;
+  padding: ${({ theme }) => theme.spaces[6]};
   h2 {
     font-size: 1.5rem;
   }
@@ -280,6 +280,11 @@ export const EditMenuItemForm = () => {
         },
       },
       {
+        type: "dom",
+        name: "box_new_line",
+        component: Box,
+      },
+      {
         name: "visibleFrom",
         type: "date",
         label: "EditMenuItemForm.input.visibleFrom.label",
@@ -314,6 +319,9 @@ export const EditMenuItemForm = () => {
       <Divider />
       <ModalBody style={{ maxHeight: "80vh" }}>
         {FORM_INPUTS.map((formInput) => {
+          if (formInput.type === "dom") {
+            return <formInput.component {...formInput.props} />;
+          }
           if (formInput.type === "checkbox") {
             return (
               <HalfInline style={{ marginBottom: "1rem" }}>
@@ -346,7 +354,11 @@ export const EditMenuItemForm = () => {
                 <FormDatePicker
                   id={formInput.name}
                   name={formInput.name}
-                  selectedDate={itemToUpdate[formInput.name]}
+                  selectedDate={
+                    itemToUpdate[formInput.name]
+                      ? new Date(itemToUpdate[formInput.name])
+                      : null
+                  }
                   label={t(formInput.label)}
                   locale="cs"
                   clearLabel={"Vymazat datum"}

@@ -14,8 +14,8 @@ exports.default = {
         enabled: true,
         resolve: "./src/plugins/cloudinary-field",
     },
-    "acoustic-newsletters": {
-        enabled: true,
-        resolve: "./src/plugins/acoustic-newsletters",
-    },
+    // "acoustic-newsletters": {
+    //   enabled: true,
+    //   resolve: "./src/plugins/acoustic-newsletters",
+    // },
 };
