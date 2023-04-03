@@ -2,15 +2,27 @@ import path from "path";
 
 export default ({ env }) => ({
   connection: {
-    client: "sqlite",
+    // client: "sqlite",
+    // connection: {
+    //   filename: path.join(
+    //     __dirname,
+    //     "..",
+    //     "..",
+    //     env("DATABASE_FILENAME", ".tmp/data.db")
+    //   ),
+    // },
+    // useNullAsDefault: true,
+    client: "postgres",
     connection: {
-      filename: path.join(
-        __dirname,
-        "..",
-        "..",
-        env("DATABASE_FILENAME", ".tmp/data.db")
-      ),
+      host: env("STRAPI_DB_HOST", "localhost"),
+      port: env.int("STRAPI_DB_PORT", 5432),
+      database: env("STRAPI_DB_NAME", "strapi4"),
+      user: env("STRAPI_DB_USER", "strapi"),
+      password: env("STRAPI_DB_PW", "strapipwd"),
+      schema: env("STRAPI_DB_SCHEMA", "public"), // Not required
+      ssl: env.bool("STRAPI_DB_SSL", false),
     },
+    debug: false,
     useNullAsDefault: true,
     // client: "postgres",
     // connection: {
@@ -25,6 +37,6 @@ export default ({ env }) => ({
     //   //   rejectUnauthorized: env.bool("DATABASE_SSL_SELF", false),
     //   // },
     // },
-    debug: false,
+    // debug: false,
   },
 });

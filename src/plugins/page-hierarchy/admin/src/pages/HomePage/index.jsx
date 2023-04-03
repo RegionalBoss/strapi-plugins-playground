@@ -4,26 +4,20 @@
  *
  */
 
-import {
-  BaseHeaderLayout,
-  Button,
-  ContentLayout,
-  Flex,
-  Layout,
-  Loader,
-} from "@strapi/design-system";
+import { BaseHeaderLayout, Button, Flex, Loader } from "@strapi/design-system";
 import Check from "@strapi/icons/Check";
 import Cross from "@strapi/icons/Cross";
 import Pencil from "@strapi/icons/Pencil";
+import styled from "styled-components";
 import React from "react";
 import { SortableMenu } from "../../components/Sortable/SortableMenu";
 import { useTranslation } from "../../hooks/useTranslation";
 import { ITEM_TYPE } from "../../lib/constants";
 import { useConfirmDialog } from "../../lib/contexts/ConfirmDialogContext";
 import { EditViewContext } from "../../lib/contexts/EditViewContext";
-import { Illo } from "../../components/Illo";
 import { EditMenuItemForm } from "../../components/EditMenuItemForm";
-import { EmptyStateLayout } from "@strapi/design-system/EmptyStateLayout";
+
+const Layout = styled.div``;
 
 const CREATE_NEW_BUTTONS = [
   {
@@ -48,64 +42,70 @@ const CREATE_NEW_BUTTONS = [
   },
 ];
 
-const HomePage = () => {
-  const {
-    isEditMode,
-    toggleEditMode,
-    addNewItem,
-    saveData,
-    refreshData,
-    items,
-    isLoading,
-    itemToUpdate,
-    handleFormModalClose,
-  } = React.useContext(EditViewContext);
+const PrimaryActions = () => {
+  const { isEditMode, toggleEditMode, saveData, refreshData, isLoading } =
+    React.useContext(EditViewContext);
+
   const { showConfirmDialog } = useConfirmDialog();
   const { t } = useTranslation();
 
-  const PrimaryActions = React.useCallback(() => {
-    if (!isEditMode)
-      return (
-        <Button
-          onClick={toggleEditMode}
-          startIcon={<Pencil />}
-          loading={isLoading}
-        >
-          {isLoading ? t("savingChanges") : t("editMode")}
-        </Button>
-      );
+  if (!isEditMode)
     return (
-      <Flex>
-        <Button
-          variant="tertiary"
-          startIcon={<Cross />}
-          style={{ marginRight: "0.5rem" }}
-          disabled={isLoading}
-          loading={isLoading}
-          onClick={async () => {
-            if (
-              await showConfirmDialog(
-                t("cancelEditMode.willDiscardChanges.confirm.title"),
-                t("cancelEditMode.willDiscardChanges.confirm.message")
-              )
-            ) {
-              refreshData();
-            }
-          }}
-        >
-          {t("cancelEditMode")}
-        </Button>
-        <Button
-          startIcon={<Check />}
-          onClick={saveData}
-          disabled={isLoading}
-          loading={isLoading}
-        >
-          {isLoading ? t("savingChanges") : t("saveChanges")}
-        </Button>
-      </Flex>
+      <Button
+        onClick={toggleEditMode}
+        startIcon={<Pencil />}
+        loading={isLoading}
+      >
+        {isLoading ? t("savingChanges") : t("editMode")}
+      </Button>
     );
-  }, [isEditMode, toggleEditMode, isLoading]);
+  return (
+    <Flex>
+      <Button
+        variant="tertiary"
+        startIcon={<Cross />}
+        style={{ marginRight: "0.5rem" }}
+        disabled={isLoading}
+        loading={isLoading}
+        onClick={async () => {
+          if (
+            await showConfirmDialog(
+              t("cancelEditMode.willDiscardChanges.confirm.title"),
+              t("cancelEditMode.willDiscardChanges.confirm.message")
+            )
+          ) {
+            refreshData();
+          }
+        }}
+      >
+        {t("cancelEditMode")}
+      </Button>
+      <Button
+        startIcon={<Check />}
+        onClick={saveData}
+        disabled={isLoading}
+        loading={isLoading}
+      >
+        {isLoading ? t("savingChanges") : t("saveChanges")}
+      </Button>
+    </Flex>
+  );
+};
+
+const ItemsList = ({ items, setItems }) => {
+  return <SortableMenu items={items} setItems={setItems} />;
+};
+
+const StyledContent = styled.div`
+  display: flex;
+  padding: 0;
+  overflow: hidden;
+`;
+
+const HomePage = () => {
+  const { isLoading, items, setItems, addNewItem, isEditMode, selectedItemId } =
+    React.useContext(EditViewContext);
+  const { t } = useTranslation();
 
   const EditNewButtons = React.useCallback(() => {
     if (!isEditMode) return null;
@@ -127,32 +127,36 @@ const HomePage = () => {
 
   return (
     <>
-      {itemToUpdate ? (
-        <EditMenuItemForm onClose={handleFormModalClose} />
-      ) : null}
-      <Layout>
-        <BaseHeaderLayout
-          title={t("plugin.name")}
-          subtitle={t("description")}
-          as="h2"
-          primaryAction={<PrimaryActions />}
-        />
-        <ContentLayout>
-          {isLoading && (
-            <Flex style={{ justifyContent: "center" }}>
-              <Loader />
-            </Flex>
-          )}
-          <EditNewButtons />
-          {items.length === 0 && !isLoading ? (
-            <EmptyStateLayout
-              icon={<Illo />}
-              content="Zatím nemate žádné stránky"
+      <Layout
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          height: "100vh",
+          overflow: "hidden",
+        }}
+      >
+        <StyledContent>
+          <div style={{ overflowY: "auto", flex: 1, padding: "0 1rem" }}>
+            <BaseHeaderLayout
+              title={t("plugin.name")}
+              subtitle={t("description")}
+              as="h2"
+              primaryAction={<PrimaryActions />}
             />
-          ) : (
-            <SortableMenu />
-          )}
-        </ContentLayout>
+            {isLoading && (
+              <Flex style={{ justifyContent: "center" }}>
+                <Loader />
+              </Flex>
+            )}
+            <EditNewButtons />
+            <ItemsList
+              items={items}
+              isLoading={isLoading}
+              setItems={setItems}
+            />
+          </div>
+          {selectedItemId ? <EditMenuItemForm /> : null}
+        </StyledContent>
       </Layout>
     </>
   );

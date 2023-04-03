@@ -10,9 +10,7 @@ import styled from "styled-components";
 import { EditViewContext } from "../../lib/contexts/EditViewContext";
 import { TreeItem } from "./TreeItem";
 
-export const SortableMenu = () => {
-  const { items, setItems } = React.useContext(EditViewContext);
-
+export const SortableMenu = ({ items, setItems }) => {
   return (
     <Wrapper>
       <DndProvider backend={HTML5Backend}>
@@ -24,7 +22,7 @@ export const SortableMenu = () => {
   );
 };
 
-const SortableMenuWrapper = React.memo(({ items, onChange }) => {
+const SortableMenuWrapper = ({ items, onChange }) => {
   const _onChange = (modifiedData) => {
     const transformedData = flatten(modifiedData).map((item) => {
       const i = {
@@ -53,7 +51,7 @@ const SortableMenuWrapper = React.memo(({ items, onChange }) => {
       </Sortly>
     </SortlyWrapper>
   );
-});
+};
 
 const SortlyWrapper = styled.div`
   display: flex;

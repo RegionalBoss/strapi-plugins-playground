@@ -100,12 +100,14 @@ const isPermissionEnabled = (permission, role) => DEFAULT_PERMISSIONS.some((defa
     (defaultPerm.roleType === null || role.type === defaultPerm.roleType));
 exports.default = {
     getActions() {
-        const generateActions = (data) => Object.keys(data).reduce((acc, key) => {
-            if (_.isFunction(data[key])) {
-                acc[key] = { enabled: false, policy: "" };
-            }
-            return acc;
-        }, {});
+        const generateActions = (data) => !data
+            ? {}
+            : Object.keys(data).reduce((acc, key) => {
+                if (_.isFunction(data[key])) {
+                    acc[key] = { enabled: false, policy: "" };
+                }
+                return acc;
+            }, {});
         const appControllers = Object.keys(strapi.api || {})
             .filter((key) => !!strapi.api[key].controllers)
             .reduce((acc, key) => {

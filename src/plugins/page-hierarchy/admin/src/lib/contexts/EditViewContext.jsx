@@ -33,7 +33,6 @@ export class _EditViewContextProvider extends React.Component {
       selectedItemId: null,
       editMode: DEBUG_MODE,
       globalLoading: false,
-      itemToUpdate: undefined,
     };
     this.deleteItem = this.deleteItem.bind(this);
     this.updateItem = this.updateItem.bind(this);
@@ -45,7 +44,6 @@ export class _EditViewContextProvider extends React.Component {
     this.addNewItem = this.addNewItem.bind(this);
     this.setItems = this.setItems.bind(this);
     this.setEditMode = this.setEditMode.bind(this);
-    this.setItemToUpdate = this.setItemToUpdate.bind(this);
     this.setSelectedItemId = this.setSelectedItemId.bind(this);
     this.onBeforeUnload = this.onBeforeUnload.bind(this);
     this.toggleEditMode = this.toggleEditMode.bind(this);
@@ -100,9 +98,8 @@ export class _EditViewContextProvider extends React.Component {
   deleteItem(itemId) {
     const nestedItemsToDelete = this.getAllNestedItems(itemId);
     const nestedItemsIdsToDelete = nestedItemsToDelete.map(({ id }) => id);
-
     const pagesIdsToDelete = nestedItemsToDelete
-      .filter((item) => item.type === PAGE)
+      .filter((item) => item.type === ITEM_TYPE.PAGE)
       .map((item) => item.pageId);
 
     const itemsIdsToDelete = nestedItemsIdsToDelete;
@@ -396,10 +393,6 @@ export class _EditViewContextProvider extends React.Component {
     this.setState({ editMode: !this.state.editMode });
   }
 
-  setItemToUpdate(itemToUpdate) {
-    this.setState({ itemToUpdate: itemToUpdate });
-  }
-
   setItems(newItems) {
     this.setState({ items: newItems });
   }
@@ -410,7 +403,7 @@ export class _EditViewContextProvider extends React.Component {
 
   handleFormModalClose(updateValue) {
     if (updateValue) this.updateItem(updateValue.id, updateValue);
-    this.setItemToUpdate(undefined);
+    this.setSelectedItemId(undefined);
   }
 
   render() {
@@ -428,7 +421,6 @@ export class _EditViewContextProvider extends React.Component {
           updateItem: this.updateItem,
           addNewItem: this.addNewItem,
           duplicateItem: this.duplicateItem,
-          setItemToUpdate: this.setItemToUpdate,
           toggleEditMode: this.toggleEditMode,
           handleFormModalClose: this.handleFormModalClose,
           // data
@@ -437,7 +429,6 @@ export class _EditViewContextProvider extends React.Component {
           isEditMode: this.state.editMode,
           selectedItemId: this.state.selectedItemId,
           globalLoading: this.state.globalLoading,
-          itemToUpdate: this.state.itemToUpdate,
           isLoading: this.state.globalLoading,
         }}
       >

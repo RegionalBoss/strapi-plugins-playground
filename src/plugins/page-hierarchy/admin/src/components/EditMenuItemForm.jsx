@@ -1,16 +1,23 @@
 import {
+  faCopy,
+  faTimes,
+  faTrash,
+  faPen,
+} from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
   Box,
   Button,
   DatePicker,
+  Divider,
   Field,
   FieldError,
   FieldHint,
   FieldInput,
   FieldLabel,
+  IconButton,
   ModalBody,
   ModalFooter,
-  ModalHeader,
-  ModalLayout,
   Option,
   Select,
   ToggleCheckbox,
@@ -22,10 +29,11 @@ import styled from "styled-components";
 import { useTranslation } from "../hooks/useTranslation";
 import { ITEM_TYPE } from "../lib/constants";
 import { EditViewContext } from "../lib/contexts/EditViewContext";
+import { useConfirmDialog } from "../lib/contexts/ConfirmDialogContext";
 
 const HalfInline = styled.div`
   display: inline-block;
-  width: 50%;
+  width: 100%;
 `;
 
 const CheckboxLabel = styled(Typography)`
@@ -39,6 +47,30 @@ const RequiredStar = styled.span`
   color: #ee5e52;
   font-size: 0.875rem;
   line-height: 0;
+`;
+
+const Form = styled.form`
+  max-width: 40vw;
+  @media (max-width: 768px) {
+    max-width: 100vw;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background: ${({ theme }) => theme.colors.neutral0};
+    z-index: 100;
+    height: 100vh;
+    width: 100vw;
+  }
+`;
+
+const FormHeader = styled.header`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  h2 {
+    font-size: 1.5rem;
+  }
 `;
 
 const FormTextInput = React.forwardRef((props, ref) => {
@@ -68,25 +100,82 @@ const FormDatePicker = React.forwardRef((props, ref) => (
   </div>
 ));
 
-export const EditMenuItemForm = ({ onClose }) => {
-  const { itemToUpdate, pages } = React.useContext(EditViewContext);
+export const EditMenuItemForm = () => {
+  const {
+    items,
+    pages,
+    handleFormModalClose,
+    isEditMode,
+    saveDataAndPickById,
+    duplicateItem,
+    deleteItem,
+    selectedItemId,
+    updateItem,
+  } = React.useContext(EditViewContext);
+
+  const itemToUpdate = items.find((item) => item.id === selectedItemId);
+
   const { t } = useTranslation();
-  const { handleSubmit, formState, setValue, control } = useForm({
-    defaultValues: {
-      ...itemToUpdate,
-      visibleFrom: itemToUpdate.visibleFrom
-        ? new Date(itemToUpdate.visibleFrom)
-        : null,
-      visibleTo: itemToUpdate.visibleTo
-        ? new Date(itemToUpdate.visibleTo)
-        : null,
-    },
-  });
-  const { errors } = formState;
+  const { showConfirmDialog } = useConfirmDialog();
+
+  // const { handleSubmit, formState, setValue, control, reset } = useForm({
+  //   defaultValues: {
+  //     ...itemToUpdate,
+  //     visibleFrom: itemToUpdate.visibleFrom
+  //       ? new Date(itemToUpdate.visibleFrom)
+  //       : null,
+  //     visibleTo: itemToUpdate.visibleTo
+  //       ? new Date(itemToUpdate.visibleTo)
+  //       : null,
+  //   },
+  // });
+  // const { errors } = formState;
+
+  const havePage = itemToUpdate.type === ITEM_TYPE.PAGE;
+
+  const page = havePage
+    ? pages.find((page) => page.id === itemToUpdate.pageId)
+    : null;
 
   const handleClose = (e) => {
-    if ((!e || e.target.type === "button") && typeof onClose === "function")
-      onClose();
+    if (
+      (!e || e.target.type === "button") &&
+      typeof handleFormModalClose === "function"
+    )
+      handleFormModalClose();
+  };
+
+  const handleDuplicateItem = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    let itemIdToDuplicate = itemToUpdate.id;
+
+    // special FE-x-BE case where we have to sync data with database
+    if (havePage && page._feGenerated) {
+      const saveDataAndDuplicate = await showConfirmDialog(
+        t(
+          "PageHierarchyEditor.update.duplicatePageItem.button.haveToSave.confirm.title"
+        ),
+        t(
+          "PageHierarchyEditor.update.duplicatePageItem.button.haveToSave.confirm.message"
+        )
+      );
+      if (!saveDataAndDuplicate) return;
+      itemIdToDuplicate = await saveDataAndPickById(item.id);
+    }
+
+    duplicateItem(itemIdToDuplicate);
+  };
+
+  const handleRemove = async () => {
+    if (
+      await showConfirmDialog(
+        t("EditMenuItemForm.delete.warning.confirm.title"),
+        t("EditMenuItemForm.delete.warning.confirm.message")
+      )
+    )
+      deleteItem(itemToUpdate.id);
   };
 
   const FORM_INPUTS = React.useMemo(
@@ -114,8 +203,7 @@ export const EditMenuItemForm = ({ onClose }) => {
         input: FormTextInput,
         label: "EditMenuItemForm.input.name.label",
         props: {
-          required: true,
-          disabled: false,
+          disabled: !isEditMode,
           placeholder: "Zadejte jméno",
         },
       },
@@ -136,7 +224,7 @@ export const EditMenuItemForm = ({ onClose }) => {
         )),
         props: {
           required: true,
-          disabled: false,
+          disabled: !isEditMode,
         },
       },
       {
@@ -148,171 +236,190 @@ export const EditMenuItemForm = ({ onClose }) => {
         label: "EditMenuItemForm.input.absoluteLinkUrl.label",
         props: {
           required: true,
-          disabled: false,
+          disabled: !isEditMode,
         },
       },
       {
         name: "isVisible",
         type: "checkbox",
         label: "EditMenuItemForm.input.isVisible.label",
+        props: {
+          disabled: !isEditMode,
+        },
       },
       {
         name: "isProtected",
         type: "checkbox",
         label: "EditMenuItemForm.input.isProtected.label",
+        props: {
+          disabled: !isEditMode,
+        },
       },
       {
         name: "excludeFromHierarchy",
         type: "checkbox",
         label: "EditMenuItemForm.input.excludeFromHierarchy.label",
+        props: {
+          disabled: !isEditMode,
+        },
       },
       {
         name: "goToClosestChild",
         type: "checkbox",
         label: "EditMenuItemForm.input.goToClosestChild.label",
+        props: {
+          disabled: !isEditMode,
+        },
       },
       {
         name: "isHighlighted",
         type: "checkbox",
         label: "EditMenuItemForm.input.isHighlighted.label",
-      },
-      {
-        type: "dom",
-        name: "box_new_line",
-        component: Box,
+        props: {
+          disabled: !isEditMode,
+        },
       },
       {
         name: "visibleFrom",
         type: "date",
         label: "EditMenuItemForm.input.visibleFrom.label",
+        props: {
+          disabled: !isEditMode,
+        },
       },
       {
         name: "visibleTo",
         type: "date",
         label: "EditMenuItemForm.input.visibleTo.label",
+        props: {
+          disabled: !isEditMode,
+        },
       },
     ],
-    [pages]
+    [pages, isEditMode]
   );
 
-  const onSubmit = (formValue) => {
-    console.log("form", formValue);
-    typeof onClose === "function" && onClose(formValue);
-  };
-
-  const FormInput = React.useCallback(
-    (formInput) => {
-      if (formInput.type === "dom") {
-        return <formInput.component {...formInput.props} />;
-      }
-      if (formInput.type === "checkbox") {
-        return (
-          <HalfInline style={{ marginBottom: "1rem" }}>
-            <Controller
-              name={formInput.name}
-              control={control}
-              render={({ field }) => (
+  return (
+    <Form onSubmit={() => null} noValidate noFormValidate>
+      <FormHeader>
+        <IconButton
+          icon={<FontAwesomeIcon icon={faTimes} />}
+          label="Zavrit"
+          onClick={handleClose}
+        ></IconButton>
+        <Typography fontWeight="bold" textColor="neutral800" as="h2" id="title">
+          {t("EditMenuItemForm.header")}
+        </Typography>
+      </FormHeader>
+      <Divider />
+      <ModalBody style={{ maxHeight: "80vh" }}>
+        {FORM_INPUTS.map((formInput) => {
+          if (formInput.type === "checkbox") {
+            return (
+              <HalfInline style={{ marginBottom: "1rem" }}>
                 <CheckboxLabel as="label">
                   {t(formInput.label)}
-
                   <ToggleCheckbox
-                    checked={field.value}
+                    checked={itemToUpdate[formInput.name] ?? false}
                     onLabel="Ano"
                     offLabel="Ne"
                     size="S"
+                    onChange={(event) => {
+                      itemToUpdate &&
+                        updateItem(itemToUpdate?.id, {
+                          [formInput.name]: event.target.checked,
+                        });
+                    }}
                     {...formInput.props}
-                    {...field}
                   >
                     {t(formInput.label)}
                   </ToggleCheckbox>
                 </CheckboxLabel>
-              )}
-            />
-          </HalfInline>
-        );
-      }
-      if (formInput.type === "date") {
-        return (
-          <HalfInline style={{ marginBottom: "1rem", paddingRight: "1rem" }}>
-            <Controller
-              name={formInput.name}
-              control={control}
-              render={({ field }) => (
+              </HalfInline>
+            );
+          }
+          if (formInput.type === "date") {
+            return (
+              <HalfInline
+                style={{ marginBottom: "1rem", paddingRight: "1rem" }}
+              >
                 <FormDatePicker
                   id={formInput.name}
                   name={formInput.name}
-                  selectedDate={field.value}
+                  selectedDate={itemToUpdate[formInput.name]}
                   label={t(formInput.label)}
                   locale="cs"
                   clearLabel={"Vymazat datum"}
-                  onClear={() => setValue(formInput.name, null)}
-                  onChange={(date) => setValue(formInput.name, date)}
+                  onClear={() => {
+                    itemToUpdate &&
+                      updateItem(itemToUpdate?.id, { [formInput.name]: null });
+                  }}
+                  onChange={(date) => {
+                    itemToUpdate &&
+                      updateItem(itemToUpdate?.id, { [formInput.name]: date });
+                  }}
+                  disabled={!isEditMode}
                   selectedDateLabel={(formattedDate) =>
                     `Date picker, current is ${formattedDate}`
                   }
                 />
-              )}
-            />
-          </HalfInline>
-        );
-      }
-      return typeof formInput.condition === "undefined" ||
-        (typeof formInput.condition === "function" &&
-          formInput.condition(itemToUpdate)) ? (
-        <Box style={{ marginBottom: "1rem" }} key={formInput.name}>
-          <Controller
-            name={formInput.name}
-            control={control}
-            rules={formInput.rules}
-            render={({ field }) => (
+              </HalfInline>
+            );
+          }
+          return typeof formInput.condition === "undefined" ||
+            (typeof formInput.condition === "function" &&
+              formInput.condition(itemToUpdate)) ? (
+            <Box style={{ marginBottom: "1rem" }} key={formInput.name}>
               <formInput.input
                 label={t(formInput.label)}
                 {...formInput.props}
-                error={
-                  errors[formInput.name]?.type &&
-                  errors[formInput.name]?.type === "required"
-                    ? t("EditMenuItemForm.input.required")
-                    : null
-                }
-                {...field}
+                value={itemToUpdate[formInput.name]}
+                onChange={(event) => {
+                  itemToUpdate &&
+                    updateItem(itemToUpdate?.id, {
+                      [formInput.name]: event.target.value,
+                    });
+                }}
               >
                 {formInput.children}
               </formInput.input>
-            )}
-          />
-        </Box>
-      ) : null;
-    },
-    [errors]
-  );
-
-  return (
-    <ModalLayout
-      onClose={handleClose}
-      labelledBy="title"
-      as="form"
-      onSubmit={handleSubmit(onSubmit)}
-      noValidate
-      noFormValidate
-    >
-      <ModalHeader closeLabel="Zrušit">
-        <Typography fontWeight="bold" textColor="neutral800" as="h2" id="title">
-          {t("EditMenuItemForm.header")}
-        </Typography>
-      </ModalHeader>
-      <ModalBody style={{ maxHeight: "80vh" }}>
-        {FORM_INPUTS.map((formInput) => (
-          <FormInput key={formInput.name} {...formInput} />
-        ))}
+            </Box>
+          ) : null;
+        })}
       </ModalBody>
-      <ModalFooter
-        startActions={
-          <Button type="button" onClick={() => onClose()} variant="tertiary">
-            Zrušit
-          </Button>
-        }
-        endActions={<Button type="submit">Uložit</Button>}
-      />
-    </ModalLayout>
+      {isEditMode && (
+        <ModalFooter
+          startActions={
+            <Button
+              disabled={havePage && !page}
+              onClick={handleDuplicateItem}
+              style={{ marginRight: "0.5rem" }}
+              startIcon={<FontAwesomeIcon icon={faCopy} />}
+            >
+              {t(
+                havePage
+                  ? page
+                    ? "PageHierarchyEditor.update.duplicatePageItem.button"
+                    : "PageHierarchyEditor.update.duplicate.pendingSave.warning.button"
+                  : "PageHierarchyEditor.update.duplicateNonPageItem.button"
+              )}
+            </Button>
+          }
+          endActions={
+            !itemToUpdate.isProtected && (
+              <Button
+                onClick={handleRemove}
+                variant="secondary"
+                startIcon={<FontAwesomeIcon icon={faTrash} />}
+              >
+                {havePage
+                  ? t("EditMenuItemForm.delete.itemAndPage")
+                  : t("EditMenuItemForm.delete.item")}
+              </Button>
+            )
+          }
+        ></ModalFooter>
+      )}
+    </Form>
   );
 };

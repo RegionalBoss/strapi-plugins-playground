@@ -84,13 +84,15 @@ const isPermissionEnabled = (permission, role) =>
 export default {
   getActions() {
     const generateActions = (data) =>
-      Object.keys(data).reduce((acc, key) => {
-        if (_.isFunction(data[key])) {
-          acc[key] = { enabled: false, policy: "" };
-        }
+      !data
+        ? {}
+        : Object.keys(data).reduce((acc, key) => {
+            if (_.isFunction(data[key])) {
+              acc[key] = { enabled: false, policy: "" };
+            }
 
-        return acc;
-      }, {});
+            return acc;
+          }, {});
 
     const appControllers = Object.keys(strapi.api || {})
       .filter((key) => !!strapi.api[key].controllers)

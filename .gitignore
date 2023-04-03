@@ -116,3 +116,6 @@ build
 logs
 
 .npmrc
+
+dist/**/*
+!**/plugins/**/dist
