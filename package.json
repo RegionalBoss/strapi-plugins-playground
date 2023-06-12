@@ -1,5 +1,5 @@
 {
-  "name": "slugify",
+  "name": "strapi-plugins-playground",
   "private": true,
   "version": "0.1.0",
   "description": "A Strapi application",
@@ -8,7 +8,15 @@
     "develop": "strapi develop",
     "start": "strapi start",
     "build": "strapi build",
-    "strapi": "strapi"
+    "prebuild": "yarn build:cloudinary && yarn build:deploy && yarn build:hierarchy",
+    "build:cloudinary": "cd ./src/plugins/cloudinary-field && yarn build && cd ../../..",
+    "build:deploy": "cd ./src/plugins/make-deploy && yarn build && cd ../../..",
+    "build:hierarchy": "cd ./src/plugins/page-hierarchy && yarn build && cd ../../..",
+    "strapi": "strapi",
+    "postinstall": "yarn run install:cloudinary && yarn run install:deploy && yarn run install:hierarchy",
+    "install:cloudinary": "cd ./src/plugins/cloudinary-field && yarn && cd ../../..",
+    "install:deploy": "cd ./src/plugins/make-deploy && yarn && cd ../../..",
+    "install:hierarchy": "cd ./src/plugins/page-hierarchy && yarn && cd ../../.."
   },
   "dependencies": {
     "@strapi/plugin-graphql": "4.8.2",
