@@ -63,10 +63,6 @@ export default {
     data: ICreateDeployDTO,
     user?: { username: string; roles: [{ id: number }] }
   ) => {
-    console.log(
-      `STRAPI: plugin::${pluginId}.${MODEL_NAME} -`,
-      strapi.query(`plugin::${pluginId}.${MODEL_NAME}`)
-    );
     const settings: IDeploySetting[] = await strapi
       .plugin(pluginId)
       .service("settings")
@@ -92,18 +88,22 @@ export default {
     if (notFinalItems?.length > 0)
       throw new ApplicationError("Some previous build has isFinal: false");
 
-    console.log("CREATE DEPLOY: ", data);
-
     const createDeploy: IDeploy = await strapi
       .query(`plugin::${pluginId}.${MODEL_NAME}`)
       .create({
         data: {
           name: data.name,
           isFinal: data.isFinal,
+          createdBy:
+            typeof data.createdBy === "number"
+              ? data.createdBy
+              : data.createdBy?.id,
+          updatedBy:
+            typeof data.updatedBy === "number"
+              ? data.updatedBy
+              : data.updatedBy?.id,
         },
       });
-
-    console.log("CREATED DEPLOY: ", createDeploy);
 
     const userData = {
       createdBy:
@@ -129,10 +129,6 @@ export default {
     const createStatusMessage_init: IDeployStatus = await strapi
       .query(`plugin::${pluginId}.deploy-status`)
       .create({ data: createStatusMessageBody_init });
-    console.log(
-      "CREATE DEPLOY STATUS MESSAGE INIT RESPONSE: ",
-      createStatusMessage_init
-    );
 
     try {
       const { data: externalServiceResponse } = await axios(
@@ -150,7 +146,6 @@ export default {
           },
         }
       );
-      console.log("EXTERNAL SERVICE RESPONSE: ", externalServiceResponse);
       await strapi.query(`plugin::${pluginId}.deploy-status`).create({
         data: {
           message: "Spuštěno sestavení aplikace",
@@ -202,14 +197,11 @@ export default {
       .query(`plugin::${pluginId}.deploy`)
       .findOne({ where: params });
 
-    console.log("existingEntry", existingEntry, params);
-
     const validData = await strapi.entityValidator.validateEntityUpdate(
       strapi.getModel(`plugin::${pluginId}.deploy`),
       data
     );
 
-    console.log("validData", validData);
     const deployStatus_validData =
       await strapi.entityValidator.validateEntityCreation(
         strapi.getModel(`plugin::${pluginId}.deploy-status`),
@@ -220,7 +212,6 @@ export default {
           deploy: { id: params.id },
         }
       );
-    console.log("deployStatus_validData", deployStatus_validData);
 
     await strapi
       .query(`plugin::${pluginId}.deploy-status`)
@@ -229,7 +220,6 @@ export default {
     const entry = await strapi
       .query(`plugin::${pluginId}.deploy`)
       .update({ where: params, data: validData });
-    console.log("entry", entry);
     if (files) {
       // automatically uploads the files based on the entry and the model
       await strapi.entityService.uploadFiles(entry, files, {
@@ -274,10 +264,6 @@ export default {
       const createStatusMessage: IDeployStatus = await strapi
         .query(`plugin::${pluginId}.deploy-status`)
         .create({ data: createStatusMessageBody });
-      console.log(
-        "CREATE DEPLOY STATUS MESSAGE RESPONSE: ",
-        createStatusMessage
-      );
     }
     // update deploy by id, with isFinish: true
     const updatedBody = {
