@@ -13,17 +13,18 @@
     "build:deploy": "cd ./src/plugins/make-deploy && yarn build && cd ../../..",
     "build:hierarchy": "cd ./src/plugins/page-hierarchy && yarn build && cd ../../..",
     "strapi": "strapi",
-    "postinstall": "yarn run install:cloudinary && yarn run install:deploy && yarn run install:hierarchy",
-    "install:cloudinary": "cd ./src/plugins/cloudinary-field && yarn && cd ../../..",
-    "install:deploy": "cd ./src/plugins/make-deploy && yarn && cd ../../..",
-    "install:hierarchy": "cd ./src/plugins/page-hierarchy && yarn && cd ../../.."
+    "setup": "yarn && yarn setup:make-deploy && yarn setup:page-hierarchy && yarn setup:cloudinary-field && yarn setup:acoustic-newsletter",
+    "setup:make-deploy": "cd ./src/plugins/make-deploy && yarn",
+    "setup:page-hierarchy": "cd ./src/plugins/page-hierarchy && yarn",
+    "setup:cloudinary-field": "cd ./src/plugins/cloudinary-field && yarn",
+    "setup:acoustic-newsletter": "cd ./src/plugins/acoustic-newsletters && yarn"
   },
   "dependencies": {
-    "@strapi/plugin-graphql": "4.8.2",
-    "@strapi/plugin-i18n": "4.8.2",
-    "@strapi/plugin-users-permissions": "4.8.2",
-    "@strapi/strapi": "4.8.2",
-    "better-sqlite3": "7.6.2",
+    "@strapi/plugin-graphql": "4.9.1",
+    "@strapi/plugin-i18n": "4.9.1",
+    "@strapi/plugin-users-permissions": "4.9.1",
+    "@strapi/strapi": "4.9.1",
+    "better-sqlite3": "8.0.1",
     "pg": "^8.8.0",
     "strapi-plugin-comments": "^2.2.1"
   },

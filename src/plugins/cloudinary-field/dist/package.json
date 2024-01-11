@@ -28,7 +28,7 @@
         "RegionalBoss <eduard.karbovanec@gmail.com>"
     ],
     "engines": {
-        "node": ">=14.19.1 <=18.x.x",
+        "node": ">=12.x.x <=18.x.x",
         "npm": ">=6.0.0"
     },
     "scripts": {

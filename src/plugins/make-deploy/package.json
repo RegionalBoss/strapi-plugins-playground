@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/RegionalBoss/strapi-plugins-playground"
+    "url": "git+https://repo.cleverlance.com/git/clv/strapi.plugin.playgrounds"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.2.0",
@@ -25,12 +25,12 @@
     "@types/uuid": "^8.3.4",
     "typescript": "4.6.3"
   },
-  "author": "RegionalBoss <eduard.karbovanec@gmail.com>",
+  "author": "RegionalBoss <eduard.karbovanec@cleverlance.com>",
   "maintainers": [
-    "RegionalBoss <eduard.karbovanec@gmail.com>"
+    "RegionalBoss <eduard.karbovanec@cleverlance.com>"
   ],
   "engines": {
-    "node": ">=14.19.1 <=18.x.x",
+    "node": ">=12.x.x <=18.x.x",
     "npm": ">=6.0.0"
   },
   "scripts": {
@@ -41,8 +41,8 @@
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/RegionalBoss/strapi-plugin-todo/issues"
+    "url": "https://repo.cleverlance.com/git/clv/strapi.plugin.playgrounds/-/issues"
   },
-  "homepage": "https://github.com/RegionalBoss/strapi-plugin-todo#readme",
+  "homepage": "https://repo.cleverlance.com/git/clv/strapi.plugin.playgrounds#readme",
   "main": "strapi-admin.js"
 }
